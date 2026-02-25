@@ -45,7 +45,7 @@ const AddNewPostPage = () => {
     handleSubmit,
     getValues,
     reset,
-    formState: { errors, isSubmitting, isValid },
+    formState: {},
   } = useForm({
     mode: "onChange",
     defaultValues: {
@@ -59,7 +59,7 @@ const AddNewPostPage = () => {
   });
   const [optionValues, setOptionValues] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const watchStatus = watch("status");
   const watchFeatured = watch("featured");
   const [content, setContent] = useState();

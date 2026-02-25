@@ -9,20 +9,17 @@ import { Textarea } from "components/textarea";
 // import PostCategory from "module/post/PostCategory";
 import React, { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import styled from "styled-components";
 import { postStatus } from "utils/constants";
 import Select from "react-select";
 import { Button } from "components/button";
 import slugify from "slugify";
 import useFirebaseImage from "hooks/useFireBaseImage";
 import {
-  addDoc,
   collection,
   doc,
   getDoc,
   getDocs,
   query,
-  serverTimestamp,
   updateDoc,
   where,
 } from "firebase/firestore";
@@ -36,12 +33,10 @@ import { imgbbAPI } from "config/apiConfig";
 import axios from "axios";
 import ImageUploader from "quill-image-uploader";
 import { useSearchParams } from "react-router-dom";
-import Swal from "sweetalert2";
-
 Quill.register("modules/imageUploader", ImageUploader);
 
 const UpdatePostPage = () => {
-  const { user } = useAuthStore((state) => state);
+  useAuthStore((state) => state);
   const {
     control,
     watch,
@@ -49,7 +44,7 @@ const UpdatePostPage = () => {
     handleSubmit,
     getValues,
     reset,
-    formState: { errors, isSubmitting, isValid },
+    formState: { isValid },
   } = useForm({
     mode: "onChange",
     defaultValues: {
@@ -65,8 +60,7 @@ const UpdatePostPage = () => {
   const postId = params.get("id");
   const [optionValues, setOptionValues] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [categoriesSelected, setCategoriesSelected] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const watchStatus = watch("status");
   const watchFeatured = watch("featured");
   const [content, setContent] = useState();
@@ -132,7 +126,9 @@ const UpdatePostPage = () => {
       }
     }
     fetchData();
-  }, [postId, reset, content]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postId, reset]);
+  // Note: 'content' intentionally excluded to avoid infinite loop
   const modules = useMemo(
     () => ({
       toolbar: [

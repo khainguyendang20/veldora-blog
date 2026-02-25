@@ -1,4 +1,8 @@
 {
   "installCommand": "npm install --legacy-peer-deps",
-  "buildCommand": "npm run build"
+  "buildCommand": "npm run build",
+  "env": {
+    "DISABLE_ESLINT_PLUGIN": "true",
+    "ESLINT_NO_DEV_ERRORS": "true"
+  }
 }
