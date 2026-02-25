@@ -61,5 +61,8 @@
   },
   "devDependencies": {
     "babel-plugin-styled-components": "^2.0.6"
+  },
+  "engines": {
+    "node": "24.x"
   }
 }
