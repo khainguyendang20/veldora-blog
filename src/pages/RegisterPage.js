@@ -66,6 +66,7 @@ const RegisterPage = () => {
         }
       ),
       role: userRole.USER,
+      status: userStatus.ACTIVE,
       createdAt: serverTimestamp(),
     });
     navigate("/");

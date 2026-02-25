@@ -22,10 +22,12 @@ import { debounce } from "lodash";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { itemPerPage } from "utils/constants";
+import { itemPerPage, userRole } from "utils/constants";
+import { useAuthStore } from "store";
 
 const CategoryManagePage = () => {
   const navigate = useNavigate();
+  const { user: currentUser } = useAuthStore((state) => state);
   const [categories, setCategories] = useState([]);
   const [filter, setFilter] = useState("");
   const [lastDocs, setLastDocs] = useState();
@@ -106,6 +108,20 @@ const CategoryManagePage = () => {
       }
     });
   };
+
+  // Only Admin and Mod can manage categories
+  if (
+    currentUser?.role !== userRole.ADMIN &&
+    currentUser?.role !== userRole.MOD
+  ) {
+    return (
+      <>
+        <Heading>Access Denied</Heading>
+        <p>You do not have permission to access this page.</p>
+      </>
+    );
+  }
+
   return (
     <>
       <FieldCheckboxes>

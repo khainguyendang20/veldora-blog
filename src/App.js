@@ -18,6 +18,7 @@ import PostManagePage from "pages/manage/PostManagePage";
 import Layout from "components/layout/Layout";
 import PostDetailPage from "pages/PostDetailPage";
 import UpdatePostPage from "pages/manage/UpdatePostPage";
+import DashboardPage from "pages/manage/DashboardPage";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 
 function App() {
@@ -60,6 +61,10 @@ function App() {
       <Route path="/register" element={<RegisterPage></RegisterPage>}></Route>
       <Route path="/login" element={<LoginPage></LoginPage>}></Route>
       <Route element={<LayoutDashboard></LayoutDashboard>}>
+        <Route
+          path="/manage/dashboard"
+          element={<DashboardPage></DashboardPage>}
+        ></Route>
         <Route
           path="/manage/add-post"
           element={<AddNewPostPage></AddNewPostPage>}

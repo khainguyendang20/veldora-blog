@@ -11,9 +11,11 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import slugify from "slugify";
-import { categoryStatus } from "utils/constants";
+import { categoryStatus, userRole } from "utils/constants";
+import { useAuthStore } from "store";
 
 const AddNewCategoryPage = () => {
+  const { user: currentUser } = useAuthStore((state) => state);
   const { control, watch, handleSubmit, reset } = useForm({
     mode: "onSubmit",
     defaultValues: {
@@ -23,6 +25,7 @@ const AddNewCategoryPage = () => {
       createdAt: new Date(),
     },
   });
+
   const handleAddNewCategory = async (values) => {
     try {
       const colRef = collection(db, "categories");
@@ -42,6 +45,20 @@ const AddNewCategoryPage = () => {
       toast.error("Error creating category!");
     }
   };
+
+  // Only Admin and Mod can add categories
+  if (
+    currentUser?.role !== userRole.ADMIN &&
+    currentUser?.role !== userRole.MOD
+  ) {
+    return (
+      <FormContainer>
+        <Heading>Access Denied</Heading>
+        <p>You do not have permission to access this page.</p>
+      </FormContainer>
+    );
+  }
+
   return (
     <FormContainer>
       <Heading>Add new category</Heading>

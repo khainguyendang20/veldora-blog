@@ -4,14 +4,16 @@ import {
   IconLogout,
   IconProfile,
   IconTags,
+  IconUsers,
 } from "components/icons";
 import { auth } from "config/firebase-config";
 import { signOut } from "firebase/auth";
 import React from "react";
 import { NavLink } from "react-router-dom";
 import styled from "styled-components";
-import { theme } from "utils/constants";
+import { theme, userRole } from "utils/constants";
 import { v4 } from "uuid";
+import { useAuthStore } from "store";
 
 const DashboardSidebarStyles = styled.div`
   display: flex;
@@ -52,36 +54,60 @@ const DashboardSidebarStyles = styled.div`
 const iconSize = 38;
 const iconColor = theme.grayDark;
 
-const itemLinks = [
-  {
-    title: "Dashboard",
-    url: "/manage/dashboard",
-    icon: <IconDashboard size={iconSize} color={iconColor}></IconDashboard>,
-  },
-  {
-    title: "Post",
-    url: "/manage/add-post",
-    icon: <IconBook size={iconSize} color={iconColor}></IconBook>,
-  },
-  {
-    title: "Category",
-    url: "/manage/category",
-    icon: <IconTags size={iconSize} color={iconColor}></IconTags>,
-  },
-  {
-    title: "Profile",
-    url: "/manage/profile",
-    icon: <IconProfile size={iconSize} color={iconColor}></IconProfile>,
-  },
-  {
-    title: "Logout",
-    url: "/",
-    icon: <IconLogout size={iconSize - 4} color={iconColor}></IconLogout>,
-    onClick: () => signOut(auth),
-  },
-];
+const getItemLinks = (role) => {
+  const baseLinks = [
+    {
+      title: "Dashboard",
+      url: "/manage/dashboard",
+      icon: <IconDashboard size={iconSize} color={iconColor}></IconDashboard>,
+    },
+    {
+      title: "Post",
+      url: "/manage/post",
+      icon: <IconBook size={iconSize} color={iconColor}></IconBook>,
+    },
+  ];
+
+  // Category management - only for Admin and Mod
+  if (role === userRole.ADMIN || role === userRole.MOD) {
+    baseLinks.push({
+      title: "Category",
+      url: "/manage/category",
+      icon: <IconTags size={iconSize} color={iconColor}></IconTags>,
+    });
+  }
+
+  // User management - only for Admin
+  if (role === userRole.ADMIN) {
+    baseLinks.push({
+      title: "Users",
+      url: "/manage/user",
+      icon: <IconUsers size={iconSize} color={iconColor}></IconUsers>,
+    });
+  }
+
+  // Profile and Logout for everyone
+  baseLinks.push(
+    {
+      title: "Profile",
+      url: "/manage/profile",
+      icon: <IconProfile size={iconSize} color={iconColor}></IconProfile>,
+    },
+    {
+      title: "Logout",
+      url: "/",
+      icon: <IconLogout size={iconSize - 4} color={iconColor}></IconLogout>,
+      onClick: () => signOut(auth),
+    }
+  );
+
+  return baseLinks;
+};
 
 const DashboardSidebar = () => {
+  const { user } = useAuthStore((state) => state);
+  const itemLinks = getItemLinks(user?.role);
+  
   return (
     <DashboardSidebarStyles className="sidebar">
       {itemLinks.map((item) => {

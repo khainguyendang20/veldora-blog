@@ -11,9 +11,11 @@ import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useSearchParams } from "react-router-dom";
 import slugify from "slugify";
-import { categoryStatus } from "utils/constants";
+import { categoryStatus, userRole } from "utils/constants";
+import { useAuthStore } from "store";
 
 const EditCategoryPage = () => {
+  const { user: currentUser } = useAuthStore((state) => state);
   const {
     control,
     handleSubmit,
@@ -26,13 +28,15 @@ const EditCategoryPage = () => {
   });
   const [params] = useSearchParams();
   const id = params.get("id");
+
   const handleUpdateCategory = (values) => {
-    const colRef = doc(db, "category", id);
+    const colRef = doc(db, "categories", id);
     updateDoc(colRef, {
       ...values,
       slug: slugify(values.slug || values.name, { lower: true }),
     });
   };
+
   useEffect(() => {
     const fetchData = async () => {
       const colRef = doc(db, "categories", id);
@@ -40,11 +44,24 @@ const EditCategoryPage = () => {
       reset({ ...singleDoc.data() });
     };
     fetchData();
-  }, []);
+  }, [id, reset]);
+
+  // Only Admin and Mod can edit categories
+  if (
+    currentUser?.role !== userRole.ADMIN &&
+    currentUser?.role !== userRole.MOD
+  ) {
+    return (
+      <FormContainer>
+        <Heading>Access Denied</Heading>
+        <p>You do not have permission to access this page.</p>
+      </FormContainer>
+    );
+  }
 
   return (
     <FormContainer>
-      <Heading>Add new category</Heading>
+      <Heading>Edit category</Heading>
       <form onSubmit={handleSubmit(handleUpdateCategory)}>
         <div className="field-format">
           <Field>

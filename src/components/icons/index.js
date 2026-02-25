@@ -8,3 +8,4 @@ export const { default: IconProfile } = require("./IconProfile");
 export const { default: IconTags } = require("./IconTags");
 export const { default: IconMenu } = require("./IconMenu");
 export const { default: IconClose } = require("./IconClose");
+export const { default: IconUsers } = require("./IconUsers");

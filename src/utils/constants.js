@@ -31,3 +31,35 @@ export const userRole = {
   MOD: 2,
   USER: 3,
 };
+
+export const userStatus = {
+  ACTIVE: 1,
+  PENDING: 2,
+  BANNED: 3,
+};
+
+export const getRoleName = (roleValue) => {
+  switch (roleValue) {
+    case userRole.ADMIN:
+      return "Admin";
+    case userRole.MOD:
+      return "Moderator";
+    case userRole.USER:
+      return "User";
+    default:
+      return "Unknown";
+  }
+};
+
+export const getStatusName = (statusValue) => {
+  switch (statusValue) {
+    case userStatus.ACTIVE:
+      return "Active";
+    case userStatus.PENDING:
+      return "Pending";
+    case userStatus.BANNED:
+      return "Banned";
+    default:
+      return "Unknown";
+  }
+};
