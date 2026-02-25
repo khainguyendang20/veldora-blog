@@ -45,7 +45,6 @@ const AddNewPostPage = () => {
     handleSubmit,
     getValues,
     reset,
-    formState: {},
   } = useForm({
     mode: "onChange",
     defaultValues: {

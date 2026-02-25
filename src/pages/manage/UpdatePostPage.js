@@ -24,7 +24,6 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "config/firebase-config";
-import { useAuthStore } from "store";
 import { toast } from "react-toastify";
 import FormContainer from "layout/FormContainer";
 import ReactQuill, { Quill } from "react-quill";
@@ -36,7 +35,6 @@ import { useSearchParams } from "react-router-dom";
 Quill.register("modules/imageUploader", ImageUploader);
 
 const UpdatePostPage = () => {
-  useAuthStore((state) => state);
   const {
     control,
     watch,
@@ -44,7 +42,6 @@ const UpdatePostPage = () => {
     handleSubmit,
     getValues,
     reset,
-    formState: { isValid },
   } = useForm({
     mode: "onChange",
     defaultValues: {

@@ -11,8 +11,6 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { auth, db } from "config/firebase-config";
 import { toast } from "react-toastify";
 import {
-  addDoc,
-  collection,
   doc,
   serverTimestamp,
   setDoc,

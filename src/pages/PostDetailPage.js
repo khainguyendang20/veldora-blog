@@ -4,7 +4,6 @@ import React from "react";
 import { useState } from "react";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { useAuthStore } from "store";
 import styled from "styled-components";
 import NotFoundPage from "./NotFoundPage";
 import PostThumbnail from "module/post/components/PostThumbnail";
@@ -131,7 +130,6 @@ const PostDetailPage = () => {
   useEffect(() => {
     document.body.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [slug]);
-  const { userInfo } = useAuthStore();
   if (!slug) return <NotFoundPage></NotFoundPage>;
   if (!postInfo.title) return null;
   const { user } = postInfo;

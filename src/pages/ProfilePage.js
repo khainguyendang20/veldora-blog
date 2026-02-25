@@ -1,6 +1,5 @@
-import Layout from "components/layout/Layout";
 import { db } from "config/firebase-config";
-import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import React from "react";
 import { useState } from "react";
 import { useEffect } from "react";
@@ -67,7 +66,8 @@ const ProfilePage = () => {
       (snapShot) => snapShot.forEach((doc) => setInfo(doc.data()))
     );
     // onSnapshot()
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username]);
   return (
     <ProfilePageStyles className="container">
       <div className="profile-cover"></div>
