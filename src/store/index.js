@@ -2,5 +2,8 @@ import { create } from "zustand";
 
 export const useAuthStore = create((set) => ({
   user: null,
-  setCurrentUser: (currentUser) => set({ user: currentUser }),
+  // True until Firebase restores (or rules out) the session on page load
+  isAuthLoading: true,
+  setCurrentUser: (currentUser) =>
+    set({ user: currentUser, isAuthLoading: false }),
 }));

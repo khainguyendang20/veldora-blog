@@ -1,14 +1,9 @@
 import { db } from "config/firebase-config";
-import {
-  collection,
-  limit,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, limit, query, where } from "firebase/firestore";
+import useFirestoreQuery from "hooks/useFirestoreQuery";
 import PostItemLarge from "module/post/PostItemLarge";
 import PostItemMini from "module/post/PostItemMini";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import styled from "styled-components";
 
 const PostsByCategoryStyles = styled.div`
@@ -36,32 +31,22 @@ const PostsByCategoryStyles = styled.div`
 `;
 
 const PostsByCategory = () => {
-  const [posts, setPosts] = useState([]);
-  useEffect(() => {
-    const colRef = collection(db, "posts");
-    const q = query(
-      colRef,
-      where("status", "==", 1),
-      where("categories", "array-contains", {
-        id: "IOLi8j3f97GwzD06PGzd",
-        name: "Công nghệ",
-        slug: "cong-nghex",
-        status: 1,
-      }),
-      // orderBy("createdAt", "desc"),
-      limit(5)
-    );
-    onSnapshot(q, (snapshot) => {
-      let result = [];
-      snapshot.forEach((doc) => {
-        result.push({
-          id: doc.id,
-          ...doc.data(),
-        });
-      });
-      setPosts(result);
-    });
-  }, []);
+  const { data: posts } = useFirestoreQuery(
+    () =>
+      query(
+        collection(db, "posts"),
+        where("status", "==", 1),
+        where("categories", "array-contains", {
+          id: "IOLi8j3f97GwzD06PGzd",
+          name: "Công nghệ",
+          slug: "cong-nghex",
+          status: 1,
+        }),
+        // orderBy("createdAt", "desc"),
+        limit(5)
+      ),
+    []
+  );
   if (!posts.length) return;
   return (
     <PostsByCategoryStyles>

@@ -36,55 +36,50 @@ const CategoryManagePage = () => {
   const handleFilterChange = debounce((e) => {
     setFilter(e.target.value);
   }, 500);
+  const canManage =
+    currentUser?.role === userRole.ADMIN || currentUser?.role === userRole.MOD;
+
+  // Later pages are a one-off read; only the first page stays live.
   const handleLoadMore = async () => {
     const nextRef = query(
       collection(db, "categories"),
       startAfter(lastDocs),
       limit(itemPerPage.MANAGE)
     );
-    onSnapshot(nextRef, (snapshot) => {
-      let result = [];
+    const snapshot = await getDocs(nextRef);
+    const result = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    setCategories((prev) => [...prev, ...result]);
+    setLastDocs(snapshot.docs[snapshot.docs.length - 1]);
+  };
+  useEffect(() => {
+    if (!canManage) return;
+    const colRef = collection(db, "categories");
+    const unsubscribeTotal = onSnapshot(colRef, (snapshot) =>
+      setTotal(snapshot.size)
+    );
+    const newRef = filter
+      ? query(
+          colRef,
+          where("name", ">=", filter),
+          where("name", "<=", filter + "utf8")
+        )
+      : query(colRef, limit(itemPerPage.MANAGE));
+    const unsubscribeList = onSnapshot(newRef, (snapshot) => {
+      const result = [];
       snapshot.forEach((doc) => {
         result.push({
           id: doc.id,
           ...doc.data(),
         });
       });
-      setCategories([...categories, ...result]);
+      setCategories(result);
+      setLastDocs(snapshot.docs[snapshot.docs.length - 1]);
     });
-    const documentSnapshots = await getDocs(nextRef);
-    const lastVisible =
-      documentSnapshots.docs[documentSnapshots.docs.length - 1];
-    setLastDocs(lastVisible);
-  };
-  useEffect(() => {
-    const fetchData = async () => {
-      const colRef = collection(db, "categories");
-      onSnapshot(colRef, (snapshot) => setTotal(snapshot.size));
-      const newRef = filter
-        ? query(
-            colRef,
-            where("name", ">=", filter),
-            where("name", "<=", filter + "utf8")
-          )
-        : query(colRef, limit(itemPerPage.MANAGE));
-      const documentSnapshots = await getDocs(newRef);
-      const lastVisible =
-        documentSnapshots.docs[documentSnapshots.docs.length - 1];
-      onSnapshot(newRef, (snapshot) => {
-        let result = [];
-        snapshot.forEach((doc) => {
-          result.push({
-            id: doc.id,
-            ...doc.data(),
-          });
-        });
-        setCategories(result);
-      });
-      setLastDocs(lastVisible);
+    return () => {
+      unsubscribeTotal();
+      unsubscribeList();
     };
-    fetchData();
-  }, [filter]);
+  }, [filter, canManage]);
   const handleApproveToggle = (data) => {
     const colRef = doc(db, "categories", data.id);
     updateDoc(colRef, {
@@ -110,10 +105,7 @@ const CategoryManagePage = () => {
   };
 
   // Only Admin and Mod can manage categories
-  if (
-    currentUser?.role !== userRole.ADMIN &&
-    currentUser?.role !== userRole.MOD
-  ) {
+  if (!canManage) {
     return (
       <>
         <Heading>Access Denied</Heading>

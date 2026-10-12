@@ -1,8 +1,8 @@
 import { db } from "config/firebase-config";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
-import React from "react";
-import { useState } from "react";
-import { useEffect } from "react";
+import { collection, query, where } from "firebase/firestore";
+import DOMPurify from "dompurify";
+import useFirestoreQuery from "hooks/useFirestoreQuery";
+import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import NotFoundPage from "./NotFoundPage";
@@ -109,24 +109,12 @@ const PostDetailStyles = styled.div`
 
 const PostDetailPage = () => {
   const { slug } = useParams();
-  const [postInfo, setPostInfo] = useState({});
-  useEffect(() => {
-    async function fetchData() {
-      if (!slug) return;
-      const colRef = query(collection(db, "posts"), where("slug", "==", slug));
-
-      onSnapshot(colRef, (snapshot) => {
-        snapshot.forEach((doc) => {
-          doc.data() &&
-            setPostInfo({
-              id: doc.id,
-              ...doc.data(),
-            });
-        });
-      });
-    }
-    fetchData();
-  }, [slug]);
+  const { data: posts } = useFirestoreQuery(
+    () =>
+      slug ? query(collection(db, "posts"), where("slug", "==", slug)) : null,
+    [slug]
+  );
+  const postInfo = posts[posts.length - 1] || {};
   useEffect(() => {
     document.body.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [slug]);
@@ -164,9 +152,9 @@ const PostDetailPage = () => {
         <div className="post-content">
           <div
             className="entry-content"
-            // Prevent XSS Attack recommen from React Docs
+            // Content is user-authored HTML, so sanitize it to prevent XSS
             dangerouslySetInnerHTML={{
-              __html: postInfo.content || "",
+              __html: DOMPurify.sanitize(postInfo.content || ""),
             }}
           ></div>
           <AuthorBox userId={user.id}></AuthorBox>

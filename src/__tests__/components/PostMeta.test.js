@@ -1,0 +1,68 @@
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import { ThemeProvider } from "styled-components";
+import { MemoryRouter } from "react-router-dom";
+import { theme } from "utils/constants";
+import PostMeta from "module/post/components/PostMeta";
+
+const renderWithProviders = (ui) =>
+  render(
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>{ui}</ThemeProvider>
+    </MemoryRouter>
+  );
+
+describe("PostMeta", () => {
+  const mockAuth = {
+    username: "john_doe",
+    fullname: "John Doe",
+    avatar: "https://example.com/avatar.jpg",
+  };
+
+  it("should render author name", () => {
+    renderWithProviders(<PostMeta auth={mockAuth} date="Jan 1, 2024" />);
+
+    expect(screen.getByText("John Doe")).toBeInTheDocument();
+  });
+
+  it("should render date", () => {
+    renderWithProviders(<PostMeta auth={mockAuth} date="Jan 1, 2024" />);
+
+    expect(screen.getByText("Jan 1, 2024")).toBeInTheDocument();
+  });
+
+  it("should use default date when not provided", () => {
+    renderWithProviders(<PostMeta auth={mockAuth} />);
+
+    expect(screen.getByText("Dec 24, 2016")).toBeInTheDocument();
+  });
+
+  it("should link to author profile", () => {
+    renderWithProviders(<PostMeta auth={mockAuth} date="Jan 1, 2024" />);
+
+    const link = screen.getByRole("link");
+    expect(link).toHaveAttribute("href", "/profile/john_doe");
+  });
+
+  it("should show default name when fullname is not provided", () => {
+    renderWithProviders(
+      <PostMeta auth={{ username: "test" }} date="Jan 1, 2024" />
+    );
+
+    expect(screen.getByText("im_dev2002")).toBeInTheDocument();
+  });
+
+  it("should render author avatar", () => {
+    renderWithProviders(<PostMeta auth={mockAuth} date="Jan 1, 2024" />);
+
+    const avatar = screen.getByRole("img");
+    expect(avatar).toHaveAttribute("src", mockAuth.avatar);
+  });
+
+  it("should render link when username is not provided", () => {
+    renderWithProviders(<PostMeta auth={{}} date="Jan 1, 2024" />);
+
+    const link = screen.getByRole("link");
+    expect(link).toBeInTheDocument();
+  });
+});

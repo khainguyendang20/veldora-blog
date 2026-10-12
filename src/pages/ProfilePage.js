@@ -1,8 +1,7 @@
 import { db } from "config/firebase-config";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { collection, query, where } from "firebase/firestore";
+import useFirestoreQuery from "hooks/useFirestoreQuery";
 import React from "react";
-import { useState } from "react";
-import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { avatarDefault } from "utils/constants";
@@ -58,16 +57,11 @@ const ProfilePageStyles = styled.div`
 
 const ProfilePage = () => {
   const { username } = useParams();
-  const [info, setInfo] = useState({});
-  // const [posts, setPosts] = useState();
-  useEffect(() => {
-    onSnapshot(
-      query(collection(db, "users"), where("username", "==", username)),
-      (snapShot) => snapShot.forEach((doc) => setInfo(doc.data()))
-    );
-    // onSnapshot()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [username]);
+  const { data: users } = useFirestoreQuery(
+    () => query(collection(db, "users"), where("username", "==", username)),
+    [username]
+  );
+  const info = users[users.length - 1] || {};
   return (
     <ProfilePageStyles className="container">
       <div className="profile-cover"></div>

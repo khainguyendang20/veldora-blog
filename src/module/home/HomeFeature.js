@@ -1,14 +1,9 @@
 import { useWindowSize } from "@uidotdev/usehooks";
 import { db } from "config/firebase-config";
-import {
-  collection,
-  limit,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, limit, query, where } from "firebase/firestore";
+import useFirestoreQuery from "hooks/useFirestoreQuery";
 import PostItemLarge from "module/post/PostItemLarge";
-import React, { useEffect, useState } from "react";
+import React from "react";
 import styled from "styled-components";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
@@ -30,28 +25,17 @@ const HomeFeatureStyles = styled.div`
 `;
 
 const HomeFeature = () => {
-  const [posts, setPosts] = useState([]);
   const { width } = useWindowSize();
-
-  useEffect(() => {
-    const colRef = collection(db, "posts");
-    const q = query(
-      colRef,
-      where("status", "==", 1),
-      where("featured", "==", true),
-      limit(4)
-    );
-    onSnapshot(q, (snapshot) => {
-      let result = [];
-      snapshot.forEach((doc) => {
-        result.push({
-          id: doc.id,
-          ...doc.data(),
-        });
-      });
-      setPosts(result);
-    });
-  }, [width]);
+  const { data: posts } = useFirestoreQuery(
+    () =>
+      query(
+        collection(db, "posts"),
+        where("status", "==", 1),
+        where("featured", "==", true),
+        limit(4)
+      ),
+    []
+  );
   if (posts.length <= 0) return;
   return (
     <>
@@ -73,8 +57,8 @@ const HomeFeature = () => {
           // onSlideChange={() => console.log("slide change")}
         >
           {posts.map((post) => (
-            <SwiperSlide>
-              <PostItemLarge key={post.id} data={post}></PostItemLarge>
+            <SwiperSlide key={post.id}>
+              <PostItemLarge data={post}></PostItemLarge>
             </SwiperSlide>
           ))}
         </Swiper>
