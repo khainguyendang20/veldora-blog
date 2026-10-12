@@ -4,7 +4,6 @@ import PostThumbnail from "./components/PostThumbnail";
 import PostCategory from "./components/PostCategory";
 import PostTitle from "./components/PostTitle";
 import PostMeta from "./components/PostMeta";
-import { v4 } from "uuid";
 
 const PostItemLargeStyles = styled.div`
   position: relative;
@@ -53,7 +52,7 @@ const PostItemLarge = (props) => {
       <div className="post-content">
         <div className="post-categories">
           {data.categories.map((category) => (
-            <PostCategory key={v4()} href={`/${category.slug}`}>
+            <PostCategory key={category.id || category.slug} href={`/${category.slug}`}>
               {category.name}
             </PostCategory>
           ))}

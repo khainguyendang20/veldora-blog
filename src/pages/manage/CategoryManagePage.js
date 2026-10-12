@@ -18,8 +18,8 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { debounce } from "lodash";
-import React, { useEffect, useState } from "react";
+import debounce from "lodash/debounce";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { itemPerPage } from "utils/constants";
@@ -31,9 +31,10 @@ const CategoryManagePage = () => {
   const [lastDocs, setLastDocs] = useState();
   const [total, setTotal] = useState(0);
 
-  const handleFilterChange = debounce((e) => {
-    setFilter(e.target.value);
-  }, 500);
+  const handleFilterChange = useMemo(
+    () => debounce((e) => setFilter(e.target.value), 500),
+    []
+  );
   // Later pages are a one-off read; only the first page stays live.
   const handleLoadMore = async () => {
     const nextRef = query(

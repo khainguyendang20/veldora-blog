@@ -1,6 +1,6 @@
 import Header from "components/layout/Header";
 import DashboardSidebar from "module/dashboard/DashboardSidebar";
-import React from "react";
+import React, { Suspense } from "react";
 import { Navigate, Outlet } from "react-router-dom";
 import styled from "styled-components";
 import { useAuthStore } from "store";
@@ -27,7 +27,9 @@ const LayoutDashboard = () => {
       <Header></Header>
       <DashboardSidebar></DashboardSidebar>
       <div className="container">
-        <Outlet></Outlet>
+        <Suspense fallback={null}>
+          <Outlet></Outlet>
+        </Suspense>
       </div>
     </LayoutDashboardStyles>
   );

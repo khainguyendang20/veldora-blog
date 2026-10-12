@@ -12,7 +12,6 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import styled from "styled-components";
 import { theme, userRole } from "utils/constants";
-import { v4 } from "uuid";
 import { useAuthStore } from "store";
 
 const DashboardSidebarStyles = styled.div`
@@ -114,12 +113,8 @@ const DashboardSidebar = () => {
         if (item.onClick)
           return (
             <div
-              className={({ isActive }) =>
-                isActive
-                  ? "sidebar__link sidebar__link--active"
-                  : "sidebar__link"
-              }
-              key={v4()}
+              className="sidebar__link"
+              key={item.title}
               onClick={item.onClick}
             >
               <span className="sidebar__link-icon">{item.icon}</span>
@@ -132,7 +127,7 @@ const DashboardSidebar = () => {
             className={({ isActive }) =>
               isActive ? "sidebar__link sidebar__link--active" : "sidebar__link"
             }
-            key={v4()}
+            key={item.title}
           >
             <span className="sidebar__link-icon">{item.icon}</span>
             <span className="sidebar__link-title">{item.title}</span>

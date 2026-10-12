@@ -1,12 +1,12 @@
-import { useWindowSize } from "@uidotdev/usehooks";
+import { useMediaQuery } from "@uidotdev/usehooks";
 import { db } from "config/firebase-config";
 import { collection, limit, query, where } from "firebase/firestore";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
 import PostItemLarge from "module/post/PostItemLarge";
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import styled from "styled-components";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Scrollbar, A11y } from "swiper/modules";
+
+const FeatureCarousel = lazy(() => import("./FeatureCarousel"));
 
 const HomeFeatureStyles = styled.div`
   @media only screen and (max-width: 1024px) {
@@ -25,7 +25,9 @@ const HomeFeatureStyles = styled.div`
 `;
 
 const HomeFeature = () => {
-  const { width } = useWindowSize();
+  // Re-renders only when a breakpoint is crossed, not on every resize
+  const isDesktop = useMediaQuery("only screen and (min-width: 1025px)");
+  const isPhone = useMediaQuery("only screen and (max-width: 640px)");
   const { data: posts } = useFirestoreQuery(
     () =>
       query(
@@ -39,26 +41,19 @@ const HomeFeature = () => {
   if (posts.length <= 0) return;
   return (
     <>
-      {width > 1024 ? (
+      {isDesktop ? (
         <HomeFeatureStyles>
           {posts.map((post) => (
             <PostItemLarge key={post.id} data={post}></PostItemLarge>
           ))}
         </HomeFeatureStyles>
       ) : (
-        <Swiper
-          style={{ width: "100%" }}
-          modules={[Navigation, Pagination, Scrollbar, A11y]}
-          slidesPerView={width <= 640 ? 1 : 2}
-          navigation
-          pagination={{ clickable: true }}
-        >
-          {posts.map((post) => (
-            <SwiperSlide key={post.id}>
-              <PostItemLarge data={post}></PostItemLarge>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        <Suspense fallback={null}>
+          <FeatureCarousel
+            posts={posts}
+            slidesPerView={isPhone ? 1 : 2}
+          ></FeatureCarousel>
+        </Suspense>
       )}
     </>
   );

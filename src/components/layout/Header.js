@@ -12,9 +12,8 @@ import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
 import { useAuthStore } from "store";
 import styled from "styled-components";
-import { v4 } from "uuid";
 import { getAuth, signOut } from "firebase/auth";
-import { useWindowSize } from "@uidotdev/usehooks";
+import { useMediaQuery } from "@uidotdev/usehooks";
 
 const HeaderStyles = styled.div`
   position: fixed;
@@ -174,7 +173,7 @@ const menuItems = [
 const ICON_SIZE = 18;
 
 const Header = () => {
-  const { width } = useWindowSize();
+  const isDesktop = useMediaQuery("only screen and (min-width: 1025px)");
   const { user } = useAuthStore((state) => state);
   const [showPopover, setShowPopover] = useState(false);
   const userPopoverRef = useRef();
@@ -187,10 +186,10 @@ const Header = () => {
             <img srcSet="/logo.png 2x" alt="FSpade Blog" className="logo-img" />
             <span className="logo-title">Veldora Blog</span>
           </NavLink>
-          {width > 1024 ? (
+          {isDesktop ? (
             <ul className="menu">
               {menuItems.map((item) => (
-                <li key={v4()}>
+                <li key={item.url}>
                   <NavLink to={item.url}>{item.title}</NavLink>
                 </li>
               ))}
@@ -200,7 +199,7 @@ const Header = () => {
           )}
         </div>
         <div className="header-r">
-          {width > 1024 && (
+          {isDesktop && (
             <div className="search">
               <input
                 type="text"
@@ -289,7 +288,7 @@ const MobileMenu = () => {
               <IconClose />
             </span>
             {menuItems.map((item) => (
-              <li key={v4()}>
+              <li key={item.url}>
                 <NavLink to={item.url}>{item.title}</NavLink>
               </li>
             ))}
