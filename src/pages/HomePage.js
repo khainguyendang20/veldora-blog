@@ -8,6 +8,7 @@ import HomeFeature from "module/home/HomeFeature";
 import styled from "styled-components";
 import { collection, limit, query, where } from "firebase/firestore";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
+import { homeCategory } from "utils/constants";
 
 const RandomPostsStyles = styled.div`
   display: grid;
@@ -89,7 +90,9 @@ const HomePage = () => {
       >
         <HomeSection>
           <Heading>Công nghệ</Heading>
-          <PostsByCategory></PostsByCategory>
+          <PostsByCategory
+            categoryId={homeCategory.TECHNOLOGY}
+          ></PostsByCategory>
         </HomeSection>
       </div>
       <HomeSection>

@@ -30,22 +30,17 @@ const PostsByCategoryStyles = styled.div`
   }
 `;
 
-const PostsByCategory = () => {
+const PostsByCategory = ({ categoryId }) => {
   const { data: posts } = useFirestoreQuery(
     () =>
       query(
         collection(db, "posts"),
         where("status", "==", 1),
-        where("categories", "array-contains", {
-          id: "IOLi8j3f97GwzD06PGzd",
-          name: "Công nghệ",
-          slug: "cong-nghex",
-          status: 1,
-        }),
+        where("categoryIds", "array-contains", categoryId),
         // orderBy("createdAt", "desc"),
         limit(5)
       ),
-    []
+    [categoryId]
   );
   if (!posts.length) return;
   return (
