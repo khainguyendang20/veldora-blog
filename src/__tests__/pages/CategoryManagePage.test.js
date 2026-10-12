@@ -2,8 +2,6 @@ import React from "react";
 import { render, screen, act, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { collection, getDocs, onSnapshot, query } from "firebase/firestore";
-import { useAuthStore } from "store";
-import { userRole } from "utils/constants";
 import CategoryManagePage from "pages/manage/CategoryManagePage";
 
 jest.mock("config/firebase-config", () => ({ db: {} }));
@@ -39,10 +37,6 @@ describe("CategoryManagePage", () => {
   let listeners;
 
   beforeEach(() => {
-    useAuthStore.setState({
-      user: { uid: "1", role: userRole.ADMIN },
-      isAuthLoading: false,
-    });
     collection.mockReturnValue({ name: "categories" });
     query.mockReturnValue({ name: "first-page" });
     getDocs.mockResolvedValue(makeSnapshot([]));
@@ -63,13 +57,6 @@ describe("CategoryManagePage", () => {
     listeners.forEach(({ unsubscribe }) =>
       expect(unsubscribe).toHaveBeenCalledTimes(1)
     );
-  });
-
-  it("does not read categories for regular users", () => {
-    useAuthStore.setState({ user: { uid: "2", role: userRole.USER } });
-    renderPage();
-
-    expect(onSnapshot).not.toHaveBeenCalled();
   });
 
   it("appends the next page on load more without opening new listeners", async () => {

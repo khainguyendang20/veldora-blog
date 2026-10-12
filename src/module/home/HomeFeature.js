@@ -52,9 +52,6 @@ const HomeFeature = () => {
           slidesPerView={width <= 640 ? 1 : 2}
           navigation
           pagination={{ clickable: true }}
-          // scrollbar={{ draggable: true }}
-          // onSwiper={(swiper) => console.log(swiper)}
-          // onSlideChange={() => console.log("slide change")}
         >
           {posts.map((post) => (
             <SwiperSlide key={post.id}>

@@ -6,9 +6,6 @@ import {
   uploadBytesResumable,
 } from "firebase/storage";
 import { useState } from "react";
-import { useAuthStore } from "store";
-import Swal from "sweetalert2";
-import { userRole } from "utils/constants";
 
 export default function useFirebaseImage(
   setValue,
@@ -16,15 +13,10 @@ export default function useFirebaseImage(
   imageName = null,
   callback = null
 ) {
-  const { user } = useAuthStore();
   const [progress, setProgress] = useState(0);
   const [image, setImage] = useState("");
   if (!setValue || !getValues) return;
   const handleUploadImage = (file) => {
-    //   if (user?.role !== userRole.ADMIN) {
-    //     Swal.fire("Failed", "You have no right to do this action", "warning");
-    //     return;
-    //   }
     const storage = getStorage();
     const storageRef = ref(storage, "images/" + file.name);
     const uploadTask = uploadBytesResumable(storageRef, file);
@@ -34,24 +26,12 @@ export default function useFirebaseImage(
         const progressPercent =
           (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
         setProgress(progressPercent);
-        switch (snapshot.state) {
-          case "paused":
-            console.log("Upload is paused");
-            break;
-          case "running":
-            console.log("Upload is running");
-            break;
-          default:
-            console.log("Nothing at all");
-        }
       },
-      (error) => {
-        console.log("Error");
+      () => {
         setImage("");
       },
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          console.log("File available at", downloadURL);
           setImage(downloadURL);
         });
       }
@@ -65,10 +45,6 @@ export default function useFirebaseImage(
   };
 
   const handleDeleteImage = () => {
-    // if (user?.role !== userRole.ADMIN) {
-    //   Swal.fire("Failed", "You have no right to do this action", "warning");
-    //   return;
-    // }
     const storage = getStorage();
     const imageRef = ref(
       storage,
@@ -76,14 +52,11 @@ export default function useFirebaseImage(
     );
     deleteObject(imageRef)
       .then(() => {
-        console.log("Remove image successfully");
         setImage("");
         setProgress(0);
         callback && callback();
       })
-      .catch((error) => {
-        console.log("handleDeleteImage ~ error", error);
-        console.log("Can not delete image");
+      .catch(() => {
         setImage("");
       });
   };

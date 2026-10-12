@@ -19,6 +19,11 @@ export const categoryStatus = {
   APPROVED: 1,
 };
 
+// Category ids featured as sections on the home page
+export const homeCategory = {
+  TECHNOLOGY: "IOLi8j3f97GwzD06PGzd",
+};
+
 export const itemPerPage = {
   MANAGE: 1,
 };
