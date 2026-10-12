@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import Header from "./Header";
 import styled from "styled-components";
 import { Outlet } from "react-router-dom";
@@ -14,7 +14,9 @@ const Layout = ({ children }) => {
       <Header></Header>
       <HomeMainStyles className="home-main">
         {children}
-        <Outlet></Outlet>
+        <Suspense fallback={null}>
+          <Outlet></Outlet>
+        </Suspense>
       </HomeMainStyles>
       <Footer></Footer>
     </>

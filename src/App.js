@@ -1,26 +1,42 @@
+import { lazy, Suspense } from "react";
 import { Route, Routes } from "react-router-dom";
-import RegisterPage from "./pages/RegisterPage";
-import LoginPage from "pages/LoginPage";
 import HomePage from "pages/HomePage";
 import NotFoundPage from "pages/NotFoundPage";
 import LayoutDashboard from "layout/LayoutDashboard";
-import AddNewPostPage from "pages/manage/AddNewPostPage";
 import useAuthListener from "hooks/useAuthListener";
 import RequireRole from "layout/RequireRole";
 import { userRole } from "utils/constants";
-import AddNewCategoryPage from "pages/manage/AddNewCategoryPage";
-import CategoryManagePage from "pages/manage/CategoryManagePage";
-import EditCategoryPage from "pages/manage/EditCategoryPage";
-import UserManagePage from "pages/manage/UserManagePage";
-import ProfilePage from "pages/ProfilePage";
-import PostManagePage from "pages/manage/PostManagePage";
 import Layout from "components/layout/Layout";
-import PostDetailPage from "pages/PostDetailPage";
-import UpdatePostPage from "pages/manage/UpdatePostPage";
-import DashboardPage from "pages/manage/DashboardPage";
+
+// Everything except the home page is split into its own chunk, so readers
+// never download the editor, form libraries or admin tables.
+const LoginPage = lazy(() => import("pages/LoginPage"));
+const RegisterPage = lazy(() => import("pages/RegisterPage"));
+const PostDetailPage = lazy(() => import("pages/PostDetailPage"));
+const ProfilePage = lazy(() => import("pages/ProfilePage"));
+const DashboardPage = lazy(() => import("pages/manage/DashboardPage"));
+const AddNewPostPage = lazy(() => import("pages/manage/AddNewPostPage"));
+const UpdatePostPage = lazy(() => import("pages/manage/UpdatePostPage"));
+const PostManagePage = lazy(() => import("pages/manage/PostManagePage"));
+const AddNewCategoryPage = lazy(() =>
+  import("pages/manage/AddNewCategoryPage")
+);
+const EditCategoryPage = lazy(() => import("pages/manage/EditCategoryPage"));
+const CategoryManagePage = lazy(() =>
+  import("pages/manage/CategoryManagePage")
+);
+const UserManagePage = lazy(() => import("pages/manage/UserManagePage"));
 
 function App() {
   useAuthListener();
+  return (
+    <Suspense fallback={null}>
+      <AppRoutes />
+    </Suspense>
+  );
+}
+
+function AppRoutes() {
   return (
     <Routes>
       <Route element={<Layout></Layout>}>
