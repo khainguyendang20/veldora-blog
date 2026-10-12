@@ -6,6 +6,8 @@ import NotFoundPage from "pages/NotFoundPage";
 import LayoutDashboard from "layout/LayoutDashboard";
 import AddNewPostPage from "pages/manage/AddNewPostPage";
 import useAuthListener from "hooks/useAuthListener";
+import RequireRole from "layout/RequireRole";
+import { userRole } from "utils/constants";
 import AddNewCategoryPage from "pages/manage/AddNewCategoryPage";
 import CategoryManagePage from "pages/manage/CategoryManagePage";
 import EditCategoryPage from "pages/manage/EditCategoryPage";
@@ -49,21 +51,27 @@ function App() {
           element={<UpdatePostPage></UpdatePostPage>}
         ></Route>
         <Route
-          path="/manage/add-category"
-          element={<AddNewCategoryPage></AddNewCategoryPage>}
-        ></Route>
-        <Route
-          path="/manage/category"
-          element={<CategoryManagePage></CategoryManagePage>}
-        ></Route>
-        <Route
-          path="/manage/edit-category"
-          element={<EditCategoryPage></EditCategoryPage>}
-        ></Route>
-        <Route
-          path="/manage/user"
-          element={<UserManagePage></UserManagePage>}
-        ></Route>
+          element={<RequireRole roles={[userRole.ADMIN, userRole.MOD]} />}
+        >
+          <Route
+            path="/manage/add-category"
+            element={<AddNewCategoryPage></AddNewCategoryPage>}
+          ></Route>
+          <Route
+            path="/manage/category"
+            element={<CategoryManagePage></CategoryManagePage>}
+          ></Route>
+          <Route
+            path="/manage/edit-category"
+            element={<EditCategoryPage></EditCategoryPage>}
+          ></Route>
+        </Route>
+        <Route element={<RequireRole roles={[userRole.ADMIN]} />}>
+          <Route
+            path="/manage/user"
+            element={<UserManagePage></UserManagePage>}
+          ></Route>
+        </Route>
         <Route
           path="/manage/post"
           element={<PostManagePage></PostManagePage>}

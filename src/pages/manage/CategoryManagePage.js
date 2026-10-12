@@ -22,12 +22,10 @@ import { debounce } from "lodash";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { itemPerPage, userRole } from "utils/constants";
-import { useAuthStore } from "store";
+import { itemPerPage } from "utils/constants";
 
 const CategoryManagePage = () => {
   const navigate = useNavigate();
-  const { user: currentUser } = useAuthStore((state) => state);
   const [categories, setCategories] = useState([]);
   const [filter, setFilter] = useState("");
   const [lastDocs, setLastDocs] = useState();
@@ -36,9 +34,6 @@ const CategoryManagePage = () => {
   const handleFilterChange = debounce((e) => {
     setFilter(e.target.value);
   }, 500);
-  const canManage =
-    currentUser?.role === userRole.ADMIN || currentUser?.role === userRole.MOD;
-
   // Later pages are a one-off read; only the first page stays live.
   const handleLoadMore = async () => {
     const nextRef = query(
@@ -52,7 +47,6 @@ const CategoryManagePage = () => {
     setLastDocs(snapshot.docs[snapshot.docs.length - 1]);
   };
   useEffect(() => {
-    if (!canManage) return;
     const colRef = collection(db, "categories");
     const unsubscribeTotal = onSnapshot(colRef, (snapshot) =>
       setTotal(snapshot.size)
@@ -79,7 +73,7 @@ const CategoryManagePage = () => {
       unsubscribeTotal();
       unsubscribeList();
     };
-  }, [filter, canManage]);
+  }, [filter]);
   const handleApproveToggle = (data) => {
     const colRef = doc(db, "categories", data.id);
     updateDoc(colRef, {
@@ -103,16 +97,6 @@ const CategoryManagePage = () => {
       }
     });
   };
-
-  // Only Admin and Mod can manage categories
-  if (!canManage) {
-    return (
-      <>
-        <Heading>Access Denied</Heading>
-        <p>You do not have permission to access this page.</p>
-      </>
-    );
-  }
 
   return (
     <>

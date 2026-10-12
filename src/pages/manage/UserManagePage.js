@@ -72,11 +72,10 @@ const RoleSelect = styled.select`
 const UserManagePage = () => {
   const { user: currentUser } = useAuthStore((state) => state);
   const [filter, setFilter] = useState("");
-  const isAdmin = currentUser?.role === userRole.ADMIN;
-  // Only admins may read the users collection
+  // Route is admin-only (RequireRole in App.js)
   const { data: users } = useFirestoreQuery(
-    () => (isAdmin ? collection(db, "users") : null),
-    [isAdmin]
+    () => collection(db, "users"),
+    []
   );
 
   const handleFilterChange = debounce((e) => {
@@ -157,16 +156,6 @@ const UserManagePage = () => {
         return "user";
     }
   };
-
-  // Only show this page for Admin
-  if (!isAdmin) {
-    return (
-      <>
-        <Heading>Access Denied</Heading>
-        <p>You do not have permission to access this page.</p>
-      </>
-    );
-  }
 
   return (
     <>
