@@ -68,12 +68,10 @@ describe("CategoryManagePage", () => {
     const listenerCount = onSnapshot.mock.calls.length;
     getDocs.mockResolvedValue(makeSnapshot([{ id: "c2", name: "Second" }]));
 
-    await act(async () => {
-      fireEvent.click(screen.getByText("Load more"));
-    });
+    fireEvent.click(screen.getByText("Load more"));
 
+    expect(await screen.findByText("Second")).toBeInTheDocument();
     expect(screen.getByText("First")).toBeInTheDocument();
-    expect(screen.getByText("Second")).toBeInTheDocument();
     expect(onSnapshot).toHaveBeenCalledTimes(listenerCount);
   });
 });

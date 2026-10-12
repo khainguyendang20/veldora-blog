@@ -1,5 +1,5 @@
 import React from "react";
-import { render, act } from "@testing-library/react";
+import { render, act, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { getDoc, onSnapshot, query } from "firebase/firestore";
 import PostDetailPage from "pages/PostDetailPage";
@@ -46,16 +46,17 @@ describe("PostDetailPage", () => {
       onNext = cb;
       return jest.fn();
     });
-    const { container } = renderAt("/post/hello");
+    renderAt("/post/hello");
 
     act(() =>
       onNext({ forEach: (cb) => cb({ id: "p1", data: () => post }) })
     );
 
-    const content = container.querySelector(".entry-content");
-    expect(content.textContent).toContain("Safe text");
-    expect(content.querySelector("img").getAttribute("onerror")).toBeNull();
-    expect(content.querySelector("script")).toBeNull();
+    expect(screen.getByText("Safe text")).toBeInTheDocument();
+    const html = document.body.innerHTML;
+    expect(html).toContain('<img src="x">');
+    expect(html).not.toMatch(/onerror/i);
+    expect(html).not.toMatch(/<script/i);
   });
 
   it("unsubscribes from the post on unmount", () => {
