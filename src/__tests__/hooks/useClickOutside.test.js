@@ -47,7 +47,7 @@ describe("useClickOutside", () => {
 
   it("should clean up event listeners on unmount", () => {
     const handler = jest.fn();
-    const { unmount, getByTestId } = render(
+    const { unmount } = render(
       <TestComponent onClickOutside={handler} />
     );
 
