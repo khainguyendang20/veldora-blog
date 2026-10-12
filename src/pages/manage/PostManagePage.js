@@ -4,16 +4,10 @@ import { IconSearch } from "components/icons";
 import Heading from "components/layout/Heading";
 import { Table } from "components/table";
 import { db } from "config/firebase-config";
-import {
-  collection,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, deleteDoc, doc, query, where } from "firebase/firestore";
+import useFirestoreQuery from "hooks/useFirestoreQuery";
 import { debounce } from "lodash";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import styled from "styled-components";
@@ -66,42 +60,21 @@ const CategoryBadge = styled.span`
 const PostManagePage = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore((state) => state);
-  const [posts, setPosts] = useState([]);
   const [filter, setFilter] = useState("");
+  const uid = currentUser?.uid;
+  const role = currentUser?.role;
 
   const handleFilterChange = debounce((e) => {
     setFilter(e.target.value);
   }, 500);
 
-  useEffect(() => {
-    if (!currentUser) return;
-
+  // Admin and Mod can see all posts, regular users only see their own
+  const { data: posts } = useFirestoreQuery(() => {
+    if (!uid) return null;
     const colRef = collection(db, "posts");
-    let queryRef;
-
-    // Admin and Mod can see all posts, regular users only see their own
-    if (
-      currentUser.role === userRole.ADMIN ||
-      currentUser.role === userRole.MOD
-    ) {
-      queryRef = colRef;
-    } else {
-      queryRef = query(colRef, where("user.id", "==", currentUser.uid));
-    }
-
-    const unsubscribe = onSnapshot(queryRef, (snapshot) => {
-      const result = [];
-      snapshot.forEach((doc) => {
-        result.push({
-          id: doc.id,
-          ...doc.data(),
-        });
-      });
-      setPosts(result);
-    });
-
-    return () => unsubscribe();
-  }, [currentUser]);
+    if (role === userRole.ADMIN || role === userRole.MOD) return colRef;
+    return query(colRef, where("user.id", "==", uid));
+  }, [uid, role]);
 
   const filteredPosts = posts.filter((post) => {
     if (!filter) return true;
