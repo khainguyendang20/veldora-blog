@@ -1,1 +1,1 @@
-export const { default: Label } = require("./Label");
+export { default as Label } from "./Label";
