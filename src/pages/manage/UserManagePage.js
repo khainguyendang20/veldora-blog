@@ -5,15 +5,10 @@ import { IconSearch } from "components/icons";
 import Heading from "components/layout/Heading";
 import { Table } from "components/table";
 import { db } from "config/firebase-config";
-import {
-  collection,
-  deleteDoc,
-  doc,
-  onSnapshot,
-  updateDoc,
-} from "firebase/firestore";
+import { collection, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import useFirestoreQuery from "hooks/useFirestoreQuery";
 import { debounce } from "lodash";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Swal from "sweetalert2";
 import styled from "styled-components";
 import { getRoleName, userRole, userStatus } from "utils/constants";
@@ -76,26 +71,17 @@ const RoleSelect = styled.select`
 
 const UserManagePage = () => {
   const { user: currentUser } = useAuthStore((state) => state);
-  const [users, setUsers] = useState([]);
   const [filter, setFilter] = useState("");
+  const isAdmin = currentUser?.role === userRole.ADMIN;
+  // Only admins may read the users collection
+  const { data: users } = useFirestoreQuery(
+    () => (isAdmin ? collection(db, "users") : null),
+    [isAdmin]
+  );
 
   const handleFilterChange = debounce((e) => {
     setFilter(e.target.value);
   }, 500);
-
-  useEffect(() => {
-    const colRef = collection(db, "users");
-    onSnapshot(colRef, (snapshot) => {
-      const result = [];
-      snapshot.forEach((doc) => {
-        result.push({
-          id: doc.id,
-          ...doc.data(),
-        });
-      });
-      setUsers(result);
-    });
-  }, []);
 
   const filteredUsers = users.filter((user) => {
     if (!filter) return true;
@@ -173,7 +159,7 @@ const UserManagePage = () => {
   };
 
   // Only show this page for Admin
-  if (currentUser?.role !== userRole.ADMIN) {
+  if (!isAdmin) {
     return (
       <>
         <Heading>Access Denied</Heading>

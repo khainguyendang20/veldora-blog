@@ -6,15 +6,8 @@ import PostsByCategory from "module/home/PostsByCategory";
 import HomeSection from "module/home/HomeSection";
 import HomeFeature from "module/home/HomeFeature";
 import styled from "styled-components";
-import { useState } from "react";
-import { useEffect } from "react";
-import {
-  collection,
-  limit,
-  onSnapshot,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, limit, query, where } from "firebase/firestore";
+import useFirestoreQuery from "hooks/useFirestoreQuery";
 
 const RandomPostsStyles = styled.div`
   display: grid;
@@ -66,26 +59,16 @@ const HomeMainStyles = styled.div`
 const postsPerPage = 9;
 
 const HomePage = () => {
-  const [posts, setPosts] = useState([]);
-  useEffect(() => {
-    const colRef = collection(db, "posts");
-    const q = query(
-      colRef,
-      where("status", "==", 1),
-      limit(postsPerPage)
-      // orderBy("createdAt", "desc")
-    );
-    onSnapshot(q, (snapshot) => {
-      let result = [];
-      snapshot.forEach((doc) => {
-        result.push({
-          id: doc.id,
-          ...doc.data(),
-        });
-      });
-      setPosts(result);
-    });
-  }, []);
+  const { data: posts } = useFirestoreQuery(
+    () =>
+      query(
+        collection(db, "posts"),
+        where("status", "==", 1),
+        limit(postsPerPage)
+        // orderBy("createdAt", "desc")
+      ),
+    []
+  );
   if (posts.length <= 0) return;
   return (
     <>
