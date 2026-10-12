@@ -1,5 +1,5 @@
 import React from "react";
-import { render, act } from "@testing-library/react";
+import { render, act, fireEvent, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { useAuthStore } from "store";
@@ -44,6 +44,33 @@ describe("PostManagePage", () => {
 
     expect(where).toHaveBeenCalledWith("user.id", "==", "u2");
     expect(onSnapshot.mock.calls[0][0]).toEqual({ name: "own-posts" });
+  });
+
+  it("filters posts by title after the search input settles", () => {
+    jest.useFakeTimers();
+    renderAs({ uid: "u1", role: userRole.ADMIN });
+    const onNext = onSnapshot.mock.calls[0][1];
+    act(() =>
+      onNext({
+        forEach: (cb) =>
+          [
+            ["p1", "React hooks"],
+            ["p2", "Firebase rules"],
+          ].forEach(([id, title]) =>
+            cb({ id, data: () => ({ title, user: {}, categories: [] }) })
+          ),
+      })
+    );
+
+    fireEvent.change(screen.getByPlaceholderText("Type to search..."), {
+      target: { value: "fire" },
+    });
+    expect(screen.getByText("React hooks")).toBeInTheDocument();
+    act(() => jest.advanceTimersByTime(500));
+
+    expect(screen.queryByText("React hooks")).not.toBeInTheDocument();
+    expect(screen.getByText("Firebase rules")).toBeInTheDocument();
+    jest.useRealTimers();
   });
 
   it("keeps one subscription when unrelated profile fields change", () => {

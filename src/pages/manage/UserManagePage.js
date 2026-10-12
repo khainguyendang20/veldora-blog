@@ -7,8 +7,8 @@ import { Table } from "components/table";
 import { db } from "config/firebase-config";
 import { collection, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
-import { debounce } from "lodash";
-import React, { useState } from "react";
+import debounce from "lodash/debounce";
+import React, { useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import styled from "styled-components";
 import { getRoleName, userRole, userStatus } from "utils/constants";
@@ -78,9 +78,10 @@ const UserManagePage = () => {
     []
   );
 
-  const handleFilterChange = debounce((e) => {
-    setFilter(e.target.value);
-  }, 500);
+  const handleFilterChange = useMemo(
+    () => debounce((e) => setFilter(e.target.value), 500),
+    []
+  );
 
   const filteredUsers = users.filter((user) => {
     if (!filter) return true;

@@ -6,8 +6,8 @@ import { Table } from "components/table";
 import { db } from "config/firebase-config";
 import { collection, deleteDoc, doc, query, where } from "firebase/firestore";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
-import { debounce } from "lodash";
-import React, { useState } from "react";
+import debounce from "lodash/debounce";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import styled from "styled-components";
@@ -64,9 +64,10 @@ const PostManagePage = () => {
   const uid = currentUser?.uid;
   const role = currentUser?.role;
 
-  const handleFilterChange = debounce((e) => {
-    setFilter(e.target.value);
-  }, 500);
+  const handleFilterChange = useMemo(
+    () => debounce((e) => setFilter(e.target.value), 500),
+    []
+  );
 
   // Admin and Mod can see all posts, regular users only see their own
   const { data: posts } = useFirestoreQuery(() => {
