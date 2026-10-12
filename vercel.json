@@ -1,8 +1,4 @@
 {
   "installCommand": "npm ci",
-  "buildCommand": "npm run build",
-  "env": {
-    "DISABLE_ESLINT_PLUGIN": "true",
-    "ESLINT_NO_DEV_ERRORS": "true"
-  }
+  "buildCommand": "npm run build"
 }
