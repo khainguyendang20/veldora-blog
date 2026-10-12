@@ -41,11 +41,11 @@ describe("Header", () => {
   it("keeps menu items mounted across re-renders", () => {
     useMediaQuery.mockReturnValue(true);
     const { rerender } = renderWithRouter(<Header />);
-    const before = screen.getByText("Blog").closest("li");
+    const before = screen.getByRole("link", { name: "Blog" });
 
     rerender(<Header />);
 
-    expect(screen.getByText("Blog").closest("li")).toBe(before);
+    expect(screen.getByRole("link", { name: "Blog" })).toBe(before);
   });
 });
 
@@ -59,16 +59,18 @@ describe("DashboardSidebar", () => {
 
   it("keeps links mounted across re-renders", () => {
     const { rerender } = renderWithRouter(<DashboardSidebar />);
-    const before = screen.getByText("Post").closest("a");
+    const before = screen.getByRole("link", { name: "Post" });
 
     rerender(<DashboardSidebar />);
 
-    expect(screen.getByText("Post").closest("a")).toBe(before);
+    expect(screen.getByRole("link", { name: "Post" })).toBe(before);
   });
 
   it("styles the logout item like the other links", () => {
     renderWithRouter(<DashboardSidebar />);
 
-    expect(screen.getByText("Logout").closest(".sidebar__link")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Logout" })).toHaveClass(
+      "sidebar__link"
+    );
   });
 });
