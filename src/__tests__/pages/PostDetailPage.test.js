@@ -4,14 +4,14 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { getDoc, onSnapshot, query } from "firebase/firestore";
 import PostDetailPage from "pages/PostDetailPage";
 
-jest.mock("config/firebase-config", () => ({ db: {} }));
-jest.mock("firebase/firestore", () => ({
-  collection: jest.fn(),
-  query: jest.fn(),
-  where: jest.fn(),
-  doc: jest.fn(),
-  getDoc: jest.fn(),
-  onSnapshot: jest.fn(),
+vi.mock("config/firebase-config", () => ({ db: {} }));
+vi.mock("firebase/firestore", () => ({
+  collection: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  doc: vi.fn(),
+  getDoc: vi.fn(),
+  onSnapshot: vi.fn(),
 }));
 
 const post = {
@@ -35,7 +35,7 @@ const renderAt = (path) =>
 
 describe("PostDetailPage", () => {
   beforeEach(() => {
-    window.HTMLElement.prototype.scrollIntoView = jest.fn();
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
     query.mockReturnValue({ name: "post-by-slug" });
     getDoc.mockResolvedValue({ data: () => undefined });
   });
@@ -44,7 +44,7 @@ describe("PostDetailPage", () => {
     let onNext;
     onSnapshot.mockImplementation((q, cb) => {
       onNext = cb;
-      return jest.fn();
+      return vi.fn();
     });
     renderAt("/post/hello");
 
@@ -60,7 +60,7 @@ describe("PostDetailPage", () => {
   });
 
   it("unsubscribes from the post on unmount", () => {
-    const unsubscribe = jest.fn();
+    const unsubscribe = vi.fn();
     onSnapshot.mockReturnValue(unsubscribe);
     const { unmount } = renderAt("/post/hello");
 

@@ -37,11 +37,10 @@ describe("useAuthStore", () => {
     expect(useAuthStore.getState().user).toEqual(user2);
   });
 
-  it("starts in the auth-loading state", () => {
-    jest.isolateModules(() => {
-      const { useAuthStore: freshStore } = require("store");
-      expect(freshStore.getState().isAuthLoading).toBe(true);
-    });
+  it("starts in the auth-loading state", async () => {
+    vi.resetModules();
+    const { useAuthStore: freshStore } = await import("store");
+    expect(freshStore.getState().isAuthLoading).toBe(true);
   });
 
   it("leaves the auth-loading state once a user (or null) is resolved", () => {

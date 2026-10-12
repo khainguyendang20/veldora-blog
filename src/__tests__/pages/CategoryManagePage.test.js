@@ -4,18 +4,18 @@ import { MemoryRouter } from "react-router-dom";
 import { collection, getDocs, onSnapshot, query } from "firebase/firestore";
 import CategoryManagePage from "pages/manage/CategoryManagePage";
 
-jest.mock("config/firebase-config", () => ({ db: {} }));
-jest.mock("firebase/firestore", () => ({
-  collection: jest.fn(),
-  query: jest.fn(),
-  where: jest.fn(),
-  limit: jest.fn(),
-  startAfter: jest.fn(),
-  getDocs: jest.fn(),
-  onSnapshot: jest.fn(),
-  doc: jest.fn(),
-  updateDoc: jest.fn(),
-  deleteDoc: jest.fn(),
+vi.mock("config/firebase-config", () => ({ db: {} }));
+vi.mock("firebase/firestore", () => ({
+  collection: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  limit: vi.fn(),
+  startAfter: vi.fn(),
+  getDocs: vi.fn(),
+  onSnapshot: vi.fn(),
+  doc: vi.fn(),
+  updateDoc: vi.fn(),
+  deleteDoc: vi.fn(),
 }));
 
 const makeSnapshot = (items) => {
@@ -42,7 +42,7 @@ describe("CategoryManagePage", () => {
     getDocs.mockResolvedValue(makeSnapshot([]));
     listeners = [];
     onSnapshot.mockImplementation((q, cb) => {
-      const unsubscribe = jest.fn();
+      const unsubscribe = vi.fn();
       listeners.push({ q, emit: (s) => act(() => cb(s)), unsubscribe });
       return unsubscribe;
     });

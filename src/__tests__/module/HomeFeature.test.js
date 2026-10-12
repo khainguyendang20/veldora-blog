@@ -5,29 +5,25 @@ import { onSnapshot, query } from "firebase/firestore";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import HomeFeature from "module/home/HomeFeature";
 
-jest.mock("config/firebase-config", () => ({ db: {} }));
-jest.mock("firebase/firestore", () => ({
-  collection: jest.fn(),
-  query: jest.fn(),
-  where: jest.fn(),
-  limit: jest.fn(),
-  onSnapshot: jest.fn(),
+vi.mock("config/firebase-config", () => ({ db: {} }));
+vi.mock("firebase/firestore", () => ({
+  collection: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  limit: vi.fn(),
+  onSnapshot: vi.fn(),
 }));
-jest.mock("@uidotdev/usehooks", () => ({ useMediaQuery: jest.fn() }));
-// Swiper is ESM-only with an exports map that CRA's Jest 27 cannot resolve.
-jest.mock(
-  "swiper/react",
-  () => ({
+vi.mock("@uidotdev/usehooks", () => ({ useMediaQuery: vi.fn() }));
+// Swiper needs real layout APIs that jsdom lacks.
+vi.mock("swiper/react", () => ({
     Swiper: ({ children, slidesPerView }) => (
       <div data-testid="swiper" data-slides={slidesPerView}>
         {children}
       </div>
     ),
-    SwiperSlide: ({ children }) => <div>{children}</div>,
-  }),
-  { virtual: true }
-);
-jest.mock("swiper/modules", () => ({}), { virtual: true });
+  SwiperSlide: ({ children }) => <div>{children}</div>,
+}));
+vi.mock("swiper/modules", () => ({ A11y: {}, Navigation: {}, Pagination: {} }));
 
 const setScreen = (size) =>
   useMediaQuery.mockImplementation((q) =>
@@ -63,10 +59,10 @@ const ui = (
 );
 
 describe("HomeFeature", () => {
-  // CRA enables resetMocks, so implementations are set per test.
+  // mockReset (vite.config.mjs) clears implementations, so set them per test.
   beforeEach(() => {
     query.mockReturnValue({ name: "featured-posts" });
-    onSnapshot.mockReturnValue(jest.fn());
+    onSnapshot.mockReturnValue(vi.fn());
   });
 
   it("keeps a single Firestore subscription across breakpoints", () => {
@@ -80,7 +76,7 @@ describe("HomeFeature", () => {
   });
 
   it("unsubscribes on unmount", () => {
-    const unsubscribe = jest.fn();
+    const unsubscribe = vi.fn();
     onSnapshot.mockReturnValue(unsubscribe);
     setScreen("desktop");
     const { unmount } = render(ui);
@@ -115,7 +111,7 @@ describe("HomeFeature", () => {
   });
 
   it("renders slides with keys", async () => {
-    const consoleError = jest.spyOn(console, "error").mockImplementation();
+    const consoleError = vi.spyOn(console, "error").mockImplementation();
     setScreen("tablet");
     render(ui);
 

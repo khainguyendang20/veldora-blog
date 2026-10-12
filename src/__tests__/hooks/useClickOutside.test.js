@@ -19,7 +19,7 @@ const TestComponent = ({ onClickOutside }) => {
 
 describe("useClickOutside", () => {
   it("should call handler when clicking outside the ref element", () => {
-    const handler = jest.fn();
+    const handler = vi.fn();
     render(<TestComponent onClickOutside={handler} />);
 
     fireEvent.mouseDown(screen.getByTestId("outside"));
@@ -28,7 +28,7 @@ describe("useClickOutside", () => {
   });
 
   it("should NOT call handler when clicking inside the ref element", () => {
-    const handler = jest.fn();
+    const handler = vi.fn();
     render(<TestComponent onClickOutside={handler} />);
 
     fireEvent.mouseDown(screen.getByTestId("inside"));
@@ -37,7 +37,7 @@ describe("useClickOutside", () => {
   });
 
   it("should handle touchstart events", () => {
-    const handler = jest.fn();
+    const handler = vi.fn();
     render(<TestComponent onClickOutside={handler} />);
 
     fireEvent.touchStart(screen.getByTestId("outside"));
@@ -46,7 +46,7 @@ describe("useClickOutside", () => {
   });
 
   it("should clean up event listeners on unmount", () => {
-    const handler = jest.fn();
+    const handler = vi.fn();
     const { unmount } = render(
       <TestComponent onClickOutside={handler} />
     );

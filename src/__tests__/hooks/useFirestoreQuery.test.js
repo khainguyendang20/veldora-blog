@@ -3,8 +3,8 @@ import { render, act } from "@testing-library/react";
 import { onSnapshot } from "firebase/firestore";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
 
-jest.mock("firebase/firestore", () => ({
-  onSnapshot: jest.fn(),
+vi.mock("firebase/firestore", () => ({
+  onSnapshot: vi.fn(),
 }));
 
 // RTL 12 has no renderHook, so run the hook inside a probe component.
@@ -37,7 +37,7 @@ describe("useFirestoreQuery", () => {
     onSnapshot.mockReset();
     onSnapshot.mockImplementation((q, onNext) => {
       listeners.push({ q, onNext });
-      const unsubscribe = jest.fn();
+      const unsubscribe = vi.fn();
       unsubscribes.push(unsubscribe);
       return unsubscribe;
     });

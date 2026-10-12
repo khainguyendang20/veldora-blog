@@ -7,17 +7,17 @@ import { useAuthStore } from "store";
 import AddNewCategoryPage from "pages/manage/AddNewCategoryPage";
 import EditCategoryPage from "pages/manage/EditCategoryPage";
 
-jest.mock("config/firebase-config", () => ({ db: {} }));
-jest.mock("firebase/firestore", () => ({
-  addDoc: jest.fn(),
-  collection: jest.fn(),
-  doc: jest.fn(),
-  getDoc: jest.fn(),
-  updateDoc: jest.fn(),
-  serverTimestamp: jest.fn(),
+vi.mock("config/firebase-config", () => ({ db: {} }));
+vi.mock("firebase/firestore", () => ({
+  addDoc: vi.fn(),
+  collection: vi.fn(),
+  doc: vi.fn(),
+  getDoc: vi.fn(),
+  updateDoc: vi.fn(),
+  serverTimestamp: vi.fn(),
 }));
-jest.mock("react-toastify", () => ({
-  toast: { success: jest.fn(), error: jest.fn() },
+vi.mock("react-toastify", () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
 }));
 
 const renderAt = (path) =>

@@ -7,9 +7,9 @@ import { userRole } from "utils/constants";
 import Header from "components/layout/Header";
 import DashboardSidebar from "module/dashboard/DashboardSidebar";
 
-jest.mock("config/firebase-config", () => ({ auth: {}, db: {} }));
-jest.mock("firebase/auth", () => ({ getAuth: jest.fn(), signOut: jest.fn() }));
-jest.mock("@uidotdev/usehooks", () => ({ useMediaQuery: jest.fn() }));
+vi.mock("config/firebase-config", () => ({ auth: {}, db: {} }));
+vi.mock("firebase/auth", () => ({ getAuth: vi.fn(), signOut: vi.fn() }));
+vi.mock("@uidotdev/usehooks", () => ({ useMediaQuery: vi.fn() }));
 
 const renderWithRouter = (ui) => {
   const utils = render(<MemoryRouter>{ui}</MemoryRouter>);
