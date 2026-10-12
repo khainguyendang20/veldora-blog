@@ -12,7 +12,10 @@ const LayoutDashboardStyles = styled.div`
 `;
 
 const LayoutDashboard = () => {
-  const { user } = useAuthStore((state) => state);
+  const { user, isAuthLoading } = useAuthStore((state) => state);
+
+  // Wait for Firebase to restore the session before deciding to redirect
+  if (isAuthLoading) return null;
 
   // Redirect to login if not authenticated
   if (!user) {

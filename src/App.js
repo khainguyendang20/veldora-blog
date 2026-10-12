@@ -5,10 +5,7 @@ import HomePage from "pages/HomePage";
 import NotFoundPage from "pages/NotFoundPage";
 import LayoutDashboard from "layout/LayoutDashboard";
 import AddNewPostPage from "pages/manage/AddNewPostPage";
-import { useEffect } from "react";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth, db } from "config/firebase-config";
-import { useAuthStore } from "store";
+import useAuthListener from "hooks/useAuthListener";
 import AddNewCategoryPage from "pages/manage/AddNewCategoryPage";
 import CategoryManagePage from "pages/manage/CategoryManagePage";
 import EditCategoryPage from "pages/manage/EditCategoryPage";
@@ -19,31 +16,9 @@ import Layout from "components/layout/Layout";
 import PostDetailPage from "pages/PostDetailPage";
 import UpdatePostPage from "pages/manage/UpdatePostPage";
 import DashboardPage from "pages/manage/DashboardPage";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
 
 function App() {
-  const { user, setCurrentUser } = useAuthStore((state) => state);
-  useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const docRef = query(
-          collection(db, "users"),
-          where("email", "==", user.email)
-        );
-        onSnapshot(docRef, (snapshot) => {
-          snapshot.forEach((doc) => {
-            setCurrentUser({
-              ...user,
-              ...doc.data(),
-            });
-          });
-        });
-      } else {
-        setCurrentUser(null);
-      }
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useAuthListener();
   return (
     <Routes>
       <Route element={<Layout></Layout>}>

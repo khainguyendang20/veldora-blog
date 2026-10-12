@@ -37,6 +37,19 @@ describe("useAuthStore", () => {
     expect(useAuthStore.getState().user).toEqual(user2);
   });
 
+  it("starts in the auth-loading state", () => {
+    jest.isolateModules(() => {
+      const { useAuthStore: freshStore } = require("store");
+      expect(freshStore.getState().isAuthLoading).toBe(true);
+    });
+  });
+
+  it("leaves the auth-loading state once a user (or null) is resolved", () => {
+    useAuthStore.setState({ isAuthLoading: true });
+    useAuthStore.getState().setCurrentUser(null);
+    expect(useAuthStore.getState().isAuthLoading).toBe(false);
+  });
+
   it("should set user back to null (logout)", () => {
     const mockUser = { uid: "123", email: "test@example.com" };
 
