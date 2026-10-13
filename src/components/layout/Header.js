@@ -9,7 +9,7 @@ import {
 import { useClickOutside } from "hooks/useClickOutSide";
 import React, { useRef } from "react";
 import { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "store";
 import styled from "styled-components";
 import { getAuth, signOut } from "firebase/auth";
@@ -176,6 +176,12 @@ const Header = () => {
   const [showPopover, setShowPopover] = useState(false);
   const userPopoverRef = useRef();
   useClickOutside(userPopoverRef, () => setShowPopover(false));
+  const navigate = useNavigate();
+  const handleSearch = (e) => {
+    e.preventDefault();
+    const q = e.currentTarget.elements.q.value.trim();
+    if (q) navigate(`/search?q=${encodeURIComponent(q)}`);
+  };
   return (
     <HeaderStyles>
       <div className="header-main">
@@ -198,16 +204,18 @@ const Header = () => {
         </div>
         <div className="header-r">
           {isDesktop && (
-            <div className="search">
+            <form className="search" role="search" onSubmit={handleSearch}>
               <input
-                type="text"
+                type="search"
+                name="q"
                 className="search-input"
+                aria-label="Search posts"
                 placeholder="Type to search... "
               />
-              <span className="search-icon">
+              <button type="submit" className="search-icon" aria-label="Search">
                 <IconSearch></IconSearch>
-              </span>
-            </div>
+              </button>
+            </form>
           )}
           {!user ? (
             <Button
@@ -285,7 +293,7 @@ const MobileMenu = () => {
             >
               <IconClose />
             </span>
-            {menuItems.map((item) => (
+            {[...menuItems, { url: "/search", title: "Search" }].map((item) => (
               <li key={item.url}>
                 <NavLink to={item.url}>{item.title}</NavLink>
               </li>
