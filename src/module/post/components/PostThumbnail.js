@@ -10,7 +10,7 @@ const PostThumbnailStyles = styled.div`
   width: 100%;
   flex-shrink: 0;
   height: ${(props) => (props.height ? props.height : "200px")};
-  a {
+  .post-thumb__frame {
     color: white;
     height: 100%;
     display: block;
@@ -40,13 +40,27 @@ const PostThumbnailStyles = styled.div`
   }
 `;
 
-const PostThumbnail = ({ url, href = "#", height, children }) => {
+// Links to the post when given its slug as `href`; without one (e.g. on
+// the post page itself) it is just the image
+const PostThumbnail = ({ url, href, height, className = "", children }) => {
+  const image = (
+    <>
+      <Image src={url} fallback={thumbnailPlaceholder} loading="lazy" />
+      <div className="overlay"></div>
+    </>
+  );
   return (
-    <PostThumbnailStyles height={height} className="post-thumb">
-      <Link to={`/post/${href}`}>
-        <Image src={url} fallback={thumbnailPlaceholder} loading="lazy" />
-        <div className="overlay"></div>
-      </Link>
+    <PostThumbnailStyles
+      height={height}
+      className={`post-thumb ${className}`.trim()}
+    >
+      {href ? (
+        <Link className="post-thumb__frame" to={`/post/${href}`}>
+          {image}
+        </Link>
+      ) : (
+        <div className="post-thumb__frame">{image}</div>
+      )}
       {children}
     </PostThumbnailStyles>
   );

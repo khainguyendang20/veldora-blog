@@ -5,7 +5,15 @@ import { Image } from "components/image";
 import Heading from "components/layout/Heading";
 import { Table } from "components/table";
 import { db } from "config/firebase-config";
-import { collection, deleteDoc, doc, query, where } from "firebase/firestore";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import { toast } from "react-toastify";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
 import debounce from "lodash/debounce";
 import React, { useMemo, useState } from "react";
@@ -13,7 +21,12 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import styled from "styled-components";
 import { shortId } from "utils/shortId";
-import { postStatus, thumbnailPlaceholder, userRole } from "utils/constants";
+import {
+  isStaffRole,
+  postStatus,
+  thumbnailPlaceholder,
+  userRole,
+} from "utils/constants";
 import { useAuthStore } from "store";
 
 const PostInfoStyles = styled.div`
@@ -29,6 +42,47 @@ const PostInfoStyles = styled.div`
     font-weight: 600;
   }
 `;
+
+const StatusTabs = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  button {
+    padding: 6px 14px;
+    border: 1px solid #ddd;
+    border-radius: 100rem;
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  button[aria-pressed="true"] {
+    border-color: ${(props) => props.theme.primary};
+    background: ${(props) => props.theme.primary};
+    color: white;
+  }
+`;
+
+const ModerationActions = styled.div`
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  button {
+    padding: 2px 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    font-size: 12px;
+  }
+`;
+
+const statusTabs = [
+  { label: "All", value: null },
+  { label: "Pending", value: postStatus.PENDING },
+  { label: "Approved", value: postStatus.APPROVED },
+  { label: "Rejected", value: postStatus.REJECTED },
+];
 
 const StatusBadge = styled.span`
   padding: 4px 12px;
@@ -62,6 +116,8 @@ const PostManagePage = () => {
   const navigate = useNavigate();
   const { user: currentUser } = useAuthStore((state) => state);
   const [filter, setFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState(null);
+  const canModerate = isStaffRole(currentUser?.role);
   const uid = currentUser?.uid;
   const role = currentUser?.role;
 
@@ -78,7 +134,12 @@ const PostManagePage = () => {
     return query(colRef, where("user.id", "==", uid));
   }, [uid, role]);
 
+  const countByStatus = (status) =>
+    status === null
+      ? posts.length
+      : posts.filter((post) => post.status === status).length;
   const filteredPosts = posts.filter((post) => {
+    if (statusFilter !== null && post.status !== statusFilter) return false;
     if (!filter) return true;
     const searchTerm = filter.toLowerCase();
     return (
@@ -105,6 +166,18 @@ const PostManagePage = () => {
     });
   };
 
+  const handleSetStatus = async (post, status) => {
+    try {
+      await updateDoc(doc(db, "posts", post.id), { status });
+      toast.success(
+        status === postStatus.APPROVED
+          ? `Approved "${post.title}"`
+          : `Rejected "${post.title}"`
+      );
+    } catch (error) {
+      toast.error("Could not update the post, please try again.");
+    }
+  };
   const getStatusBadge = (status) => {
     switch (status) {
       case postStatus.APPROVED:
@@ -137,6 +210,18 @@ const PostManagePage = () => {
           </span>
         </div>
       </FieldCheckboxes>
+      <StatusTabs role="group" aria-label="Filter by status">
+        {statusTabs.map((tab) => (
+          <button
+            key={tab.label}
+            type="button"
+            aria-pressed={statusFilter === tab.value}
+            onClick={() => setStatusFilter(tab.value)}
+          >
+            {tab.label} ({countByStatus(tab.value)})
+          </button>
+        ))}
+      </StatusTabs>
       <Table>
         <thead>
           <tr>
@@ -170,7 +255,33 @@ const PostManagePage = () => {
                   <CategoryBadge key={index}>{cat.name || cat}</CategoryBadge>
                 ))}
               </td>
-              <td>{getStatusBadge(post.status)}</td>
+              <td>
+                {getStatusBadge(post.status)}
+                {canModerate && (
+                  <ModerationActions>
+                    {post.status !== postStatus.APPROVED && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleSetStatus(post, postStatus.APPROVED)
+                        }
+                      >
+                        Approve
+                      </button>
+                    )}
+                    {post.status !== postStatus.REJECTED && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleSetStatus(post, postStatus.REJECTED)
+                        }
+                      >
+                        Reject
+                      </button>
+                    )}
+                  </ModerationActions>
+                )}
+              </td>
               <td>
                 <FieldCheckboxes>
                   <ActionView

@@ -65,7 +65,11 @@ const PostItemMini = ({ isReverse = false, data, ...props }) => {
     <PostMiniItemStyles reverse={isReverse}>
       <PostThumbnail href={slug} url={thumbnail}></PostThumbnail>
       <div className="post-content">
-        {category && <PostCategory>{category.name}</PostCategory>}
+        {category && (
+          <PostCategory href={`/category/${category.slug}`}>
+            {category.name}
+          </PostCategory>
+        )}
         <PostTitle size="16px" href={slug}>
           {title}
         </PostTitle>

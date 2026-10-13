@@ -1,6 +1,6 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { useAuthStore } from "store";
 import { userRole } from "utils/constants";
@@ -46,6 +46,34 @@ describe("Header", () => {
     rerender(<Header />);
 
     expect(screen.getByRole("link", { name: "Blog" })).toBe(before);
+  });
+
+  it("does not link to pages that don't exist", () => {
+    useMediaQuery.mockReturnValue(true);
+    renderWithRouter(<Header />);
+
+    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute("href", "/");
+    expect(screen.queryByText("Contact")).not.toBeInTheDocument();
+  });
+
+  it("opens the search page with the typed query", () => {
+    useMediaQuery.mockReturnValue(true);
+    const Location = () => <p>at {useLocation().pathname + useLocation().search}</p>;
+    render(
+      <MemoryRouter>
+        <Header />
+        <Routes>
+          <Route path="*" element={<Location />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search posts" }), {
+      target: { value: " da lat " },
+    });
+    fireEvent.submit(screen.getByRole("search"));
+
+    expect(screen.getByText("at /search?q=da%20lat")).toBeInTheDocument();
   });
 });
 

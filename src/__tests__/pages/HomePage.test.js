@@ -18,6 +18,7 @@ vi.mock("firebase/firestore", () => ({
 // Both sections run their own queries; they have their own tests
 vi.mock("module/home/HomeFeature", () => ({ default: () => null }));
 vi.mock("module/home/PostsByCategory", () => ({ default: () => null }));
+vi.mock("module/home/CategoryList", () => ({ default: () => null }));
 
 const makePost = (n) => ({
   title: `Post ${n}`,

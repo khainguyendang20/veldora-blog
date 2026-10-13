@@ -1,7 +1,15 @@
 import React from "react";
 import { render, act, fireEvent, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  onSnapshot,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import { toast } from "react-toastify";
 import { useAuthStore } from "store";
 import { userRole } from "utils/constants";
 import PostManagePage from "pages/manage/PostManagePage";
@@ -14,6 +22,10 @@ vi.mock("firebase/firestore", () => ({
   onSnapshot: vi.fn(),
   doc: vi.fn(),
   deleteDoc: vi.fn(),
+  updateDoc: vi.fn(),
+}));
+vi.mock("react-toastify", () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
 }));
 
 const renderAs = (user) => {
@@ -83,5 +95,64 @@ describe("PostManagePage", () => {
     );
 
     expect(onSnapshot).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("PostManagePage moderation", () => {
+  const posts = [
+    ["p1", "Draft one", 2],
+    ["p2", "Live one", 1],
+    ["p3", "Draft two", 2],
+  ];
+
+  beforeEach(() => {
+    collection.mockReturnValue({ name: "posts" });
+    query.mockReturnValue({ name: "own-posts" });
+    doc.mockImplementation((db, ...path) => ({ path: path.join("/") }));
+    updateDoc.mockResolvedValue();
+    onSnapshot.mockReturnValue(vi.fn());
+  });
+
+  const emitPosts = () => {
+    const onNext = onSnapshot.mock.calls[0][1];
+    act(() =>
+      onNext({
+        forEach: (cb) =>
+          posts.forEach(([id, title, status]) =>
+            cb({ id, data: () => ({ title, status, user: {}, categories: [] }) })
+          ),
+      })
+    );
+  };
+
+  it("filters by status and shows how many posts each has", () => {
+    renderAs({ uid: "u1", role: userRole.MOD });
+    emitPosts();
+
+    fireEvent.click(screen.getByRole("button", { name: "Pending (2)" }));
+
+    expect(screen.getByText("Draft one")).toBeInTheDocument();
+    expect(screen.getByText("Draft two")).toBeInTheDocument();
+    expect(screen.queryByText("Live one")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "All (3)" })).toBeInTheDocument();
+  });
+
+  it("lets staff approve a pending post in one click", async () => {
+    renderAs({ uid: "u1", role: userRole.MOD });
+    emitPosts();
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Approve" })[0]);
+
+    expect(updateDoc).toHaveBeenCalledWith({ path: "posts/p1" }, { status: 1 });
+    await act(() => Promise.resolve());
+    expect(toast.success).toHaveBeenCalledWith('Approved "Draft one"');
+  });
+
+  it("does not offer moderation to regular users", () => {
+    renderAs({ uid: "u2", role: userRole.USER });
+    emitPosts();
+
+    expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Reject" })).not.toBeInTheDocument();
   });
 });

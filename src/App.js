@@ -13,6 +13,9 @@ import Layout from "components/layout/Layout";
 const LoginPage = lazy(() => import("pages/LoginPage"));
 const RegisterPage = lazy(() => import("pages/RegisterPage"));
 const PostDetailPage = lazy(() => import("pages/PostDetailPage"));
+const BlogPage = lazy(() => import("pages/BlogPage"));
+const CategoryPage = lazy(() => import("pages/CategoryPage"));
+const SearchPage = lazy(() => import("pages/SearchPage"));
 const ProfilePage = lazy(() => import("pages/ProfilePage"));
 const DashboardPage = lazy(() => import("pages/manage/DashboardPage"));
 const AddNewPostPage = lazy(() => import("pages/manage/AddNewPostPage"));
@@ -26,6 +29,9 @@ const CategoryManagePage = lazy(() =>
   import("pages/manage/CategoryManagePage")
 );
 const UserManagePage = lazy(() => import("pages/manage/UserManagePage"));
+const ProfileSettingsPage = lazy(() =>
+  import("pages/manage/ProfileSettingsPage")
+);
 
 function App() {
   useAuthListener();
@@ -45,6 +51,12 @@ function AppRoutes() {
           path="/post/:slug"
           element={<PostDetailPage></PostDetailPage>}
         ></Route>
+        <Route path="/blog" element={<BlogPage></BlogPage>}></Route>
+        <Route path="/search" element={<SearchPage></SearchPage>}></Route>
+        <Route
+          path="/category/:slug"
+          element={<CategoryPage></CategoryPage>}
+        ></Route>
         <Route
           path="/profile/:username"
           element={<ProfilePage></ProfilePage>}
@@ -57,6 +69,10 @@ function AppRoutes() {
         <Route
           path="/manage/dashboard"
           element={<DashboardPage></DashboardPage>}
+        ></Route>
+        <Route
+          path="/manage/profile"
+          element={<ProfileSettingsPage></ProfileSettingsPage>}
         ></Route>
         <Route
           path="/manage/add-post"

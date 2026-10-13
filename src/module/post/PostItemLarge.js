@@ -45,7 +45,7 @@ const PostItemLarge = (props) => {
       <div className="post-content">
         <div className="post-categories">
           {(data.categories || []).map((category) => (
-            <PostCategory key={category.id || category.slug} href={`/${category.slug}`}>
+            <PostCategory key={category.id || category.slug} href={`/category/${category.slug}`}>
               {category.name}
             </PostCategory>
           ))}

@@ -19,6 +19,7 @@ import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import { uploadImage } from "utils/uploadImage";
 import ImageUploader from "quill-image-uploader";
+import { isSlugTaken, randomSlugSuffix } from "./slug";
 
 Quill.register("modules/imageUploader", ImageUploader);
 
@@ -50,6 +51,7 @@ const toOption = (category) => ({ label: category.name, value: category.id });
 // and hands it to `onSubmit`; the page decides how to persist it.
 const PostForm = ({
   defaultValues = emptyPost,
+  postId,
   onSubmit,
   onImageDeleted,
   submitLabel,
@@ -60,6 +62,7 @@ const PostForm = ({
   // Only staff moderate; Firestore rules reject status/featured changes
   // from anyone else, so regular users never see those controls
   const canModerate = useAuthStore((state) => isStaffRole(state.user?.role));
+  const uid = useAuthStore((state) => state.user?.uid);
   const [optionValues, setOptionValues] = useState(
     (defaultValues.categories || []).map(toOption)
   );
@@ -93,8 +96,25 @@ const PostForm = ({
     getCategories();
   }, []);
 
+  // Two posts with one slug would make one of them unreachable. A slug
+  // typed by hand is the author's choice, so ask for another; one made from
+  // the title just gets a short random suffix.
+  const resolveSlug = async (values) => {
+    const customSlug = values.slug?.trim();
+    const slug = slugify(customSlug || values.title, { lower: true });
+    const checkOptions = { postId, uid, isStaff: canModerate };
+    if (!(await isSlugTaken(slug, checkOptions))) return slug;
+    if (customSlug) return null;
+    return `${slug}-${randomSlugSuffix()}`;
+  };
+
   const handleSavePost = async (values) => {
     try {
+      const slug = await resolveSlug(values);
+      if (!slug) {
+        toast.error("This slug is already used by another post.");
+        return;
+      }
       const categories = await Promise.all(
         optionValues.map(async (option) => {
           const data = (await getDoc(doc(db, "categories", option.value))).data();
@@ -104,7 +124,7 @@ const PostForm = ({
       await onSubmit({
         ...values,
         thumbnail: image,
-        slug: slugify(values.slug || values.title, { lower: true }),
+        slug,
         status: Number(values.status),
         categories,
         categoryIds: categories.map((category) => category.id),

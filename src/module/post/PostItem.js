@@ -21,7 +21,11 @@ const PostItem = ({ data, ...props }) => {
   return (
     <PostItemStyles>
       <PostThumbnail href={slug} url={thumbnail}>
-        {category && <PostCategory absolute>{category.name}</PostCategory>}
+        {category && (
+          <PostCategory absolute href={`/category/${category.slug}`}>
+            {category.name}
+          </PostCategory>
+        )}
       </PostThumbnail>
       <div className="post-content">
         <PostTitle href={slug}>{title}</PostTitle>

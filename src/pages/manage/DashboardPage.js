@@ -1,10 +1,15 @@
 import Heading from "components/layout/Heading";
 import { db } from "config/firebase-config";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import {
+  collection,
+  getCountFromServer,
+  query,
+  where,
+} from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useAuthStore } from "store";
-import { isStaffRole, userRole } from "utils/constants";
+import { isStaffRole, postStatus, userRole } from "utils/constants";
 
 const DashboardStyles = styled.div`
   .stats {
@@ -41,35 +46,50 @@ const DashboardStyles = styled.div`
   }
 `;
 
+// Which counts each role sees; Firestore rules only let staff read other
+// users' unpublished posts
+const statCards = [
+  { key: "myPosts", label: "My Posts", visible: () => true },
+  { key: "pending", label: "Pending review", visible: isStaffRole },
+  { key: "posts", label: "Total Posts", visible: isStaffRole },
+  { key: "categories", label: "Categories", visible: isStaffRole },
+  { key: "users", label: "Users", visible: (role) => role === userRole.ADMIN },
+];
+
 const DashboardPage = () => {
   const { user } = useAuthStore((state) => state);
-  const [stats, setStats] = useState({
-    posts: 0,
-    categories: 0,
-    users: 0,
-    myPosts: 0,
-  });
+  const uid = user?.uid;
+  const role = user?.role;
+  const [stats, setStats] = useState({});
 
   useEffect(() => {
-    if (!user) return;
+    if (!uid) return;
+    let cancelled = false;
     const postsRef = collection(db, "posts");
-    const count = (ref, key) =>
-      onSnapshot(ref, (snapshot) => {
-        setStats((prev) => ({ ...prev, [key]: snapshot.size }));
-      });
-    const unsubscribers = [
-      count(query(postsRef, where("user.id", "==", user.uid)), "myPosts"),
-    ];
-    // Firestore rules only let staff read unpublished posts of other users
-    if (isStaffRole(user.role)) {
-      unsubscribers.push(count(postsRef, "posts"));
-      unsubscribers.push(count(collection(db, "categories"), "categories"));
-    }
-    if (user.role === userRole.ADMIN) {
-      unsubscribers.push(count(collection(db, "users"), "users"));
-    }
-    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
-  }, [user]);
+    const queries = {
+      myPosts: query(postsRef, where("user.id", "==", uid)),
+      pending: query(postsRef, where("status", "==", postStatus.PENDING)),
+      posts: postsRef,
+      categories: collection(db, "categories"),
+      users: collection(db, "users"),
+    };
+    // Count aggregations cost one read per 1000 documents, where a
+    // listener on the whole collection read every document
+    const visible = statCards.filter((card) => card.visible(role));
+    Promise.all(
+      visible.map(async ({ key }) => {
+        const snapshot = await getCountFromServer(queries[key]);
+        return [key, snapshot.data().count];
+      })
+    )
+      .then((counts) => {
+        if (!cancelled) setStats(Object.fromEntries(counts));
+      })
+      .catch((error) => console.error(error));
+    return () => {
+      cancelled = true;
+    };
+  }, [uid, role]);
 
   return (
     <DashboardStyles>
@@ -78,28 +98,14 @@ const DashboardPage = () => {
         <p>Welcome back, {user?.fullname || user?.displayName || "User"}!</p>
       </div>
       <div className="stats">
-        <div className="stat-card">
-          <div className="stat-card__number">{stats.myPosts}</div>
-          <div className="stat-card__label">My Posts</div>
-        </div>
-        {(user?.role === userRole.ADMIN || user?.role === userRole.MOD) && (
-          <>
-            <div className="stat-card">
-              <div className="stat-card__number">{stats.posts}</div>
-              <div className="stat-card__label">Total Posts</div>
+        {statCards
+          .filter((card) => card.visible(role))
+          .map((card) => (
+            <div className="stat-card" key={card.key}>
+              <div className="stat-card__number">{stats[card.key] ?? "–"}</div>
+              <div className="stat-card__label">{card.label}</div>
             </div>
-            <div className="stat-card">
-              <div className="stat-card__number">{stats.categories}</div>
-              <div className="stat-card__label">Categories</div>
-            </div>
-          </>
-        )}
-        {user?.role === userRole.ADMIN && (
-          <div className="stat-card">
-            <div className="stat-card__number">{stats.users}</div>
-            <div className="stat-card__label">Users</div>
-          </div>
-        )}
+          ))}
       </div>
     </DashboardStyles>
   );

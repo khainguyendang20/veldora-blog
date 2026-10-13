@@ -1,4 +1,4 @@
-import { ActionDelete, ActionEdit } from "components/actions";
+import { ActionDelete } from "components/actions";
 import { Toggle } from "components/checkbox";
 import { FieldCheckboxes } from "components/field";
 import { IconSearch } from "components/icons";
@@ -238,7 +238,6 @@ const UserManagePage = () => {
               <td>
                 {user.id !== currentUser?.uid && (
                   <FieldCheckboxes>
-                    <ActionEdit></ActionEdit>
                     <ActionDelete
                       onClick={() => handleDeleteUser(user.id)}
                     ></ActionDelete>

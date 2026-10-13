@@ -58,6 +58,7 @@ const UpdatePostPage = () => {
         <PostForm
           key={postId}
           defaultValues={post}
+          postId={postId}
           onSubmit={handleUpdatePost}
           onImageDeleted={handleImageDeleted}
           submitLabel="Update Post"

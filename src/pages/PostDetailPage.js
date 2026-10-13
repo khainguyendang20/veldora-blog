@@ -3,13 +3,15 @@ import { collection, query, where } from "firebase/firestore";
 import DOMPurify from "dompurify";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
 import React, { useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
 import NotFoundPage from "./NotFoundPage";
 import { PageLoading } from "components/loading";
 import PostThumbnail from "module/post/components/PostThumbnail";
 import PostMeta from "module/post/components/PostMeta";
 import AuthorBox from "module/post/components/AuthorBox";
+import PostCategory from "module/post/components/PostCategory";
+import PostRelated from "module/post/PostRelated";
 import { formatDate } from "utils/formatDate";
 import { useAuthStore } from "store";
 import { isStaffRole, postStatus } from "utils/constants";
@@ -35,6 +37,24 @@ const PostDetailStyles = styled.div`
       font-weight: bold;
       font-size: 36px;
       margin-bottom: 16px;
+    }
+    &-categories {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    &-edit {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 6px 16px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    &-info {
+      text-align: center;
     }
     &-info .post-meta {
       margin: 0 auto;
@@ -114,6 +134,7 @@ const PostDetailPage = () => {
   const { slug } = useParams();
   const isAuthLoading = useAuthStore((state) => state.isAuthLoading);
   const isStaff = useAuthStore((state) => isStaffRole(state.user?.role));
+  const uid = useAuthStore((state) => state.user?.uid);
   // Firestore rules only let everyone else read approved posts, and reject
   // any query that could return something else. Wait for the session so
   // staff don't briefly see "not found" for an unapproved post.
@@ -131,6 +152,7 @@ const PostDetailPage = () => {
   if (slug && (isAuthLoading || loading)) return <PageLoading></PageLoading>;
   if (!postInfo) return <NotFoundPage></NotFoundPage>;
   const { user } = postInfo;
+  const canEdit = isStaff || (uid && user?.id === uid);
   return (
     <PostDetailStyles className="container">
       <div className="container">
@@ -140,23 +162,31 @@ const PostDetailPage = () => {
             className="post-feature"
           ></PostThumbnail>
           <div className="post-info">
-            {/* <PostCategory className="mb-6" to={postInfo.category?.slug}>
-              {postInfo.category?.name}
-            </PostCategory> */}
+            {postInfo.categories?.length > 0 && (
+              <div className="post-categories">
+                {postInfo.categories.map((category) => (
+                  <PostCategory
+                    key={category.id}
+                    href={`/category/${category.slug}`}
+                  >
+                    {category.name}
+                  </PostCategory>
+                ))}
+              </div>
+            )}
             <h1 className="post-heading">{postInfo.title}</h1>
             <PostMeta
               date={formatDate(postInfo.createdAt)}
               auth={postInfo.user}
             ></PostMeta>
-            {/* Check if user role is ADMIN then can edit the post */}
-            {/* {userInfo?.role === userRole.ADMIN && (
+            {canEdit && (
               <Link
                 to={`/manage/update-post?id=${postInfo.id}`}
-                className="inline-block px-4 py-2 mt-5 text-sm border border-gray-400 rounded-md"
+                className="post-edit"
               >
                 Edit post
               </Link>
-            )} */}
+            )}
           </div>
         </div>
         <div className="post-content">
@@ -169,7 +199,10 @@ const PostDetailPage = () => {
           ></div>
           <AuthorBox userId={user?.id}></AuthorBox>
         </div>
-        {/* <PostRelated categoryId={postInfo?.category?.id}></PostRelated> */}
+        <PostRelated
+          categoryId={postInfo.categories?.[0]?.id}
+          postId={postInfo.id}
+        ></PostRelated>
       </div>
     </PostDetailStyles>
   );
