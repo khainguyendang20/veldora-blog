@@ -1,7 +1,7 @@
 import Heading from "components/layout/Heading";
 import { db } from "config/firebase-config";
 import { collection, limit, orderBy, query, where } from "firebase/firestore";
-import useFirestoreQuery from "hooks/useFirestoreQuery";
+import useCachedQuery from "hooks/useCachedQuery";
 import React from "react";
 import styled from "styled-components";
 import { postStatus } from "utils/constants";
@@ -24,7 +24,8 @@ const PostRelatedStyles = styled.div`
 
 // Newest approved posts sharing the post's first category
 const PostRelated = ({ categoryId, postId }) => {
-  const { data: posts } = useFirestoreQuery(
+  const { data: posts } = useCachedQuery(
+    `related:${categoryId}`,
     () =>
       categoryId
         ? query(

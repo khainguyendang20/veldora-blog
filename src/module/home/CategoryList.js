@@ -1,7 +1,7 @@
 import Heading from "components/layout/Heading";
 import { db } from "config/firebase-config";
 import { collection, query, where } from "firebase/firestore";
-import useFirestoreQuery from "hooks/useFirestoreQuery";
+import useCachedQuery from "hooks/useCachedQuery";
 import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
@@ -23,7 +23,8 @@ const CategoryListStyles = styled.ul`
 
 // Sidebar links to every approved category
 const CategoryList = () => {
-  const { data: categories } = useFirestoreQuery(
+  const { data: categories } = useCachedQuery(
+    "categories:approved",
     () =>
       query(
         collection(db, "categories"),

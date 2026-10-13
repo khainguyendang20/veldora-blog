@@ -1,7 +1,7 @@
 import React from "react";
-import { render, act, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { onSnapshot, query } from "firebase/firestore";
+import { getDocs, query } from "firebase/firestore";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import HomeFeature from "module/home/HomeFeature";
 
@@ -11,7 +11,8 @@ vi.mock("firebase/firestore", () => ({
   query: vi.fn(),
   where: vi.fn(),
   limit: vi.fn(),
-  onSnapshot: vi.fn(),
+  getDocs: vi.fn(),
+  getDocsFromCache: vi.fn(),
 }));
 vi.mock("@uidotdev/usehooks", () => ({ useMediaQuery: vi.fn() }));
 // Swiper needs real layout APIs that jsdom lacks.
@@ -43,14 +44,12 @@ const makePost = (id) => ({
   user: { fullname: "Author", username: "author" },
 });
 
-const emitPosts = (ids) => {
-  const onNext = onSnapshot.mock.calls[onSnapshot.mock.calls.length - 1][1];
-  act(() =>
-    onNext({
-      forEach: (cb) => ids.forEach((id) => cb({ id, data: () => makePost(id) })),
-    })
-  );
-};
+// Featured posts are a one-off cached read (useCachedQuery)
+const servePosts = (ids) =>
+  getDocs.mockResolvedValue({
+    empty: ids.length === 0,
+    docs: ids.map((id) => ({ id, data: () => makePost(id) })),
+  });
 
 const ui = (
   <MemoryRouter>
@@ -62,37 +61,25 @@ describe("HomeFeature", () => {
   // mockReset (vite.config.mjs) clears implementations, so set them per test.
   beforeEach(() => {
     query.mockReturnValue({ name: "featured-posts" });
-    onSnapshot.mockReturnValue(vi.fn());
+    servePosts(["a", "b"]);
   });
 
-  it("keeps a single Firestore subscription across breakpoints", () => {
+  it("reads the featured posts once across breakpoints", async () => {
     setScreen("desktop");
     const { rerender } = render(ui);
+    await screen.findByText("Post a");
 
     setScreen("tablet");
     rerender(ui);
 
-    expect(onSnapshot).toHaveBeenCalledTimes(1);
+    expect(getDocs).toHaveBeenCalledTimes(1);
   });
 
-  it("unsubscribes on unmount", () => {
-    const unsubscribe = vi.fn();
-    onSnapshot.mockReturnValue(unsubscribe);
-    setScreen("desktop");
-    const { unmount } = render(ui);
-
-    unmount();
-
-    expect(unsubscribe).toHaveBeenCalledTimes(1);
-  });
-
-  it("shows a grid without the carousel on desktop", () => {
+  it("shows a grid without the carousel on desktop", async () => {
     setScreen("desktop");
     render(ui);
 
-    emitPosts(["a", "b"]);
-
-    expect(screen.getByText("Post a")).toBeInTheDocument();
+    expect(await screen.findByText("Post a")).toBeInTheDocument();
     expect(screen.queryByTestId("swiper")).not.toBeInTheDocument();
   });
 
@@ -103,8 +90,6 @@ describe("HomeFeature", () => {
     setScreen(size);
     render(ui);
 
-    emitPosts(["a", "b"]);
-
     const swiper = await screen.findByTestId("swiper");
     expect(swiper).toHaveAttribute("data-slides", n);
     expect(swiper.textContent).toContain("Post a");
@@ -114,8 +99,6 @@ describe("HomeFeature", () => {
     const consoleError = vi.spyOn(console, "error").mockImplementation();
     setScreen("tablet");
     render(ui);
-
-    emitPosts(["a", "b"]);
     await screen.findByTestId("swiper");
 
     const keyWarnings = consoleError.mock.calls.filter(([msg]) =>

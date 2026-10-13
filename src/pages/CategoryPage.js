@@ -2,7 +2,7 @@ import Heading from "components/layout/Heading";
 import { PageLoading } from "components/loading";
 import { db } from "config/firebase-config";
 import { collection, orderBy, query, where } from "firebase/firestore";
-import useFirestoreQuery from "hooks/useFirestoreQuery";
+import useCachedQuery from "hooks/useCachedQuery";
 import usePaginatedQuery from "hooks/usePaginatedQuery";
 import HomeSection from "module/home/HomeSection";
 import PostList from "module/post/PostList";
@@ -15,7 +15,8 @@ import useDocumentMeta from "hooks/useDocumentMeta";
 // Approved posts of one approved category, newest first
 const CategoryPage = () => {
   const { slug } = useParams();
-  const { data: categories, loading: categoryLoading } = useFirestoreQuery(
+  const { data: categories, loading: categoryLoading } = useCachedQuery(
+    `category:${slug}`,
     () =>
       query(
         collection(db, "categories"),

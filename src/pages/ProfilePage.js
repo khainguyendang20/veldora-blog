@@ -1,6 +1,6 @@
 import { db } from "config/firebase-config";
 import { collection, query, where } from "firebase/firestore";
-import useFirestoreQuery from "hooks/useFirestoreQuery";
+import useCachedQuery from "hooks/useCachedQuery";
 import React from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
@@ -59,7 +59,8 @@ const ProfilePageStyles = styled.div`
 
 const ProfilePage = () => {
   const { username } = useParams();
-  const { data: users } = useFirestoreQuery(
+  const { data: users } = useCachedQuery(
+    `profile:${username}`,
     () => query(collection(db, "users"), where("username", "==", username)),
     [username]
   );

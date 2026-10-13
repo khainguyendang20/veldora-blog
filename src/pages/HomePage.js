@@ -7,16 +7,10 @@ import HomeSection from "module/home/HomeSection";
 import HomeFeature from "module/home/HomeFeature";
 import CategoryList from "module/home/CategoryList";
 import styled from "styled-components";
-import {
-  collection,
-  limit,
-  orderBy,
-  query,
-  where,
-} from "firebase/firestore";
+import { collection, limit, orderBy, query, where } from "firebase/firestore";
 import shuffle from "lodash/shuffle";
 import { PageLoading } from "components/loading";
-import useFirestoreQuery from "hooks/useFirestoreQuery";
+import useCachedQuery from "hooks/useCachedQuery";
 import { homeCategory, postStatus } from "utils/constants";
 import useDocumentMeta from "hooks/useDocumentMeta";
 
@@ -75,7 +69,12 @@ const poolSize = 24;
 
 const HomePage = () => {
   useDocumentMeta();
-  const { data: posts, loading, error } = useFirestoreQuery(
+  const {
+    data: posts,
+    loading,
+    error,
+  } = useCachedQuery(
+    "home:posts",
     () =>
       query(
         collection(db, "posts"),
