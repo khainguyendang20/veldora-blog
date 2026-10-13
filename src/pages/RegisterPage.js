@@ -19,6 +19,7 @@ import { Link, useNavigate } from "react-router-dom";
 import LayoutAuthentication from "layout/LayoutAuthentication";
 import slugify from "slugify";
 import { avatarDefault, userRole, userStatus } from "utils/constants";
+import { authErrorMessage } from "utils/authErrorMessage";
 
 const schema = yup.object({
   fullname: yup.string().required("Please enter your fullname"),
@@ -37,35 +38,31 @@ const RegisterPage = () => {
   const {
     control,
     handleSubmit,
-    formState: { errors, isValid, isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm({ mode: "onChange", resolver: yupResolver(schema) });
   const handleSignUp = async (values) => {
-    if (!isValid) return;
-    // return new Promise((resolve) => setTimeout(() => resolve(), 3000));
-    await createUserWithEmailAndPassword(auth, values.email, values.password);
-    await updateProfile(auth.currentUser, { displayName: values.fullname });
-    toast.success("Registered successfully!!");
-    // const colRef = collection(db, "users");
-    // await addDoc(colRef, {
-    //   fullname: values.fullname,
-    //   email: values.email,
-    //   password: values.password,
-    // });
-    await setDoc(doc(db, "users", auth.currentUser.uid), {
-      fullname: values.fullname,
-      email: values.email,
-      avatar: avatarDefault,
-      username: slugify(
-        values.fullname + "-" + auth.currentUser.uid.slice(0, 10),
-        {
-          lower: true,
-        }
-      ),
-      role: userRole.USER,
-      status: userStatus.ACTIVE,
-      createdAt: serverTimestamp(),
-    });
-    navigate("/");
+    try {
+      await createUserWithEmailAndPassword(auth, values.email, values.password);
+      await updateProfile(auth.currentUser, { displayName: values.fullname });
+      await setDoc(doc(db, "users", auth.currentUser.uid), {
+        fullname: values.fullname,
+        email: values.email,
+        avatar: avatarDefault,
+        username: slugify(
+          values.fullname + "-" + auth.currentUser.uid.slice(0, 10),
+          {
+            lower: true,
+          }
+        ),
+        role: userRole.USER,
+        status: userStatus.ACTIVE,
+        createdAt: serverTimestamp(),
+      });
+      toast.success("Registered successfully!");
+      navigate("/");
+    } catch (error) {
+      toast.error(authErrorMessage(error));
+    }
   };
   return (
     <LayoutAuthentication>

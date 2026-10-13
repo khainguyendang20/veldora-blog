@@ -58,7 +58,7 @@ describe("constants", () => {
 
   describe("itemPerPage", () => {
     it("should have MANAGE value", () => {
-      expect(itemPerPage.MANAGE).toBe(1);
+      expect(itemPerPage.MANAGE).toBe(10);
     });
   });
 

@@ -7,6 +7,7 @@ import { avatarDefault } from "utils/constants";
 const AuthorBox = ({ userId = "" }) => {
   const [user, setUser] = useState({});
   useEffect(() => {
+    if (!userId) return;
     async function fetchUserData() {
       const docRef = doc(db, "users", userId);
       const docSnapshot = await getDoc(docRef);

@@ -44,7 +44,7 @@ const PostMetaStyles = styled.div`
   }
 `;
 
-const PostMeta = ({ color = "black", auth, date = "Dec 24, 2016" }) => {
+const PostMeta = ({ color = "black", auth, date }) => {
   return (
     <PostMetaStyles className="post-meta" color={color}>
       <Link
@@ -53,16 +53,18 @@ const PostMeta = ({ color = "black", auth, date = "Dec 24, 2016" }) => {
       >
         <Image className="post-auth-avt" src={auth?.avatar} fallback={avatarDefault} />
         <span className="post-auth-name">
-          {auth?.fullname ? auth.fullname : "im_dev2002"}
+          {auth?.fullname || "Unknown author"}
         </span>
       </Link>
 
-      <div className="post-date">
-        <span className="post-date-icon">
-          <IconClock size={18} color={color}></IconClock>
-        </span>
-        {date}
-      </div>
+      {date && (
+        <div className="post-date">
+          <span className="post-date-icon">
+            <IconClock size={18} color={color}></IconClock>
+          </span>
+          {date}
+        </div>
+      )}
     </PostMetaStyles>
   );
 };

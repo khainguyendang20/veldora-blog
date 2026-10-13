@@ -74,4 +74,26 @@ describe("CategoryManagePage", () => {
     expect(screen.getByText("First")).toBeInTheDocument();
     expect(onSnapshot).toHaveBeenCalledTimes(listenerCount);
   });
+
+  it("searches every category by name or slug, ignoring case", async () => {
+    renderPage();
+    const all = listeners.find(({ q }) => q.name === "categories");
+    const firstPage = listeners.find(({ q }) => q.name === "first-page");
+    all.emit(
+      makeSnapshot([
+        { id: "tech", name: "Technology" },
+        { id: "life", name: "Lifestyle" },
+      ])
+    );
+    firstPage.emit(makeSnapshot([{ id: "tech", name: "Technology" }]));
+
+    fireEvent.change(screen.getByPlaceholderText("Type to search..."), {
+      target: { value: "LIFE" },
+    });
+
+    // Found although it is not on the loaded page
+    expect(await screen.findByText("Lifestyle")).toBeInTheDocument();
+    expect(screen.queryByText("Technology")).not.toBeInTheDocument();
+    expect(screen.queryByText("Load more")).not.toBeInTheDocument();
+  });
 });

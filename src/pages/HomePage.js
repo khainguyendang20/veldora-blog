@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { db } from "config/firebase-config";
 import Heading from "components/layout/Heading";
 import PostItem from "module/post/PostItem";
@@ -6,9 +6,17 @@ import PostsByCategory from "module/home/PostsByCategory";
 import HomeSection from "module/home/HomeSection";
 import HomeFeature from "module/home/HomeFeature";
 import styled from "styled-components";
-import { collection, limit, query, where } from "firebase/firestore";
+import {
+  collection,
+  limit,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore";
+import shuffle from "lodash/shuffle";
+import { PageLoading } from "components/loading";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
-import { homeCategory } from "utils/constants";
+import { homeCategory, postStatus } from "utils/constants";
 
 const RandomPostsStyles = styled.div`
   display: grid;
@@ -57,31 +65,58 @@ const HomeMainStyles = styled.div`
   }
 `;
 
-const postsPerPage = 9;
+const recentCount = 9;
+const randomCount = 4;
+// Recent posts take the newest; random ones are drawn from the rest of the
+// pool, so the two sections never show the same post
+const poolSize = 24;
 
 const HomePage = () => {
-  const { data: posts } = useFirestoreQuery(
+  const { data: posts, loading, error } = useFirestoreQuery(
     () =>
       query(
         collection(db, "posts"),
-        where("status", "==", 1),
-        limit(postsPerPage)
-        // orderBy("createdAt", "desc")
+        where("status", "==", postStatus.APPROVED),
+        orderBy("createdAt", "desc"),
+        limit(poolSize)
       ),
     []
   );
-  if (posts.length <= 0) return;
+  const recentPosts = posts.slice(0, recentCount);
+  const randomPosts = useMemo(
+    () => shuffle(posts.slice(recentCount)).slice(0, randomCount),
+    [posts]
+  );
+  if (loading) return <PageLoading></PageLoading>;
+  if (error) {
+    return (
+      <HomeSection>
+        <Heading>Could not load posts</Heading>
+        <p>Please try again in a moment.</p>
+      </HomeSection>
+    );
+  }
+  if (!posts.length) {
+    return (
+      <HomeSection>
+        <Heading>No posts yet</Heading>
+        <p>Check back soon for new articles.</p>
+      </HomeSection>
+    );
+  }
   return (
     <>
       <HomeFeature></HomeFeature>
-      <HomeSection>
-        <Heading>Random Posts</Heading>
-        <RandomPostsStyles>
-          {posts.slice(0, 4).map((post) => (
-            <PostItem data={post} key={post.id}></PostItem>
-          ))}
-        </RandomPostsStyles>
-      </HomeSection>
+      {randomPosts.length > 0 && (
+        <HomeSection>
+          <Heading>Random Posts</Heading>
+          <RandomPostsStyles>
+            {randomPosts.map((post) => (
+              <PostItem data={post} key={post.id}></PostItem>
+            ))}
+          </RandomPostsStyles>
+        </HomeSection>
+      )}
       <div
         style={{
           width: "100%",
@@ -100,7 +135,7 @@ const HomePage = () => {
           <div className="home__main">
             <Heading>Recent Posts</Heading>
             <div className="home__recent-posts">
-              {posts.map((post) => (
+              {recentPosts.map((post) => (
                 <PostItem data={post} key={post.id}></PostItem>
               ))}
             </div>

@@ -1,5 +1,11 @@
 import { db } from "config/firebase-config";
-import { collection, limit, query, where } from "firebase/firestore";
+import {
+  collection,
+  limit,
+  orderBy,
+  query,
+  where,
+} from "firebase/firestore";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
 import PostItemLarge from "module/post/PostItemLarge";
 import PostItemMini from "module/post/PostItemMini";
@@ -37,7 +43,7 @@ const PostsByCategory = ({ categoryId }) => {
         collection(db, "posts"),
         where("status", "==", 1),
         where("categoryIds", "array-contains", categoryId),
-        // orderBy("createdAt", "desc"),
+        orderBy("createdAt", "desc"),
         limit(5)
       ),
     [categoryId]

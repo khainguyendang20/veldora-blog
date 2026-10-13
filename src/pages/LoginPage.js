@@ -13,6 +13,7 @@ import { auth } from "config/firebase-config";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "store";
 import { toast } from "react-toastify";
+import { authErrorMessage } from "utils/authErrorMessage";
 
 const schema = yup.object({
   email: yup
@@ -31,15 +32,14 @@ const LoginPage = () => {
   const {
     control,
     handleSubmit,
-    formState: { errors, isValid, isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm({ mode: "onChange", resolver: yupResolver(schema) });
   const handleLogin = async (values) => {
     try {
-      if (!isValid) return;
       await signInWithEmailAndPassword(auth, values.email, values.password);
       navigate("/");
     } catch (error) {
-      toast.error(error.message || error);
+      toast.error(authErrorMessage(error));
     }
   };
   useEffect(() => {
@@ -82,7 +82,7 @@ const LoginPage = () => {
           </Link>
         </div>
         <Button type="submit" disabled={isSubmitting} isLoading={isSubmitting}>
-          Sign Up
+          Sign In
         </Button>
       </form>
     </LayoutAuthentication>

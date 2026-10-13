@@ -13,11 +13,20 @@ export default function useFirestoreQuery(buildQuery, deps) {
       return;
     }
     setState((prev) => ({ ...prev, loading: true }));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = [];
-      snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));
-      setState({ data, loading: false });
-    });
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const data = [];
+        snapshot.forEach((doc) => data.push({ id: doc.id, ...doc.data() }));
+        setState({ data, loading: false });
+      },
+      (error) => {
+        // Usually a missing composite index (the message links to create
+        // it) or a query that Firestore rules reject
+        console.error(error);
+        setState({ data: [], loading: false, error });
+      }
+    );
     return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);

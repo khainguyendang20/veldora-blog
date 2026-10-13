@@ -6,6 +6,7 @@ import React, { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import NotFoundPage from "./NotFoundPage";
+import { PageLoading } from "components/loading";
 import PostThumbnail from "module/post/components/PostThumbnail";
 import PostMeta from "module/post/components/PostMeta";
 import AuthorBox from "module/post/components/AuthorBox";
@@ -111,22 +112,24 @@ const PostDetailStyles = styled.div`
 
 const PostDetailPage = () => {
   const { slug } = useParams();
+  const isAuthLoading = useAuthStore((state) => state.isAuthLoading);
   const isStaff = useAuthStore((state) => isStaffRole(state.user?.role));
   // Firestore rules only let everyone else read approved posts, and reject
-  // any query that could return something else
-  const { data: posts } = useFirestoreQuery(() => {
-    if (!slug) return null;
+  // any query that could return something else. Wait for the session so
+  // staff don't briefly see "not found" for an unapproved post.
+  const { data: posts, loading } = useFirestoreQuery(() => {
+    if (!slug || isAuthLoading) return null;
     const bySlug = query(collection(db, "posts"), where("slug", "==", slug));
     return isStaff
       ? bySlug
       : query(bySlug, where("status", "==", postStatus.APPROVED));
-  }, [slug, isStaff]);
-  const postInfo = posts[posts.length - 1] || {};
+  }, [slug, isStaff, isAuthLoading]);
+  const postInfo = posts[posts.length - 1];
   useEffect(() => {
     document.body.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [slug]);
-  if (!slug) return <NotFoundPage></NotFoundPage>;
-  if (!postInfo.title) return null;
+  if (slug && (isAuthLoading || loading)) return <PageLoading></PageLoading>;
+  if (!postInfo) return <NotFoundPage></NotFoundPage>;
   const { user } = postInfo;
   return (
     <PostDetailStyles className="container">
@@ -164,7 +167,7 @@ const PostDetailPage = () => {
               __html: DOMPurify.sanitize(postInfo.content || ""),
             }}
           ></div>
-          <AuthorBox userId={user.id}></AuthorBox>
+          <AuthorBox userId={user?.id}></AuthorBox>
         </div>
         {/* <PostRelated categoryId={postInfo?.category?.id}></PostRelated> */}
       </div>
