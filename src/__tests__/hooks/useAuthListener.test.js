@@ -1,7 +1,7 @@
 import React from "react";
 import { render, act } from "@testing-library/react";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { onSnapshot, query } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { useAuthStore } from "store";
 import useAuthListener from "hooks/useAuthListener";
@@ -13,9 +13,7 @@ vi.mock("firebase/auth", () => ({
 }));
 vi.mock("react-toastify", () => ({ toast: { error: vi.fn() } }));
 vi.mock("firebase/firestore", () => ({
-  collection: vi.fn(),
-  query: vi.fn(),
-  where: vi.fn(),
+  doc: vi.fn(),
   onSnapshot: vi.fn(),
 }));
 
@@ -24,10 +22,7 @@ const Probe = () => {
   return null;
 };
 
-const docsSnapshot = (docs) => ({
-  empty: docs.length === 0,
-  forEach: (cb) => docs.forEach((data) => cb({ data: () => data })),
-});
+const profileSnapshot = (data) => ({ data: () => data });
 
 describe("useAuthListener", () => {
   let emitAuth;
@@ -42,7 +37,7 @@ describe("useAuthListener", () => {
       return unsubscribeAuth;
     });
     userListeners = [];
-    query.mockImplementation(() => ({ name: "user-by-email" }));
+    doc.mockImplementation((db, ...path) => ({ path: path.join("/") }));
     onSnapshot.mockImplementation((q, cb) => {
       const unsubscribe = vi.fn();
       userListeners.push({ emit: (s) => act(() => cb(s)), unsubscribe });
@@ -53,7 +48,9 @@ describe("useAuthListener", () => {
   it("merges the auth user with their profile document", () => {
     render(<Probe />);
     emitAuth({ uid: "1", email: "a@b.c" });
-    userListeners[0].emit(docsSnapshot([{ fullname: "Alice", role: 1 }]));
+    // Read by uid: profiles no longer store the email
+    expect(onSnapshot.mock.calls[0][0]).toEqual({ path: "users/1" });
+    userListeners[0].emit(profileSnapshot({ fullname: "Alice", role: 1 }));
 
     expect(useAuthStore.getState().user).toEqual({
       uid: "1",
@@ -75,7 +72,7 @@ describe("useAuthListener", () => {
   it("resolves to a null user when the profile document is missing", () => {
     render(<Probe />);
     emitAuth({ uid: "1", email: "a@b.c" });
-    userListeners[0].emit(docsSnapshot([]));
+    userListeners[0].emit(profileSnapshot(undefined));
 
     expect(useAuthStore.getState().user).toBeNull();
     expect(useAuthStore.getState().isAuthLoading).toBe(false);
@@ -84,7 +81,7 @@ describe("useAuthListener", () => {
   it("signs banned users out", () => {
     render(<Probe />);
     emitAuth({ uid: "1", email: "a@b.c" });
-    userListeners[0].emit(docsSnapshot([{ fullname: "Alice", status: 3 }]));
+    userListeners[0].emit(profileSnapshot({ fullname: "Alice", status: 3 }));
 
     expect(useAuthStore.getState().user).toBeNull();
     expect(signOut).toHaveBeenCalledTimes(1);

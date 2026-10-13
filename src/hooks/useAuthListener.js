@@ -1,13 +1,13 @@
 import { auth, db } from "config/firebase-config";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 import { useEffect } from "react";
 import { toast } from "react-toastify";
 import { useAuthStore } from "store";
 import { userStatus } from "utils/constants";
 
 // Keeps the auth store in sync with the Firebase session and the
-// signed-in user's profile document.
+// signed-in user's profile document (users/{uid}).
 export default function useAuthListener() {
   const setCurrentUser = useAuthStore((state) => state.setCurrentUser);
 
@@ -20,15 +20,10 @@ export default function useAuthListener() {
         setCurrentUser(null);
         return;
       }
-      const userQuery = query(
-        collection(db, "users"),
-        where("email", "==", user.email)
-      );
-      unsubscribeUser = onSnapshot(userQuery, (snapshot) => {
-        let profile = null;
-        snapshot.forEach((doc) => {
-          profile = doc.data();
-        });
+      unsubscribeUser = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
+        const profile = snapshot.data();
+        // Also the case for a moment right after sign-up, until the
+        // profile is written
         if (!profile) {
           setCurrentUser(null);
           return;

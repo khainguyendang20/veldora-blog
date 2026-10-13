@@ -79,10 +79,24 @@ const UserManagePage = () => {
   const { user: currentUser } = useAuthStore((state) => state);
   const [filter, setFilter] = useState("");
   // Route is admin-only (RequireRole in App.js)
-  const { data: users } = useFirestoreQuery(
+  const { data: profiles } = useFirestoreQuery(
     () => collection(db, "users"),
     []
   );
+  // Emails live apart from the public profiles; only admins read them all
+  const { data: emails } = useFirestoreQuery(
+    () => collection(db, "userEmails"),
+    []
+  );
+  const users = useMemo(() => {
+    const emailById = Object.fromEntries(
+      emails.map((entry) => [entry.id, entry.email])
+    );
+    return profiles.map((profile) => ({
+      ...profile,
+      email: emailById[profile.id] || profile.email,
+    }));
+  }, [profiles, emails]);
 
   const handleFilterChange = useMemo(
     () => debounce((e) => setFilter(e.target.value), 500),

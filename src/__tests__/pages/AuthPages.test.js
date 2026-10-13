@@ -6,7 +6,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { setDoc } from "firebase/firestore";
+import { createUserProfile } from "module/auth/userProfile";
 import { toast } from "react-toastify";
 import { useAuthStore } from "store";
 import { theme } from "utils/constants";
@@ -19,11 +19,7 @@ vi.mock("firebase/auth", () => ({
   createUserWithEmailAndPassword: vi.fn(),
   updateProfile: vi.fn(),
 }));
-vi.mock("firebase/firestore", () => ({
-  doc: vi.fn(),
-  setDoc: vi.fn(),
-  serverTimestamp: vi.fn(),
-}));
+vi.mock("module/auth/userProfile", () => ({ createUserProfile: vi.fn() }));
 vi.mock("react-toastify", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
@@ -90,7 +86,26 @@ describe("RegisterPage", () => {
         "An account with this email already exists."
       )
     );
-    expect(setDoc).not.toHaveBeenCalled();
+    expect(createUserProfile).not.toHaveBeenCalled();
     expect(toast.success).not.toHaveBeenCalled();
+  });
+});
+
+describe("RegisterPage success", () => {
+  it("creates the profile with the chosen name", async () => {
+    const user = { uid: "u1", email: "a@b.co" };
+    createUserWithEmailAndPassword.mockResolvedValue({ user });
+    createUserProfile.mockResolvedValue();
+    renderPage(<RegisterPage />);
+
+    type("Enter your fullname...", "Alice");
+    type("Enter your email address...", "a@b.co");
+    type("Enter your password...", "secret123");
+    fireEvent.click(screen.getByRole("button", { name: "Sign Up" }));
+
+    await waitFor(() =>
+      expect(createUserProfile).toHaveBeenCalledWith(user, { fullname: "Alice" })
+    );
+    expect(toast.success).toHaveBeenCalled();
   });
 });

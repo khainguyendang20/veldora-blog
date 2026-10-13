@@ -30,7 +30,8 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // Profiles are public (author boxes, profile pages)
+      // Profiles are public (author boxes, profile pages), so they hold no
+      // email; that lives in userEmails
       allow read: if true;
 
       // Registration: own document only, as an active regular user, and
@@ -38,8 +39,7 @@ service cloud.firestore {
       allow create: if signedIn()
         && request.auth.uid == userId
         && request.resource.data.keys().hasOnly(
-          ['fullname', 'email', 'avatar', 'username', 'role', 'status', 'createdAt'])
-        && request.resource.data.email.lower() == request.auth.token.email.lower()
+          ['fullname', 'avatar', 'username', 'role', 'status', 'createdAt'])
         && request.resource.data.role == 3
         && request.resource.data.status == 1;
 
@@ -51,6 +51,20 @@ service cloud.firestore {
             .hasOnly(['fullname', 'avatar', 'description']));
 
       allow delete: if isAdmin();
+    }
+
+    // Private half of a profile: readable by its owner and admins only
+    match /userEmails/{userId} {
+      allow read: if (signedIn() && request.auth.uid == userId) || isAdmin();
+      // Written at registration with the account's own email; admins may
+      // write any (the migration script runs as an admin)
+      allow create: if isAdmin()
+        || (signedIn()
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['email'])
+          && request.resource.data.email.lower()
+            == request.auth.token.email.lower());
+      allow update, delete: if isAdmin();
     }
 
     match /posts/{postId} {
