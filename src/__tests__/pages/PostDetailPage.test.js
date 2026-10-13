@@ -189,8 +189,9 @@ describe("PostDetailPage extras", () => {
     openPost(null);
     expect(where).toHaveBeenCalledWith("categoryIds", "array-contains", "c1");
 
+    // Related posts subscribe last, after the comments
     act(() =>
-      listeners[1]({
+      listeners[listeners.length - 1]({
         forEach: (cb) =>
           ["p1", "p2"].forEach((id) =>
             cb({ id, data: () => ({ ...fullPost, slug: id, title: `Title ${id}` }) })

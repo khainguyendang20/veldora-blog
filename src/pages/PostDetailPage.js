@@ -12,6 +12,7 @@ import PostMeta from "module/post/components/PostMeta";
 import AuthorBox from "module/post/components/AuthorBox";
 import PostCategory from "module/post/components/PostCategory";
 import PostRelated from "module/post/PostRelated";
+import CommentSection from "module/comment/CommentSection";
 import { formatDate } from "utils/formatDate";
 import { readingTime } from "utils/readingTime";
 import { useAuthStore } from "store";
@@ -203,6 +204,7 @@ const PostDetailPage = () => {
             }}
           ></div>
           <AuthorBox userId={user?.id}></AuthorBox>
+          <CommentSection post={postInfo}></CommentSection>
         </div>
         <PostRelated
           categoryId={postInfo.categories?.[0]?.id}
