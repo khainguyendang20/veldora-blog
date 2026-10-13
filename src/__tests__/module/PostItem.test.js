@@ -6,6 +6,7 @@ import { theme } from "utils/constants";
 import PostItem from "module/post/PostItem";
 import PostItemMini from "module/post/PostItemMini";
 import PostItemLarge from "module/post/PostItemLarge";
+import PostThumbnail from "module/post/components/PostThumbnail";
 
 const renderItem = (ui) =>
   render(
@@ -55,5 +56,19 @@ describe("PostItem description", () => {
 
     expect(screen.getByText("A short summary")).toBeInTheDocument();
     expect(screen.queryByText(/lorem ipsum/i)).not.toBeInTheDocument();
+  });
+});
+
+describe("PostThumbnail", () => {
+  it("links to the post when given a slug", () => {
+    renderItem(<PostThumbnail url="" href="hello" />);
+
+    expect(screen.getByRole("link")).toHaveAttribute("href", "/post/hello");
+  });
+
+  it("is a plain image without a slug, e.g. on the post page", () => {
+    renderItem(<PostThumbnail url="" className="post-feature" />);
+
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 });
