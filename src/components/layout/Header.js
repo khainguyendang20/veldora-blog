@@ -155,16 +155,12 @@ const MobileMenuStyles = styled.div`
 
 const menuItems = [
   {
-    url: "#",
+    url: "/",
     title: "Home",
   },
   {
     url: "/blog",
     title: "Blog",
-  },
-  {
-    url: "/contact",
-    title: "Contact",
   },
   {
     url: "/manage/add-post",

@@ -13,6 +13,8 @@ import Layout from "components/layout/Layout";
 const LoginPage = lazy(() => import("pages/LoginPage"));
 const RegisterPage = lazy(() => import("pages/RegisterPage"));
 const PostDetailPage = lazy(() => import("pages/PostDetailPage"));
+const BlogPage = lazy(() => import("pages/BlogPage"));
+const CategoryPage = lazy(() => import("pages/CategoryPage"));
 const ProfilePage = lazy(() => import("pages/ProfilePage"));
 const DashboardPage = lazy(() => import("pages/manage/DashboardPage"));
 const AddNewPostPage = lazy(() => import("pages/manage/AddNewPostPage"));
@@ -44,6 +46,11 @@ function AppRoutes() {
         <Route
           path="/post/:slug"
           element={<PostDetailPage></PostDetailPage>}
+        ></Route>
+        <Route path="/blog" element={<BlogPage></BlogPage>}></Route>
+        <Route
+          path="/category/:slug"
+          element={<CategoryPage></CategoryPage>}
         ></Route>
         <Route
           path="/profile/:username"
