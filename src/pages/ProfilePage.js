@@ -67,7 +67,7 @@ const ProfilePage = () => {
     <ProfilePageStyles className="container">
       <div className="profile-cover"></div>
       <div className="profile-avt">
-        <Image src={info.avatar} fallback={avatarDefault} />
+        <Image src={info.avatar} fallback={avatarDefault} resizeTo={400} />
       </div>
       <div className="profile-info">
         <div className="profile-info__name">{info?.fullname}</div>

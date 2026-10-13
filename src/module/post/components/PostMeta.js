@@ -51,7 +51,12 @@ const PostMeta = ({ color = "black", auth, date }) => {
         to={auth?.username ? `/profile/${auth.username}` : "#"}
         className="post-auth"
       >
-        <Image className="post-auth-avt" src={auth?.avatar} fallback={avatarDefault} />
+        <Image
+          className="post-auth-avt"
+          src={auth?.avatar}
+          fallback={avatarDefault}
+          resizeTo={96}
+        />
         <span className="post-auth-name">
           {auth?.fullname || "Unknown author"}
         </span>

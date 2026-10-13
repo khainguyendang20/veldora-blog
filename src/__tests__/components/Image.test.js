@@ -35,3 +35,21 @@ describe("Image", () => {
     expect(screen.getByAltText("cover")).toHaveAttribute("src", "https://cdn/y.jpg");
   });
 });
+
+describe("Image resizing", () => {
+  it("requests a resized Cloudinary copy", () => {
+    render(
+      <Image
+        src="https://res.cloudinary.com/demo/image/upload/v1/a.jpg"
+        fallback="/fallback.svg"
+        resizeTo={400}
+        alt="cover"
+      />
+    );
+
+    expect(screen.getByAltText("cover")).toHaveAttribute(
+      "src",
+      "https://res.cloudinary.com/demo/image/upload/f_auto,q_auto,c_limit,w_400/v1/a.jpg"
+    );
+  });
+});

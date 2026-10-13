@@ -40,6 +40,7 @@ const PostItemLarge = (props) => {
       <PostThumbnail
         href={slug}
         height="480px"
+        imageWidth={1200}
         url={thumbnail}
       ></PostThumbnail>
       <div className="post-content">

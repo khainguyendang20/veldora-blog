@@ -231,7 +231,7 @@ const Header = () => {
               className="header-r__user"
               onClick={() => setShowPopover(!showPopover)}
             >
-              <Image src={user.avatar} fallback={avatarDefault} />
+              <Image src={user.avatar} fallback={avatarDefault} resizeTo={96} />
               <UserPopover
                 show={showPopover}
                 setShow={setShowPopover}

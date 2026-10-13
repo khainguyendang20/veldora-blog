@@ -160,6 +160,7 @@ const PostDetailPage = () => {
           <PostThumbnail
             url={postInfo.thumbnail}
             className="post-feature"
+            imageWidth={1280}
           ></PostThumbnail>
           <div className="post-info">
             {postInfo.categories?.length > 0 && (

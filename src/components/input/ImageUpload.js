@@ -88,7 +88,7 @@ const ImageUpload = (props) => {
       )}
       {image && (
         <div className="input__image--uploaded">
-          <Image src={image} fallback={thumbnailPlaceholder} />
+          <Image src={image} fallback={thumbnailPlaceholder} resizeTo={800} />
           <button type="button" onClick={handleDeleteImage}>
             <svg
               xmlns="http://www.w3.org/2000/svg"

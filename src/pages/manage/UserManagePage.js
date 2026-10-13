@@ -204,7 +204,7 @@ const UserManagePage = () => {
               <td>
                 <InfoColStyles>
                   <div className="avt">
-                    <Image src={user.avatar} fallback={avatarDefault} />
+                    <Image src={user.avatar} fallback={avatarDefault} resizeTo={160} />
                   </div>
                   <div>
                     <h3>{user.fullname}</h3>

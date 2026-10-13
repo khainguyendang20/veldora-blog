@@ -243,7 +243,11 @@ const PostManagePage = () => {
                 }}
               >
                 <PostInfoStyles>
-                  <Image src={post.thumbnail} fallback={thumbnailPlaceholder} />
+                  <Image
+                    src={post.thumbnail}
+                    fallback={thumbnailPlaceholder}
+                    resizeTo={160}
+                  />
                   <span title={post.title} className="truncate">
                     {post.title}
                   </span>
