@@ -81,6 +81,39 @@ service cloud.firestore {
         return signedIn() && resource.data.user.id == request.auth.uid;
       }
 
+      function postPath() {
+        return /databases/$(database)/documents/posts/$(postId);
+      }
+
+      function changesOnly(fields) {
+        return request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(fields);
+      }
+
+      function changesAny(fields) {
+        return request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(fields);
+      }
+
+      function movedBy(field, delta) {
+        return request.resource.data.get(field, 0)
+          == resource.data.get(field, 0) + delta;
+      }
+
+      // likeCount and commentCount move by exactly one, in the same batch
+      // as the like or comment that justifies the change
+      function isCounterUpdate() {
+        let like = /databases/$(database)/documents/posts/$(postId)/likes/$(request.auth.uid);
+        let comment = /databases/$(database)/documents/posts/$(postId)/comments/$(request.resource.data.get('lastCommentId', '-'));
+        return isActive() && (
+          (changesOnly(['likeCount']) && (
+            (movedBy('likeCount', 1) && !exists(like) && existsAfter(like))
+            || (movedBy('likeCount', -1) && exists(like) && !existsAfter(like))))
+          || (changesOnly(['commentCount', 'lastCommentId']) && (
+            (movedBy('commentCount', 1) && !exists(comment) && existsAfter(comment))
+            || (movedBy('commentCount', -1) && exists(comment) && !existsAfter(comment)))));
+      }
+
       // Anyone reads approved posts; authors and staff also see the rest.
       // Public queries must therefore filter on status == 1.
       allow read: if resource.data.status == 1 || isAuthor() || isStaff();
@@ -92,15 +125,17 @@ service cloud.firestore {
           || (request.resource.data.status == 2
             && request.resource.data.get('featured', false) == false));
 
-      // Authors edit their own posts but cannot change who wrote them or
-      // the moderation fields
+      // Authors edit their own posts but cannot change who wrote them, the
+      // moderation fields or the counters
       allow update: if isStaff()
+        || isCounterUpdate()
         || (isActive()
           && isAuthor()
           && request.resource.data.user.id == resource.data.user.id
           && request.resource.data.status == resource.data.status
           && request.resource.data.get('featured', false)
-            == resource.data.get('featured', false));
+            == resource.data.get('featured', false)
+          && !changesAny(['likeCount', 'commentCount', 'lastCommentId']));
 
       allow delete: if isStaff() || (isActive() && isAuthor());
 
@@ -126,10 +161,16 @@ service cloud.firestore {
           && request.resource.data.user.id == request.auth.uid
           && request.resource.data.user.fullname
             == get(profilePath()).data.fullname
-          && request.resource.data.createdAt == request.time;
+          && request.resource.data.createdAt == request.time
+          && getAfter(postPath()).data.get('commentCount', 0)
+            == post().get('commentCount', 0) + 1;
 
-        // Commenters remove their own; post authors and staff moderate
-        allow delete: if (signedIn() && resource.data.user.id == request.auth.uid)
+        // Commenters remove their own (with the counter); post authors and
+        // staff moderate, and clear comments when deleting the post
+        allow delete: if (signedIn()
+            && resource.data.user.id == request.auth.uid
+            && getAfter(postPath()).data.get('commentCount', 0)
+              == post().get('commentCount', 0) - 1)
           || isPostAuthor()
           || isStaff();
       }
@@ -141,9 +182,15 @@ service cloud.firestore {
           && request.auth.uid == userId
           && post().status == 1
           && request.resource.data.keys().hasOnly(['createdAt'])
-          && request.resource.data.createdAt == request.time;
-        // Post authors and staff clear likes when deleting the post
-        allow delete: if (signedIn() && request.auth.uid == userId)
+          && request.resource.data.createdAt == request.time
+          && getAfter(postPath()).data.get('likeCount', 0)
+            == post().get('likeCount', 0) + 1;
+        // Readers unlike (with the counter); post authors and staff clear
+        // likes when deleting the post
+        allow delete: if (signedIn()
+            && request.auth.uid == userId
+            && getAfter(postPath()).data.get('likeCount', 0)
+              == post().get('likeCount', 0) - 1)
           || isPostAuthor()
           || isStaff();
       }

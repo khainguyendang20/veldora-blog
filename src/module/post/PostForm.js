@@ -109,8 +109,12 @@ const PostForm = ({
   };
 
   const handleSavePost = async (values) => {
+    // Counters belong to likes and comments, which may have changed since
+    // the form loaded; saving these stale copies would undo them
+    // eslint-disable-next-line no-unused-vars
+    const { likeCount, commentCount, lastCommentId, ...fields } = values;
     try {
-      const slug = await resolveSlug(values);
+      const slug = await resolveSlug(fields);
       if (!slug) {
         toast.error("This slug is already used by another post.");
         return;
@@ -122,7 +126,7 @@ const PostForm = ({
         })
       );
       await onSubmit({
-        ...values,
+        ...fields,
         thumbnail: image,
         slug,
         status: Number(values.status),

@@ -3,13 +3,13 @@ import { Image } from "components/image";
 import Heading from "components/layout/Heading";
 import { db } from "config/firebase-config";
 import {
-  addDoc,
   collection,
-  deleteDoc,
   doc,
+  increment,
   orderBy,
   query,
   serverTimestamp,
+  writeBatch,
 } from "firebase/firestore";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
 import React, { useState } from "react";
@@ -113,7 +113,11 @@ const CommentSection = ({ post }) => {
     if (!text) return;
     setSending(true);
     try {
-      await addDoc(collection(db, "posts", post.id, "comments"), {
+      // The comment and the post's commentCount change together; Firestore
+      // rules check that lastCommentId names the comment being added
+      const commentRef = doc(collection(db, "posts", post.id, "comments"));
+      const batch = writeBatch(db);
+      batch.set(commentRef, {
         content: text,
         // Must match the author's profile; rules check it
         user: {
@@ -124,6 +128,11 @@ const CommentSection = ({ post }) => {
         },
         createdAt: serverTimestamp(),
       });
+      batch.update(doc(db, "posts", post.id), {
+        commentCount: increment(1),
+        lastCommentId: commentRef.id,
+      });
+      await batch.commit();
       setContent("");
     } catch (error) {
       toast.error("Could not post your comment, please try again.");
@@ -134,7 +143,13 @@ const CommentSection = ({ post }) => {
 
   const handleDelete = async (commentId) => {
     try {
-      await deleteDoc(doc(db, "posts", post.id, "comments", commentId));
+      const batch = writeBatch(db);
+      batch.delete(doc(db, "posts", post.id, "comments", commentId));
+      batch.update(doc(db, "posts", post.id), {
+        commentCount: increment(-1),
+        lastCommentId: commentId,
+      });
+      await batch.commit();
     } catch (error) {
       toast.error("Could not delete the comment, please try again.");
     }

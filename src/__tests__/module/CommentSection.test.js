@@ -3,12 +3,12 @@ import { act, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 import {
-  addDoc,
   collection,
-  deleteDoc,
   doc,
+  increment,
   onSnapshot,
   query,
+  writeBatch,
 } from "firebase/firestore";
 import { useAuthStore } from "store";
 import { theme } from "utils/constants";
@@ -16,10 +16,10 @@ import CommentSection from "module/comment/CommentSection";
 
 vi.mock("config/firebase-config", () => ({ db: {} }));
 vi.mock("firebase/firestore", () => ({
-  addDoc: vi.fn(),
   collection: vi.fn(),
-  deleteDoc: vi.fn(),
   doc: vi.fn(),
+  increment: vi.fn(),
+  writeBatch: vi.fn(),
   onSnapshot: vi.fn(),
   orderBy: vi.fn(),
   query: vi.fn(),
@@ -50,13 +50,26 @@ const emitComments = (comments) =>
 const reader = { uid: "r1", role: 3, fullname: "Reader", username: "reader", avatar: "" };
 
 describe("CommentSection", () => {
+  let batch;
+
   beforeEach(() => {
     query.mockReturnValue({ name: "comments" });
     onSnapshot.mockReturnValue(vi.fn());
     collection.mockImplementation((db, ...path) => ({ path: path.join("/") }));
-    doc.mockImplementation((db, ...path) => ({ path: path.join("/") }));
-    addDoc.mockResolvedValue({});
-    deleteDoc.mockResolvedValue();
+    // doc(collectionRef) makes a new comment id
+    doc.mockImplementation((first, ...path) =>
+      first?.path
+        ? { path: `${first.path}/new`, id: "new" }
+        : { path: path.join("/"), id: path[path.length - 1] }
+    );
+    increment.mockImplementation((n) => ({ increment: n }));
+    batch = {
+      set: vi.fn(),
+      delete: vi.fn(),
+      update: vi.fn(),
+      commit: vi.fn().mockResolvedValue(),
+    };
+    writeBatch.mockReturnValue(batch);
   });
 
   it("lists comments as plain text", () => {
@@ -84,12 +97,20 @@ describe("CommentSection", () => {
     });
     fireEvent.click(screen.getByText("Post comment"));
 
-    await waitFor(() => expect(addDoc).toHaveBeenCalledTimes(1));
-    expect(addDoc.mock.calls[0][0]).toEqual({ path: "posts/p1/comments" });
-    expect(addDoc.mock.calls[0][1]).toMatchObject({
+    await waitFor(() => expect(batch.commit).toHaveBeenCalledTimes(1));
+    expect(batch.set.mock.calls[0][0]).toEqual({
+      path: "posts/p1/comments/new",
+      id: "new",
+    });
+    expect(batch.set.mock.calls[0][1]).toMatchObject({
       content: "Great read!",
       user: { id: "r1", fullname: "Reader", username: "reader" },
     });
+    // Firestore rules need the counter and the new comment's id together
+    expect(batch.update).toHaveBeenCalledWith(
+      { path: "posts/p1", id: "p1" },
+      { commentCount: { increment: 1 }, lastCommentId: "new" }
+    );
     await waitFor(() =>
       expect(screen.getByLabelText("Write a comment")).toHaveValue("")
     );
@@ -111,7 +132,14 @@ describe("CommentSection", () => {
     expect(screen.getAllByRole("button", { name: "Delete" })).toHaveLength(1);
     fireEvent.click(screen.getByRole("button", { name: "Delete" }));
 
-    expect(deleteDoc).toHaveBeenCalledWith({ path: "posts/p1/comments/c1" });
+    expect(batch.delete).toHaveBeenCalledWith({
+      path: "posts/p1/comments/c1",
+      id: "c1",
+    });
+    expect(batch.update).toHaveBeenCalledWith(
+      { path: "posts/p1", id: "p1" },
+      { commentCount: { increment: -1 }, lastCommentId: "c1" }
+    );
   });
 
   it("lets the post's author moderate every comment", () => {

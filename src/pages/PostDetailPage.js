@@ -205,7 +205,7 @@ const PostDetailPage = () => {
             }}
           ></div>
           {postInfo.status === postStatus.APPROVED && (
-            <PostActions postId={postInfo.id}></PostActions>
+            <PostActions post={postInfo}></PostActions>
           )}
           <AuthorBox userId={user?.id}></AuthorBox>
           <CommentSection post={postInfo}></CommentSection>

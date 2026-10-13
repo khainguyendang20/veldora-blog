@@ -65,6 +65,9 @@ const docs = {
     thumbnail: "https://img/thumb.jpg",
     categories: [{ id: "c1", name: "Tech", slug: "tech", status: 1 }],
     user: { id: "u1", fullname: "Author" },
+    likeCount: 5,
+    commentCount: 2,
+    lastCommentId: "c9",
   },
   "categories/c1": { name: "Tech", slug: "tech", status: 1 },
 };
@@ -136,6 +139,10 @@ describe("UpdatePostPage", () => {
       categoryIds: ["c1"],
     });
     expect(toast.success).toHaveBeenCalledWith("Update post successfully!");
+    // Stale counters from when the form loaded must not overwrite new ones
+    expect(payload).not.toHaveProperty("likeCount");
+    expect(payload).not.toHaveProperty("commentCount");
+    expect(payload).not.toHaveProperty("lastCommentId");
   });
 });
 
