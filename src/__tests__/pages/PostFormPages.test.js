@@ -43,7 +43,7 @@ vi.mock("react-quill", () => {
   return { __esModule: true, default: Editor, Quill: Editor.Quill };
 });
 vi.mock("quill-image-uploader", () => ({ default: {} }));
-// Firebase Storage upload is out of scope for these tests.
+// Image upload is covered by useImageUpload.test.js.
 const mockImageHook = vi.hoisted(() => ({
   image: "https://img/thumb.jpg",
   setImage: () => {},
@@ -52,7 +52,7 @@ const mockImageHook = vi.hoisted(() => ({
   handleDeleteImage: () => {},
   handleResetUpload: () => {},
 }));
-vi.mock("hooks/useFireBaseImage", () => ({ default: () => mockImageHook }));
+vi.mock("hooks/useImageUpload", () => ({ default: () => mockImageHook }));
 
 const docs = {
   "posts/p1": {

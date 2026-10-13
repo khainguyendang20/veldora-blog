@@ -63,9 +63,9 @@ describe("constants", () => {
   });
 
   describe("avatarDefault", () => {
-    it("should be a valid URL string", () => {
-      expect(typeof avatarDefault).toBe("string");
-      expect(avatarDefault).toContain("https://");
+    // Served from public/ so it never depends on an external host
+    it("should point to a local public asset", () => {
+      expect(avatarDefault).toMatch(/^\/[\w-]+\.svg$/);
     });
   });
 });

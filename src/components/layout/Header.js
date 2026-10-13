@@ -14,6 +14,8 @@ import { useAuthStore } from "store";
 import styled from "styled-components";
 import { getAuth, signOut } from "firebase/auth";
 import { useMediaQuery } from "@uidotdev/usehooks";
+import { Image } from "components/image";
+import { avatarDefault } from "utils/constants";
 
 const HeaderStyles = styled.div`
   position: fixed;
@@ -225,7 +227,7 @@ const Header = () => {
               className="header-r__user"
               onClick={() => setShowPopover(!showPopover)}
             >
-              <img src={user.avatar} alt="" />
+              <Image src={user.avatar} fallback={avatarDefault} />
               <UserPopover
                 show={showPopover}
                 setShow={setShowPopover}

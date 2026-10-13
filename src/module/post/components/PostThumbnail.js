@@ -1,6 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { Image } from "components/image";
+import { thumbnailPlaceholder } from "utils/constants";
 
 const PostThumbnailStyles = styled.div`
   position: relative;
@@ -42,7 +44,7 @@ const PostThumbnail = ({ url, href = "#", height, children }) => {
   return (
     <PostThumbnailStyles height={height} className="post-thumb">
       <Link to={`/post/${href}`}>
-        <img src={url} alt="" loading="lazy" />
+        <Image src={url} fallback={thumbnailPlaceholder} loading="lazy" />
         <div className="overlay"></div>
       </Link>
       {children}

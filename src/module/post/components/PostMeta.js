@@ -2,6 +2,8 @@ import { IconClock } from "components/icons";
 import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { Image } from "components/image";
+import { avatarDefault } from "utils/constants";
 
 const PostMetaStyles = styled.div`
   @media only screen and (max-width: 1024px) {
@@ -49,7 +51,7 @@ const PostMeta = ({ color = "black", auth, date = "Dec 24, 2016" }) => {
         to={auth?.username ? `/profile/${auth.username}` : "#"}
         className="post-auth"
       >
-        <img className="post-auth-avt" src={auth?.avatar} alt="" />
+        <Image className="post-auth-avt" src={auth?.avatar} fallback={avatarDefault} />
         <span className="post-auth-name">
           {auth?.fullname ? auth.fullname : "im_dev2002"}
         </span>

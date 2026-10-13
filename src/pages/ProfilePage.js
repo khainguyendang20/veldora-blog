@@ -5,6 +5,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { avatarDefault } from "utils/constants";
+import { Image } from "components/image";
 
 const ProfilePageStyles = styled.div`
   position: relative;
@@ -66,7 +67,7 @@ const ProfilePage = () => {
     <ProfilePageStyles className="container">
       <div className="profile-cover"></div>
       <div className="profile-avt">
-        <img src={info.avatar || avatarDefault} alt="" />
+        <Image src={info.avatar} fallback={avatarDefault} />
       </div>
       <div className="profile-info">
         <div className="profile-info__name">{info?.fullname}</div>

@@ -1,6 +1,7 @@
 import { ActionDelete, ActionEdit, ActionView } from "components/actions";
 import { FieldCheckboxes } from "components/field";
 import { IconSearch } from "components/icons";
+import { Image } from "components/image";
 import Heading from "components/layout/Heading";
 import { Table } from "components/table";
 import { db } from "config/firebase-config";
@@ -12,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import styled from "styled-components";
 import { shortId } from "utils/shortId";
-import { postStatus, userRole } from "utils/constants";
+import { postStatus, thumbnailPlaceholder, userRole } from "utils/constants";
 import { useAuthStore } from "store";
 
 const PostInfoStyles = styled.div`
@@ -157,7 +158,7 @@ const PostManagePage = () => {
                 }}
               >
                 <PostInfoStyles>
-                  <img src={post.thumbnail} alt="" />
+                  <Image src={post.thumbnail} fallback={thumbnailPlaceholder} />
                   <span title={post.title} className="truncate">
                     {post.title}
                   </span>
