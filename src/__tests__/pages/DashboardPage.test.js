@@ -1,7 +1,12 @@
 import React from "react";
-import { render } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
-import { collection, onSnapshot, query } from "firebase/firestore";
+import {
+  collection,
+  getCountFromServer,
+  query,
+  where,
+} from "firebase/firestore";
 import { useAuthStore } from "store";
 import { theme } from "utils/constants";
 import DashboardPage from "pages/manage/DashboardPage";
@@ -11,8 +16,10 @@ vi.mock("firebase/firestore", () => ({
   collection: vi.fn(),
   query: vi.fn(),
   where: vi.fn(),
-  onSnapshot: vi.fn(),
+  getCountFromServer: vi.fn(),
 }));
+
+const counts = { "my-posts": 2, pending: 3, posts: 10, categories: 4, users: 7 };
 
 const renderAs = (user) => {
   useAuthStore.setState({ user, isAuthLoading: false });
@@ -23,42 +30,54 @@ const renderAs = (user) => {
   );
 };
 
-// Firestore rules reject listeners on data the user may not read, so each
-// role must only subscribe to what it is allowed to count
+// Firestore rules reject counts over data the user may not read, so each
+// role must only count what it is allowed to see
 describe("DashboardPage", () => {
   beforeEach(() => {
     collection.mockImplementation((db, name) => ({ name }));
-    query.mockImplementation((col) => ({ name: `my-${col.name}` }));
-    onSnapshot.mockReturnValue(vi.fn());
+    where.mockImplementation((field, op, value) => ({ field, value }));
+    query.mockImplementation((col, clause) => ({
+      name: clause.field === "status" ? "pending" : "my-posts",
+    }));
+    getCountFromServer.mockImplementation(async (q) => ({
+      data: () => ({ count: counts[q.name] }),
+    }));
   });
 
-  const subscribed = () => onSnapshot.mock.calls.map(([ref]) => ref.name);
+  const counted = () => getCountFromServer.mock.calls.map(([q]) => q.name);
 
-  it("only counts a regular user's own posts", () => {
+  it("only counts a regular user's own posts", async () => {
     renderAs({ uid: "u1", role: 3 });
 
-    expect(subscribed()).toEqual(["my-posts"]);
+    expect(await screen.findByText("2")).toBeInTheDocument();
+    expect(counted()).toEqual(["my-posts"]);
+    expect(where).toHaveBeenCalledWith("user.id", "==", "u1");
+    expect(screen.queryByText("Pending review")).not.toBeInTheDocument();
   });
 
-  it("counts all posts and categories for mods", () => {
+  it("shows mods the moderation queue and totals", async () => {
     renderAs({ uid: "u1", role: 2 });
 
-    expect(subscribed()).toEqual(["my-posts", "posts", "categories"]);
+    expect(await screen.findByText("Pending review")).toBeInTheDocument();
+    expect(await screen.findByText("3")).toBeInTheDocument();
+    expect(counted()).toEqual(["my-posts", "pending", "posts", "categories"]);
   });
 
-  it("also counts users for admins", () => {
+  it("also counts users for admins", async () => {
     renderAs({ uid: "u1", role: 1 });
 
-    expect(subscribed()).toEqual(["my-posts", "posts", "categories", "users"]);
+    expect(await screen.findByText("7")).toBeInTheDocument();
+    expect(counted()).toContain("users");
   });
 
-  it("unsubscribes from every listener on unmount", () => {
-    const unsubscribe = vi.fn();
-    onSnapshot.mockReturnValue(unsubscribe);
-    const { unmount } = renderAs({ uid: "u1", role: 1 });
+  it("does not re-count when unrelated profile fields change", async () => {
+    renderAs({ uid: "u1", role: 3, fullname: "A" });
+    await screen.findByText("2");
 
-    unmount();
+    act(() =>
+      useAuthStore.setState({ user: { uid: "u1", role: 3, fullname: "B" } })
+    );
 
-    expect(unsubscribe).toHaveBeenCalledTimes(4);
+    expect(getCountFromServer).toHaveBeenCalledTimes(1);
   });
 });
