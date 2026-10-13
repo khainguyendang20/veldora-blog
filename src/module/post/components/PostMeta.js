@@ -35,6 +35,10 @@ const PostMetaStyles = styled.div`
   .post-date {
     column-gap: 6px;
   }
+  .post-reading-time {
+    display: flex;
+    align-items: center;
+  }
   @media only screen and (max-width: 640px) {
     display: none;
     margin: 2px 0;
@@ -44,7 +48,7 @@ const PostMetaStyles = styled.div`
   }
 `;
 
-const PostMeta = ({ color = "black", auth, date }) => {
+const PostMeta = ({ color = "black", auth, date, minutesToRead }) => {
   return (
     <PostMetaStyles className="post-meta" color={color}>
       <Link
@@ -69,6 +73,9 @@ const PostMeta = ({ color = "black", auth, date }) => {
           </span>
           {date}
         </div>
+      )}
+      {minutesToRead > 0 && (
+        <span className="post-reading-time">· {minutesToRead} min read</span>
       )}
     </PostMetaStyles>
   );

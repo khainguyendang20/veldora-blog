@@ -13,6 +13,7 @@ import AuthorBox from "module/post/components/AuthorBox";
 import PostCategory from "module/post/components/PostCategory";
 import PostRelated from "module/post/PostRelated";
 import { formatDate } from "utils/formatDate";
+import { readingTime } from "utils/readingTime";
 import { useAuthStore } from "store";
 import { isStaffRole, postStatus } from "utils/constants";
 import useDocumentMeta from "hooks/useDocumentMeta";
@@ -181,6 +182,7 @@ const PostDetailPage = () => {
             <PostMeta
               date={formatDate(postInfo.createdAt)}
               auth={postInfo.user}
+              minutesToRead={readingTime(postInfo.content)}
             ></PostMeta>
             {canEdit && (
               <Link

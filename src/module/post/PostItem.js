@@ -6,6 +6,7 @@ import PostMeta from "./components/PostMeta";
 import PostDescription from "./components/PostDescription";
 import PostThumbnail from "./components/PostThumbnail";
 import { formatDate } from "utils/formatDate";
+import { readingTime } from "utils/readingTime";
 
 const PostItemStyles = styled.div`
   /* max-width: 340px; */
@@ -16,7 +17,8 @@ const PostItemStyles = styled.div`
 
 const PostItem = ({ data, ...props }) => {
   if (!data) return;
-  const { title, slug, thumbnail, createdAt, user, categories, desc } = data;
+  const { title, slug, thumbnail, createdAt, user, categories, desc, content } =
+    data;
   const category = categories?.[0];
   return (
     <PostItemStyles>
@@ -29,7 +31,11 @@ const PostItem = ({ data, ...props }) => {
       </PostThumbnail>
       <div className="post-content">
         <PostTitle href={slug}>{title}</PostTitle>
-        <PostMeta auth={user} date={formatDate(createdAt)}></PostMeta>
+        <PostMeta
+          auth={user}
+          date={formatDate(createdAt)}
+          minutesToRead={readingTime(content)}
+        ></PostMeta>
         {desc && <PostDescription>{desc}</PostDescription>}
       </div>
     </PostItemStyles>
