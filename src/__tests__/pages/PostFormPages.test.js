@@ -84,18 +84,22 @@ const renderAt = (path) =>
 
 beforeEach(() => {
   useAuthStore.setState({
-    user: { uid: "u1", email: "a@b.c", role: 1 },
+    user: {
+      uid: "u1",
+      email: "a@b.c",
+      role: 1,
+      fullname: "Author",
+      username: "author",
+      avatar: "/a.png",
+      password: "secret",
+    },
     isAuthLoading: false,
   });
   collection.mockImplementation((db, name) => ({ name }));
   query.mockImplementation((col) => col);
   doc.mockImplementation((db, ...segments) => ({ path: segments.join("/") }));
   getDoc.mockImplementation(async (ref) => ({ data: () => docs[ref.path] }));
-  getDocs.mockImplementation(async (q) =>
-    q.name === "users"
-      ? snapshotOf([["u1", { fullname: "Author", email: "a@b.c" }]])
-      : snapshotOf([["c1", docs["categories/c1"]]])
-  );
+  getDocs.mockResolvedValue(snapshotOf([["c1", docs["categories/c1"]]]));
   addDoc.mockResolvedValue({ id: "new" });
   updateDoc.mockResolvedValue();
 });
@@ -144,10 +148,69 @@ describe("AddNewPostPage", () => {
       thumbnail: "https://img/thumb.jpg",
       categories: [],
       categoryIds: [],
-      user: { id: "u1", fullname: "Author", email: "a@b.c" },
+    });
+    // Only public profile fields are copied into the public post
+    expect(payload.user).toEqual({
+      id: "u1",
+      fullname: "Author",
+      username: "author",
+      avatar: "/a.png",
     });
     expect(toast.success).toHaveBeenCalledWith(
       "Create new post successfully!"
     );
+  });
+});
+
+describe("as a regular user", () => {
+  const setRegularUser = (uid) =>
+    useAuthStore.setState({
+      user: { uid, email: "r@b.c", role: 3, fullname: "Reader" },
+      isAuthLoading: false,
+    });
+
+  it("hides moderation controls and submits the post for review", async () => {
+    setRegularUser("u2");
+    renderAt("/manage/add-post");
+    await waitFor(() => expect(getDocs).toHaveBeenCalled());
+
+    expect(screen.queryByText("Approved")).not.toBeInTheDocument();
+    expect(screen.queryByText("Featured Post:")).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText("Title"), {
+      target: { value: "Draft" },
+    });
+    fireEvent.click(screen.getByText("Create Post"));
+
+    await waitFor(() => expect(addDoc).toHaveBeenCalledTimes(1));
+    expect(addDoc.mock.calls[0][1]).toMatchObject({
+      status: 2,
+      featured: false,
+      user: { id: "u2" },
+    });
+  });
+
+  it("can edit their own post", async () => {
+    setRegularUser("u1");
+    renderAt("/manage/update-post?id=p1");
+
+    expect(await screen.findByDisplayValue("Old title")).toBeInTheDocument();
+    expect(screen.queryByText("Approved")).not.toBeInTheDocument();
+  });
+
+  it("cannot edit someone else's post", async () => {
+    setRegularUser("u2");
+    renderAt("/manage/update-post?id=p1");
+
+    expect(await screen.findByText("Access Denied")).toBeInTheDocument();
+    expect(screen.queryByDisplayValue("Old title")).not.toBeInTheDocument();
+  });
+
+  it("is denied when Firestore refuses to return the post", async () => {
+    setRegularUser("u2");
+    getDoc.mockRejectedValue(new Error("permission-denied"));
+    renderAt("/manage/update-post?id=p1");
+
+    expect(await screen.findByText("Access Denied")).toBeInTheDocument();
   });
 });

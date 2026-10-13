@@ -9,7 +9,8 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Select from "react-select";
 import slugify from "slugify";
-import { postStatus } from "utils/constants";
+import { isStaffRole, postStatus } from "utils/constants";
+import { useAuthStore } from "store";
 import useImageUpload from "hooks/useImageUpload";
 import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { db } from "config/firebase-config";
@@ -56,6 +57,9 @@ const PostForm = ({
 }) => {
   const { control, watch, setValue, handleSubmit, reset } =
     useForm({ mode: "onChange", defaultValues });
+  // Only staff moderate; Firestore rules reject status/featured changes
+  // from anyone else, so regular users never see those controls
+  const canModerate = useAuthStore((state) => isStaffRole(state.user?.role));
   const [optionValues, setOptionValues] = useState(
     (defaultValues.categories || []).map(toOption)
   );
@@ -167,35 +171,37 @@ const PostForm = ({
         />
       </div>
       <div className="field-format">
-        <Field>
-          <Label>Status</Label>
-          <FieldCheckboxes>
-            <Radio
-              name="status"
-              control={control}
-              checked={Number(watchStatus) === postStatus.APPROVED}
-              value={postStatus.APPROVED}
-            >
-              Approved
-            </Radio>
-            <Radio
-              name="status"
-              control={control}
-              checked={Number(watchStatus) === postStatus.PENDING}
-              value={postStatus.PENDING}
-            >
-              Pending
-            </Radio>
-            <Radio
-              name="status"
-              control={control}
-              checked={Number(watchStatus) === postStatus.REJECTED}
-              value={postStatus.REJECTED}
-            >
-              Rejected
-            </Radio>
-          </FieldCheckboxes>
-        </Field>
+        {canModerate && (
+          <Field>
+            <Label>Status</Label>
+            <FieldCheckboxes>
+              <Radio
+                name="status"
+                control={control}
+                checked={Number(watchStatus) === postStatus.APPROVED}
+                value={postStatus.APPROVED}
+              >
+                Approved
+              </Radio>
+              <Radio
+                name="status"
+                control={control}
+                checked={Number(watchStatus) === postStatus.PENDING}
+                value={postStatus.PENDING}
+              >
+                Pending
+              </Radio>
+              <Radio
+                name="status"
+                control={control}
+                checked={Number(watchStatus) === postStatus.REJECTED}
+                value={postStatus.REJECTED}
+              >
+                Rejected
+              </Radio>
+            </FieldCheckboxes>
+          </Field>
+        )}
         <Field>
           <Label>Category</Label>
           <Select
@@ -210,21 +216,23 @@ const PostForm = ({
           />
         </Field>
       </div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "20px",
-          margin: "12px 0 24px",
-        }}
-      >
-        <Label>Featured Post:</Label>
-        <Toggle
-          on={watchFeatured === true}
-          onClick={() => setValue("featured", !watchFeatured)}
-        ></Toggle>
-      </div>
+      {canModerate && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "20px",
+            margin: "12px 0 24px",
+          }}
+        >
+          <Label>Featured Post:</Label>
+          <Toggle
+            on={watchFeatured === true}
+            onClick={() => setValue("featured", !watchFeatured)}
+          ></Toggle>
+        </div>
+      )}
       <Button type="submit">{submitLabel}</Button>
     </form>
   );

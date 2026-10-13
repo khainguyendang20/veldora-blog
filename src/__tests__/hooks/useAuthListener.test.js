@@ -1,12 +1,17 @@
 import React from "react";
 import { render, act } from "@testing-library/react";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "firebase/auth";
 import { onSnapshot, query } from "firebase/firestore";
+import { toast } from "react-toastify";
 import { useAuthStore } from "store";
 import useAuthListener from "hooks/useAuthListener";
 
 vi.mock("config/firebase-config", () => ({ auth: {}, db: {} }));
-vi.mock("firebase/auth", () => ({ onAuthStateChanged: vi.fn() }));
+vi.mock("firebase/auth", () => ({
+  onAuthStateChanged: vi.fn(),
+  signOut: vi.fn(),
+}));
+vi.mock("react-toastify", () => ({ toast: { error: vi.fn() } }));
 vi.mock("firebase/firestore", () => ({
   collection: vi.fn(),
   query: vi.fn(),
@@ -74,6 +79,16 @@ describe("useAuthListener", () => {
 
     expect(useAuthStore.getState().user).toBeNull();
     expect(useAuthStore.getState().isAuthLoading).toBe(false);
+  });
+
+  it("signs banned users out", () => {
+    render(<Probe />);
+    emitAuth({ uid: "1", email: "a@b.c" });
+    userListeners[0].emit(docsSnapshot([{ fullname: "Alice", status: 3 }]));
+
+    expect(useAuthStore.getState().user).toBeNull();
+    expect(signOut).toHaveBeenCalledTimes(1);
+    expect(toast.error).toHaveBeenCalledTimes(1);
   });
 
   it("drops the previous profile listener when the auth user changes", () => {

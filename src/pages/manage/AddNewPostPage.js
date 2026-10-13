@@ -1,13 +1,6 @@
 import Heading from "components/layout/Heading";
 import { db } from "config/firebase-config";
-import {
-  addDoc,
-  collection,
-  getDocs,
-  query,
-  serverTimestamp,
-  where,
-} from "firebase/firestore";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import FormContainer from "layout/FormContainer";
 import PostForm from "module/post/PostForm";
 import React from "react";
@@ -18,16 +11,16 @@ const AddNewPostPage = () => {
   const { user } = useAuthStore((state) => state);
 
   const handleCreatePost = async (payload) => {
-    const userSnapshot = await getDocs(
-      query(collection(db, "users"), where("email", "==", user.email))
-    );
-    let author = {};
-    userSnapshot.forEach((doc) => {
-      author = { id: doc.id, ...doc.data() };
-    });
+    // Posts are public, so embed only the public profile fields. The id
+    // must be the auth uid: Firestore rules check it for ownership.
     await addDoc(collection(db, "posts"), {
       ...payload,
-      user: author,
+      user: {
+        id: user.uid,
+        fullname: user.fullname || "",
+        username: user.username || "",
+        avatar: user.avatar || "",
+      },
       createdAt: serverTimestamp(),
     });
     toast.success("Create new post successfully!");

@@ -6,17 +6,26 @@ import PostForm from "module/post/PostForm";
 import React, { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import { useAuthStore } from "store";
+import { isStaffRole } from "utils/constants";
 
 const UpdatePostPage = () => {
   const [params] = useSearchParams();
   const postId = params.get("id");
+  const user = useAuthStore((state) => state.user);
   const [post, setPost] = useState(null);
+  const [denied, setDenied] = useState(false);
 
   useEffect(() => {
     async function fetchPost() {
       if (!postId) return;
-      const snapshot = await getDoc(doc(db, "posts", postId));
-      if (snapshot.data()) setPost(snapshot.data());
+      try {
+        const snapshot = await getDoc(doc(db, "posts", postId));
+        if (snapshot.data()) setPost(snapshot.data());
+      } catch (error) {
+        // Firestore rules refuse other users' unpublished posts
+        setDenied(true);
+      }
     }
     fetchPost();
   }, [postId]);
@@ -29,6 +38,18 @@ const UpdatePostPage = () => {
   const handleImageDeleted = async () => {
     await updateDoc(doc(db, "posts", postId), { thumbnail: "" });
   };
+
+  // Approved posts are readable by everyone, so check ownership here too
+  const canEdit =
+    post && (isStaffRole(user?.role) || post.user?.id === user?.uid);
+  if (denied || (post && !canEdit)) {
+    return (
+      <FormContainer>
+        <Heading>Access Denied</Heading>
+        <p>You can only edit your own posts.</p>
+      </FormContainer>
+    );
+  }
 
   return (
     <FormContainer>

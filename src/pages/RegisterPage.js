@@ -54,7 +54,6 @@ const RegisterPage = () => {
     await setDoc(doc(db, "users", auth.currentUser.uid), {
       fullname: values.fullname,
       email: values.email,
-      password: values.password,
       avatar: avatarDefault,
       username: slugify(
         values.fullname + "-" + auth.currentUser.uid.slice(0, 10),
