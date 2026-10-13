@@ -5,6 +5,29 @@
   "outputDirectory": "build",
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/rss.xml",
+      "destination": "/api/rss"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/api/robots"
+    },
+    {
+      "source": "/post/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Zalo|zalo|Twitterbot|Slackbot|Discordbot|LinkedInBot|TelegramBot|WhatsApp|SkypeUriPreview|Pinterest|redditbot|Embedly|bitlybot).*"
+        }
+      ],
+      "destination": "/api/og?slug=:slug"
+    },
+    {
       "source": "/__/:path*",
       "destination": "https://fspade-blog.firebaseapp.com/__/:path*"
     },
