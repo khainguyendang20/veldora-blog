@@ -8,7 +8,10 @@ import { getAuth } from "firebase/auth";
 // Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: import.meta.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: import.meta.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+  // The app's own host: Vite (dev) and vercel.json (production) proxy
+  // /__/auth to REACT_APP_FIREBASE_AUTH_DOMAIN. Google sign-in on another
+  // domain loses its result in browsers that partition third-party storage.
+  authDomain: window.location.host,
   projectId: import.meta.env.REACT_APP_FIREBASE_PROJECT_ID,
   storageBucket: import.meta.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: import.meta.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,

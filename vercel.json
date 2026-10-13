@@ -5,6 +5,10 @@
   "outputDirectory": "build",
   "rewrites": [
     {
+      "source": "/__/:path*",
+      "destination": "https://fspade-blog.firebaseapp.com/__/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

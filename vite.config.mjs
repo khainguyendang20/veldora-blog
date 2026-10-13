@@ -1,9 +1,21 @@
 /// <reference types="vitest" />
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 
 const src = fileURLToPath(new URL("./src", import.meta.url));
+const env = loadEnv("", process.cwd(), "REACT_APP_");
+
+// Firebase's sign-in helper pages (/__/auth/handler and the config they
+// load) are served from the app's own origin, as vercel.json does in
+// production. Same-origin sign-in keeps working in browsers that
+// partition third-party storage, which otherwise breaks signInWithRedirect.
+const firebaseAuthProxy = {
+  "/__": {
+    target: `https://${env.REACT_APP_FIREBASE_AUTH_DOMAIN}`,
+    changeOrigin: true,
+  },
+};
 
 export default defineConfig({
   plugins: [
@@ -34,7 +46,8 @@ export default defineConfig({
   optimizeDeps: {
     esbuildOptions: { loader: { ".js": "jsx" } },
   },
-  server: { port: 3000 },
+  server: { port: 3000, proxy: firebaseAuthProxy },
+  preview: { proxy: firebaseAuthProxy },
   // Same output folder as CRA, so the Vercel project settings still apply
   build: {
     outDir: "build",
