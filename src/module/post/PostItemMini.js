@@ -1,6 +1,7 @@
 import React from "react";
 import styled, { css } from "styled-components";
 import PostThumbnail from "./components/PostThumbnail";
+import { formatDate } from "utils/formatDate";
 import PostTitle from "./components/PostTitle";
 import PostCategory from "./components/PostCategory";
 import PostMeta from "./components/PostMeta";
@@ -59,23 +60,16 @@ const PostMiniItemStyles = styled.div`
 const PostItemMini = ({ isReverse = false, data, ...props }) => {
   if (!data) return;
   const { title, slug, thumbnail, createdAt, user, categories } = data;
-  const date = new Date(createdAt.seconds * 1000).toLocaleDateString("vi-VI", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  const category = categories?.[0];
   return (
     <PostMiniItemStyles reverse={isReverse}>
-      <PostThumbnail
-        href={slug}
-        url={thumbnail}
-      ></PostThumbnail>
+      <PostThumbnail href={slug} url={thumbnail}></PostThumbnail>
       <div className="post-content">
-        <PostCategory>{categories[0].name}</PostCategory>
+        {category && <PostCategory>{category.name}</PostCategory>}
         <PostTitle size="16px" href={slug}>
-          {title || "You can make your art with canyon color"}
+          {title}
         </PostTitle>
-        <PostMeta date={date} auth={user}></PostMeta>
+        <PostMeta date={formatDate(createdAt)} auth={user}></PostMeta>
       </div>
     </PostMiniItemStyles>
   );

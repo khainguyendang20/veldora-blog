@@ -31,10 +31,11 @@ describe("PostMeta", () => {
     expect(screen.getByText("Jan 1, 2024")).toBeInTheDocument();
   });
 
-  it("should use default date when not provided", () => {
-    renderWithProviders(<PostMeta auth={mockAuth} />);
+  it("should hide the date when it is not known yet", () => {
+    const { container } = renderWithProviders(<PostMeta auth={mockAuth} />);
 
-    expect(screen.getByText("Dec 24, 2016")).toBeInTheDocument();
+    // eslint-disable-next-line testing-library/no-container, testing-library/no-node-access
+    expect(container.querySelector(".post-date")).toBeNull();
   });
 
   it("should link to author profile", () => {
@@ -49,7 +50,7 @@ describe("PostMeta", () => {
       <PostMeta auth={{ username: "test" }} date="Jan 1, 2024" />
     );
 
-    expect(screen.getByText("im_dev2002")).toBeInTheDocument();
+    expect(screen.getByText("Unknown author")).toBeInTheDocument();
   });
 
   it("should render author avatar", () => {

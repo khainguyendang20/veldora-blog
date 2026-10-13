@@ -5,12 +5,12 @@ import { IconEyeToggle } from "components/icons";
 const InputPassword = ({ control, ...props }) => {
   const [showPassword, setShowPassword] = useState(false);
   if (!control) return null;
-  const { error } = props;
+  const { error, placeholder = "Enter your password..." } = props;
   return (
     <Input
       type={showPassword ? "text" : "password"}
       name="password"
-      placeholder="Enter your fullname..."
+      placeholder={placeholder}
       control={control}
       error={error}
     >

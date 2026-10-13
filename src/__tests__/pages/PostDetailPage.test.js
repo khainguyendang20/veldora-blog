@@ -39,6 +39,35 @@ describe("PostDetailPage", () => {
     window.HTMLElement.prototype.scrollIntoView = vi.fn();
     query.mockReturnValue({ name: "post-by-slug" });
     getDoc.mockResolvedValue({ data: () => undefined });
+    useAuthStore.setState({ user: null, isAuthLoading: false });
+  });
+
+  it("shows a spinner until the post arrives", () => {
+    onSnapshot.mockReturnValue(vi.fn());
+    renderAt("/post/hello");
+
+    expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
+  });
+
+  it("waits for the session before querying", () => {
+    useAuthStore.setState({ user: null, isAuthLoading: true });
+    renderAt("/post/hello");
+
+    expect(onSnapshot).not.toHaveBeenCalled();
+    expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
+  });
+
+  it("shows the not found page for an unknown slug", () => {
+    let onNext;
+    onSnapshot.mockImplementation((q, cb) => {
+      onNext = cb;
+      return vi.fn();
+    });
+    renderAt("/post/missing");
+
+    act(() => onNext({ forEach: () => {} }));
+
+    expect(screen.getByText("Back to home")).toBeInTheDocument();
   });
 
   it("strips scripts and event handlers from post content", () => {

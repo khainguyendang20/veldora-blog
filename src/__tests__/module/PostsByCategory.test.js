@@ -1,6 +1,6 @@
 import React from "react";
 import { render } from "@testing-library/react";
-import { onSnapshot, query, where } from "firebase/firestore";
+import { onSnapshot, orderBy, query, where } from "firebase/firestore";
 import PostsByCategory from "module/home/PostsByCategory";
 
 vi.mock("config/firebase-config", () => ({ db: {} }));
@@ -9,6 +9,7 @@ vi.mock("firebase/firestore", () => ({
   query: vi.fn(),
   where: vi.fn(),
   limit: vi.fn(),
+  orderBy: vi.fn(),
   onSnapshot: vi.fn(),
 }));
 
@@ -27,5 +28,6 @@ describe("PostsByCategory", () => {
       "array-contains",
       "cat-123"
     );
+    expect(orderBy).toHaveBeenCalledWith("createdAt", "desc");
   });
 });

@@ -6,7 +6,7 @@ const LoadingStyles = styled.span`
   height: ${(props) => props.size};
   border-width: ${(props) => props.borderSize};
   border-style: solid;
-  border-color: white;
+  border-color: ${(props) => props.color};
   border-top-color: transparent;
   animation: spinner linear 0.75s infinite;
   border-radius: 100rem;
@@ -18,13 +18,14 @@ const LoadingStyles = styled.span`
   }
 `;
 
-const LoadingSpinner = ({ size = "32px", borderSize = "4px" }) => {
+const LoadingSpinner = ({ size = "32px", borderSize = "4px", color = "white" }) => {
   return (
     <LoadingStyles
       role="status"
       aria-label="Loading"
       size={size}
       borderSize={borderSize}
+      color={color}
     ></LoadingStyles>
   );
 };

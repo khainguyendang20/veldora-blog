@@ -16,7 +16,6 @@ import {
   query,
   startAfter,
   updateDoc,
-  where,
 } from "firebase/firestore";
 import debounce from "lodash/debounce";
 import React, { useEffect, useMemo, useState } from "react";
@@ -29,7 +28,7 @@ const CategoryManagePage = () => {
   const [categories, setCategories] = useState([]);
   const [filter, setFilter] = useState("");
   const [lastDocs, setLastDocs] = useState();
-  const [total, setTotal] = useState(0);
+  const [allCategories, setAllCategories] = useState([]);
 
   const handleFilterChange = useMemo(
     () => debounce((e) => setFilter(e.target.value), 500),
@@ -47,19 +46,25 @@ const CategoryManagePage = () => {
     setCategories((prev) => [...prev, ...result]);
     setLastDocs(snapshot.docs[snapshot.docs.length - 1]);
   };
+  // The whole collection is already loaded for the total, so search it in
+  // memory: Firestore has no case-insensitive or substring queries
+  const searchTerm = filter.trim().toLowerCase();
+  const visibleCategories = searchTerm
+    ? allCategories.filter(
+        (category) =>
+          category.name?.toLowerCase().includes(searchTerm) ||
+          category.slug?.toLowerCase().includes(searchTerm)
+      )
+    : categories;
   useEffect(() => {
     const colRef = collection(db, "categories");
     const unsubscribeTotal = onSnapshot(colRef, (snapshot) =>
-      setTotal(snapshot.size)
+      setAllCategories(
+        snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+      )
     );
-    const newRef = filter
-      ? query(
-          colRef,
-          where("name", ">=", filter),
-          where("name", "<=", filter + "utf8")
-        )
-      : query(colRef, limit(itemPerPage.MANAGE));
-    const unsubscribeList = onSnapshot(newRef, (snapshot) => {
+    const firstPage = query(colRef, limit(itemPerPage.MANAGE));
+    const unsubscribeList = onSnapshot(firstPage, (snapshot) => {
       const result = [];
       snapshot.forEach((doc) => {
         result.push({
@@ -74,7 +79,7 @@ const CategoryManagePage = () => {
       unsubscribeTotal();
       unsubscribeList();
     };
-  }, [filter]);
+  }, []);
   const handleApproveToggle = (data) => {
     const colRef = doc(db, "categories", data.id);
     updateDoc(colRef, {
@@ -129,8 +134,8 @@ const CategoryManagePage = () => {
           </tr>
         </thead>
         <tbody>
-          {categories.length > 0 &&
-            categories.map((category) => (
+          {visibleCategories.length > 0 &&
+            visibleCategories.map((category) => (
               <tr key={category.id}>
                 <td>{category.id}</td>
                 <td>{category.name}</td>
@@ -159,7 +164,7 @@ const CategoryManagePage = () => {
             ))}
         </tbody>
       </Table>
-      {categories.length < total && (
+      {!searchTerm && categories.length < allCategories.length && (
         <Button onClick={handleLoadMore}>Load more</Button>
       )}
     </>

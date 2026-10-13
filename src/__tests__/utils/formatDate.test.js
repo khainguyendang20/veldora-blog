@@ -26,6 +26,11 @@ describe("formatDate", () => {
     expect(result).toContain("2024");
   });
 
+  it("should return an empty string while the server timestamp is pending", () => {
+    expect(formatDate(null)).toBe("");
+    expect(formatDate(undefined)).toBe("");
+  });
+
   it("should handle timestamp with seconds = 0 (epoch)", () => {
     const epoch = { seconds: 0 };
     const result = formatDate(epoch);

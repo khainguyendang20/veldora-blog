@@ -96,6 +96,22 @@ describe("useFirestoreQuery", () => {
     expect(onSnapshot).toHaveBeenCalledTimes(1);
   });
 
+  it("stops loading and exposes the error when the query fails", () => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    onSnapshot.mockImplementation((q, onNext, onError) => {
+      listeners.push({ q, onNext, onError });
+      return vi.fn();
+    });
+    const { result } = renderHook(() => useFirestoreQuery(() => ({}), []));
+    const error = new Error("The query requires an index");
+
+    act(() => listeners[0].onError(error));
+
+    expect(result.current).toEqual({ data: [], loading: false, error });
+    expect(consoleError).toHaveBeenCalledWith(error);
+    consoleError.mockRestore();
+  });
+
   it("does not subscribe when the builder returns null", () => {
     const { result } = renderHook(() => useFirestoreQuery(() => null, []));
 

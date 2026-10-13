@@ -25,7 +25,7 @@ export const homeCategory = {
 };
 
 export const itemPerPage = {
-  MANAGE: 1,
+  MANAGE: 10,
 };
 
 export const avatarDefault = "/avatar-default.svg";

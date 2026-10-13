@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
 import PostThumbnail from "./components/PostThumbnail";
+import { formatDate } from "utils/formatDate";
 import PostCategory from "./components/PostCategory";
 import PostTitle from "./components/PostTitle";
 import PostMeta from "./components/PostMeta";
@@ -34,11 +35,6 @@ const PostItemLarge = (props) => {
 
   if (!data) return;
   const { title, slug, thumbnail, createdAt, user } = data;
-  const date = new Date(createdAt.seconds * 1000).toLocaleDateString("vi-VI", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
   return (
     <PostItemLargeStyles className="post-large" {...rest}>
       <PostThumbnail
@@ -48,7 +44,7 @@ const PostItemLarge = (props) => {
       ></PostThumbnail>
       <div className="post-content">
         <div className="post-categories">
-          {data.categories.map((category) => (
+          {(data.categories || []).map((category) => (
             <PostCategory key={category.id || category.slug} href={`/${category.slug}`}>
               {category.name}
             </PostCategory>
@@ -57,7 +53,11 @@ const PostItemLarge = (props) => {
         <PostTitle href={slug} size="32px" color="white">
           {title}
         </PostTitle>
-        <PostMeta color="white" date={date} auth={user}></PostMeta>
+        <PostMeta
+          color="white"
+          date={formatDate(createdAt)}
+          auth={user}
+        ></PostMeta>
       </div>
     </PostItemLargeStyles>
   );
