@@ -7,32 +7,32 @@ import { useAuthStore } from "store";
 import { userRole } from "utils/constants";
 import App from "App";
 
-jest.mock("config/firebase-config", () => ({ auth: {}, db: {} }));
-jest.mock("firebase/auth", () => ({
-  getAuth: jest.fn(),
-  onAuthStateChanged: jest.fn(),
-  signInWithEmailAndPassword: jest.fn(),
-  createUserWithEmailAndPassword: jest.fn(),
-  updateProfile: jest.fn(),
-  signOut: jest.fn(),
+vi.mock("config/firebase-config", () => ({ auth: {}, db: {} }));
+vi.mock("firebase/auth", () => ({
+  getAuth: vi.fn(),
+  onAuthStateChanged: vi.fn(),
+  signInWithEmailAndPassword: vi.fn(),
+  createUserWithEmailAndPassword: vi.fn(),
+  updateProfile: vi.fn(),
+  signOut: vi.fn(),
 }));
-jest.mock("firebase/firestore", () => ({
-  collection: jest.fn(),
-  doc: jest.fn(),
-  query: jest.fn(),
-  where: jest.fn(),
-  limit: jest.fn(),
-  startAfter: jest.fn(),
-  onSnapshot: jest.fn(),
-  getDocs: jest.fn(),
-  getDoc: jest.fn(),
-  setDoc: jest.fn(),
-  updateDoc: jest.fn(),
-  deleteDoc: jest.fn(),
-  serverTimestamp: jest.fn(),
+vi.mock("firebase/firestore", () => ({
+  collection: vi.fn(),
+  doc: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  limit: vi.fn(),
+  startAfter: vi.fn(),
+  onSnapshot: vi.fn(),
+  getDocs: vi.fn(),
+  getDoc: vi.fn(),
+  setDoc: vi.fn(),
+  updateDoc: vi.fn(),
+  deleteDoc: vi.fn(),
+  serverTimestamp: vi.fn(),
 }));
-// ESM-only package that CRA's Jest cannot transform.
-jest.mock("@uidotdev/usehooks", () => ({
+// jsdom has no matchMedia, which useMediaQuery needs.
+vi.mock("@uidotdev/usehooks", () => ({
   useWindowSize: () => ({ width: 1280 }),
   useMediaQuery: () => true,
 }));
@@ -51,8 +51,8 @@ const renderAt = (path, role) => {
 
 describe("App routes", () => {
   beforeEach(() => {
-    onAuthStateChanged.mockReturnValue(jest.fn());
-    onSnapshot.mockReturnValue(jest.fn());
+    onAuthStateChanged.mockReturnValue(vi.fn());
+    onSnapshot.mockReturnValue(vi.fn());
   });
 
   it("renders the login page", async () => {

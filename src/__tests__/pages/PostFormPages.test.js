@@ -15,23 +15,23 @@ import { useAuthStore } from "store";
 import AddNewPostPage from "pages/manage/AddNewPostPage";
 import UpdatePostPage from "pages/manage/UpdatePostPage";
 
-jest.mock("config/firebase-config", () => ({ db: {} }));
-jest.mock("firebase/firestore", () => ({
-  addDoc: jest.fn(),
-  collection: jest.fn(),
-  doc: jest.fn(),
-  getDoc: jest.fn(),
-  getDocs: jest.fn(),
-  query: jest.fn(),
-  where: jest.fn(),
-  updateDoc: jest.fn(),
-  serverTimestamp: jest.fn(),
+vi.mock("config/firebase-config", () => ({ db: {} }));
+vi.mock("firebase/firestore", () => ({
+  addDoc: vi.fn(),
+  collection: vi.fn(),
+  doc: vi.fn(),
+  getDoc: vi.fn(),
+  getDocs: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  updateDoc: vi.fn(),
+  serverTimestamp: vi.fn(),
 }));
-jest.mock("react-toastify", () => ({
-  toast: { success: jest.fn(), error: jest.fn() },
+vi.mock("react-toastify", () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
 }));
 // Quill needs a real browser selection API; a textarea stands in for it.
-jest.mock("react-quill", () => {
+vi.mock("react-quill", () => {
   const Editor = ({ value, onChange }) => (
     <textarea
       aria-label="content"
@@ -42,17 +42,17 @@ jest.mock("react-quill", () => {
   Editor.Quill = { register: () => {} };
   return { __esModule: true, default: Editor, Quill: Editor.Quill };
 });
-jest.mock("quill-image-uploader", () => ({}));
+vi.mock("quill-image-uploader", () => ({ default: {} }));
 // Firebase Storage upload is out of scope for these tests.
-const mockImageHook = {
+const mockImageHook = vi.hoisted(() => ({
   image: "https://img/thumb.jpg",
   setImage: () => {},
   progress: 0,
   handleSelectImage: () => {},
   handleDeleteImage: () => {},
   handleResetUpload: () => {},
-};
-jest.mock("hooks/useFireBaseImage", () => () => mockImageHook);
+}));
+vi.mock("hooks/useFireBaseImage", () => ({ default: () => mockImageHook }));
 
 const docs = {
   "posts/p1": {

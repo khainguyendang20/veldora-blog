@@ -29,7 +29,7 @@ describe("Toggle", () => {
   });
 
   it("should call onClick when clicked", () => {
-    const handleClick = jest.fn();
+    const handleClick = vi.fn();
     renderWithTheme(<Toggle on={false} onClick={handleClick} />);
 
     const checkbox = screen.getByRole("checkbox");

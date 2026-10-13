@@ -19,7 +19,14 @@ const LoadingStyles = styled.span`
 `;
 
 const LoadingSpinner = ({ size = "32px", borderSize = "4px" }) => {
-  return <LoadingStyles size={size} borderSize={borderSize}></LoadingStyles>;
+  return (
+    <LoadingStyles
+      role="status"
+      aria-label="Loading"
+      size={size}
+      borderSize={borderSize}
+    ></LoadingStyles>
+  );
 };
 
 export default LoadingSpinner;

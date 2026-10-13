@@ -1,1 +1,1 @@
-export const { default: Table } = require("./Table");
+export { default as Table } from "./Table";

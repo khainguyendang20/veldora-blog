@@ -1,1 +1,1 @@
-export const { default: Input } = require("./Input");
+export { default as Input } from "./Input";

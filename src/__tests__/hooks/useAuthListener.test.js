@@ -5,13 +5,13 @@ import { onSnapshot, query } from "firebase/firestore";
 import { useAuthStore } from "store";
 import useAuthListener from "hooks/useAuthListener";
 
-jest.mock("config/firebase-config", () => ({ auth: {}, db: {} }));
-jest.mock("firebase/auth", () => ({ onAuthStateChanged: jest.fn() }));
-jest.mock("firebase/firestore", () => ({
-  collection: jest.fn(),
-  query: jest.fn(),
-  where: jest.fn(),
-  onSnapshot: jest.fn(),
+vi.mock("config/firebase-config", () => ({ auth: {}, db: {} }));
+vi.mock("firebase/auth", () => ({ onAuthStateChanged: vi.fn() }));
+vi.mock("firebase/firestore", () => ({
+  collection: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  onSnapshot: vi.fn(),
 }));
 
 const Probe = () => {
@@ -31,7 +31,7 @@ describe("useAuthListener", () => {
 
   beforeEach(() => {
     useAuthStore.setState({ user: null, isAuthLoading: true });
-    unsubscribeAuth = jest.fn();
+    unsubscribeAuth = vi.fn();
     onAuthStateChanged.mockImplementation((auth, cb) => {
       emitAuth = (user) => act(() => cb(user));
       return unsubscribeAuth;
@@ -39,7 +39,7 @@ describe("useAuthListener", () => {
     userListeners = [];
     query.mockImplementation(() => ({ name: "user-by-email" }));
     onSnapshot.mockImplementation((q, cb) => {
-      const unsubscribe = jest.fn();
+      const unsubscribe = vi.fn();
       userListeners.push({ emit: (s) => act(() => cb(s)), unsubscribe });
       return unsubscribe;
     });

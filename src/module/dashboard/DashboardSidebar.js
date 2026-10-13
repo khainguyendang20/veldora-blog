@@ -115,7 +115,14 @@ const DashboardSidebar = () => {
             <div
               className="sidebar__link"
               key={item.title}
+              role="button"
+              tabIndex={0}
+              aria-label={item.title}
+              title={item.title}
               onClick={item.onClick}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") item.onClick();
+              }}
             >
               <span className="sidebar__link-icon">{item.icon}</span>
               <span className="sidebar__link-title">{item.title}</span>
@@ -128,6 +135,8 @@ const DashboardSidebar = () => {
               isActive ? "sidebar__link sidebar__link--active" : "sidebar__link"
             }
             key={item.title}
+            aria-label={item.title}
+            title={item.title}
           >
             <span className="sidebar__link-icon">{item.icon}</span>
             <span className="sidebar__link-title">{item.title}</span>

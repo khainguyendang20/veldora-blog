@@ -5,8 +5,8 @@ import { useAuthStore } from "store";
 import LayoutDashboard from "layout/LayoutDashboard";
 
 // Header and sidebar pull in Firebase; they are not under test here.
-jest.mock("components/layout/Header", () => () => null);
-jest.mock("module/dashboard/DashboardSidebar", () => () => null);
+vi.mock("components/layout/Header", () => ({ default: () => null }));
+vi.mock("module/dashboard/DashboardSidebar", () => ({ default: () => null }));
 
 const renderDashboard = () =>
   render(

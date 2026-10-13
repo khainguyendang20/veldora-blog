@@ -3,19 +3,19 @@ import { render } from "@testing-library/react";
 import { onSnapshot, query, where } from "firebase/firestore";
 import PostsByCategory from "module/home/PostsByCategory";
 
-jest.mock("config/firebase-config", () => ({ db: {} }));
-jest.mock("firebase/firestore", () => ({
-  collection: jest.fn(),
-  query: jest.fn(),
-  where: jest.fn(),
-  limit: jest.fn(),
-  onSnapshot: jest.fn(),
+vi.mock("config/firebase-config", () => ({ db: {} }));
+vi.mock("firebase/firestore", () => ({
+  collection: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  limit: vi.fn(),
+  onSnapshot: vi.fn(),
 }));
 
 describe("PostsByCategory", () => {
   beforeEach(() => {
     query.mockReturnValue({ name: "category-posts" });
-    onSnapshot.mockReturnValue(jest.fn());
+    onSnapshot.mockReturnValue(vi.fn());
   });
 
   it("queries approved posts by the given category id", () => {

@@ -6,14 +6,14 @@ import { useAuthStore } from "store";
 import { userRole } from "utils/constants";
 import PostManagePage from "pages/manage/PostManagePage";
 
-jest.mock("config/firebase-config", () => ({ db: {} }));
-jest.mock("firebase/firestore", () => ({
-  collection: jest.fn(),
-  query: jest.fn(),
-  where: jest.fn(),
-  onSnapshot: jest.fn(),
-  doc: jest.fn(),
-  deleteDoc: jest.fn(),
+vi.mock("config/firebase-config", () => ({ db: {} }));
+vi.mock("firebase/firestore", () => ({
+  collection: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+  onSnapshot: vi.fn(),
+  doc: vi.fn(),
+  deleteDoc: vi.fn(),
 }));
 
 const renderAs = (user) => {
@@ -30,7 +30,7 @@ describe("PostManagePage", () => {
     collection.mockReturnValue({ name: "posts" });
     query.mockReturnValue({ name: "own-posts" });
     where.mockReturnValue("user.id == u2");
-    onSnapshot.mockReturnValue(jest.fn());
+    onSnapshot.mockReturnValue(vi.fn());
   });
 
   it("lists every post for moderators", () => {
@@ -47,7 +47,7 @@ describe("PostManagePage", () => {
   });
 
   it("filters posts by title after the search input settles", () => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     renderAs({ uid: "u1", role: userRole.ADMIN });
     const onNext = onSnapshot.mock.calls[0][1];
     act(() =>
@@ -66,11 +66,11 @@ describe("PostManagePage", () => {
       target: { value: "fire" },
     });
     expect(screen.getByText("React hooks")).toBeInTheDocument();
-    act(() => jest.advanceTimersByTime(500));
+    act(() => vi.advanceTimersByTime(500));
 
     expect(screen.queryByText("React hooks")).not.toBeInTheDocument();
     expect(screen.getByText("Firebase rules")).toBeInTheDocument();
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   it("keeps one subscription when unrelated profile fields change", () => {

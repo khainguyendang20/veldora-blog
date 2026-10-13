@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { render, fireEvent } from "@testing-library/react";
+import { render, fireEvent, screen } from "@testing-library/react";
 import { useClickOutside } from "hooks/useClickOutSide";
 
 // Test component that uses the hook
@@ -19,34 +19,34 @@ const TestComponent = ({ onClickOutside }) => {
 
 describe("useClickOutside", () => {
   it("should call handler when clicking outside the ref element", () => {
-    const handler = jest.fn();
-    const { getByTestId } = render(<TestComponent onClickOutside={handler} />);
+    const handler = vi.fn();
+    render(<TestComponent onClickOutside={handler} />);
 
-    fireEvent.mouseDown(getByTestId("outside"));
+    fireEvent.mouseDown(screen.getByTestId("outside"));
 
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
   it("should NOT call handler when clicking inside the ref element", () => {
-    const handler = jest.fn();
-    const { getByTestId } = render(<TestComponent onClickOutside={handler} />);
+    const handler = vi.fn();
+    render(<TestComponent onClickOutside={handler} />);
 
-    fireEvent.mouseDown(getByTestId("inside"));
+    fireEvent.mouseDown(screen.getByTestId("inside"));
 
     expect(handler).not.toHaveBeenCalled();
   });
 
   it("should handle touchstart events", () => {
-    const handler = jest.fn();
-    const { getByTestId } = render(<TestComponent onClickOutside={handler} />);
+    const handler = vi.fn();
+    render(<TestComponent onClickOutside={handler} />);
 
-    fireEvent.touchStart(getByTestId("outside"));
+    fireEvent.touchStart(screen.getByTestId("outside"));
 
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
   it("should clean up event listeners on unmount", () => {
-    const handler = jest.fn();
+    const handler = vi.fn();
     const { unmount } = render(
       <TestComponent onClickOutside={handler} />
     );

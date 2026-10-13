@@ -1,1 +1,1 @@
-export const { default: LoadingSpinner } = require("./LoadingSpinner");
+export { default as LoadingSpinner } from "./LoadingSpinner";

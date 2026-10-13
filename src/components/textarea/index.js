@@ -1,1 +1,1 @@
-export const { default: Textarea } = require("./Textarea");
+export { default as Textarea } from "./Textarea";
