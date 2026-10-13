@@ -11,7 +11,7 @@ vi.mock("config/firebase-config", () => ({ db: {} }));
 vi.mock("firebase/firestore", () => ({
   collection: vi.fn(),
   doc: vi.fn(),
-  deleteDoc: vi.fn(),
+  writeBatch: vi.fn(),
   updateDoc: vi.fn(),
   onSnapshot: vi.fn(),
 }));

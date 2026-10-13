@@ -6,7 +6,7 @@ import { Image } from "components/image";
 import Heading from "components/layout/Heading";
 import { Table } from "components/table";
 import { db } from "config/firebase-config";
-import { collection, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, doc, updateDoc, writeBatch } from "firebase/firestore";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
 import debounce from "lodash/debounce";
 import React, { useMemo, useState } from "react";
@@ -163,8 +163,11 @@ const UserManagePage = () => {
       confirmButtonText: "Yes, delete it!",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        const colRef = doc(db, "users", userId);
-        await deleteDoc(colRef);
+        // The email lives apart from the profile; remove both together
+        const batch = writeBatch(db);
+        batch.delete(doc(db, "users", userId));
+        batch.delete(doc(db, "userEmails", userId));
+        await batch.commit();
         Swal.fire("Deleted!", "User has been deleted.", "success");
       }
     });
