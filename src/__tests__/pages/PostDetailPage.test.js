@@ -6,6 +6,7 @@ import { useAuthStore } from "store";
 import PostDetailPage from "pages/PostDetailPage";
 
 vi.mock("config/firebase-config", () => ({ db: {} }));
+vi.mock("module/post/highlightCode", () => ({ highlightCode: vi.fn() }));
 vi.mock("firebase/firestore", () => ({
   collection: vi.fn(),
   query: vi.fn(),
@@ -157,6 +158,16 @@ describe("PostDetailPage extras", () => {
       listeners[0]({ forEach: (cb) => cb({ id: "p1", data: () => fullPost }) })
     );
   };
+
+  it("lists the post's headings in a table of contents", () => {
+    fullPost.content = "<h2>One</h2><p>a</p><h2>Two</h2><h2>Three</h2>";
+    openPost(null);
+
+    const toc = screen.getByRole("navigation", { name: "Table of contents" });
+    expect(toc).toHaveTextContent("OneTwoThree");
+    expect(screen.getByRole("link", { name: "Two" })).toHaveAttribute("href", "#h-two");
+    fullPost.content = "<p>Body</p>";
+  });
 
   it("titles the browser tab after the post", () => {
     openPost(null);

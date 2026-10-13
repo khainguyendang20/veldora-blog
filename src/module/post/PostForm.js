@@ -8,7 +8,7 @@ import { Button } from "components/button";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Select from "react-select";
-import slugify from "slugify";
+import { toSlug } from "utils/toSlug";
 import { isStaffRole, postStatus } from "utils/constants";
 import { useAuthStore } from "store";
 import useImageUpload from "hooks/useImageUpload";
@@ -26,7 +26,7 @@ Quill.register("modules/imageUploader", ImageUploader);
 const quillModules = {
   toolbar: [
     ["bold", "italic", "underline", "strike"],
-    ["blockquote"],
+    ["blockquote", "code-block"],
     [{ header: 1 }, { header: 2 }], // custom button values
     [{ list: "ordered" }, { list: "bullet" }],
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
@@ -101,7 +101,7 @@ const PostForm = ({
   // the title just gets a short random suffix.
   const resolveSlug = async (values) => {
     const customSlug = values.slug?.trim();
-    const slug = slugify(customSlug || values.title, { lower: true });
+    const slug = toSlug(customSlug || values.title);
     const checkOptions = { postId, uid, isStaff: canModerate };
     if (!(await isSlugTaken(slug, checkOptions))) return slug;
     if (customSlug) return null;

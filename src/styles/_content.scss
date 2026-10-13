@@ -80,3 +80,15 @@
     padding: 0 24px;
   }
 }
+
+// Table of contents links land below the fixed header
+.entry-content :is(h1, h2, h3) {
+  scroll-margin-top: 90px;
+}
+
+.entry-content pre {
+  overflow-x: auto;
+  padding: 16px;
+  border-radius: 8px;
+  font-size: 14px;
+}
