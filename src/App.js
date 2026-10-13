@@ -12,6 +12,7 @@ import Layout from "components/layout/Layout";
 // never download the editor, form libraries or admin tables.
 const LoginPage = lazy(() => import("pages/LoginPage"));
 const RegisterPage = lazy(() => import("pages/RegisterPage"));
+const ForgotPasswordPage = lazy(() => import("pages/ForgotPasswordPage"));
 const PostDetailPage = lazy(() => import("pages/PostDetailPage"));
 const BlogPage = lazy(() => import("pages/BlogPage"));
 const CategoryPage = lazy(() => import("pages/CategoryPage"));
@@ -65,6 +66,10 @@ function AppRoutes() {
       </Route>
       <Route path="/register" element={<RegisterPage></RegisterPage>}></Route>
       <Route path="/login" element={<LoginPage></LoginPage>}></Route>
+      <Route
+        path="/forgot-password"
+        element={<ForgotPasswordPage></ForgotPasswordPage>}
+      ></Route>
       <Route element={<LayoutDashboard></LayoutDashboard>}>
         <Route
           path="/manage/dashboard"

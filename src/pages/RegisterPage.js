@@ -13,6 +13,7 @@ import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import LayoutAuthentication from "layout/LayoutAuthentication";
 import { createUserProfile } from "module/auth/userProfile";
+import GoogleSignInButton from "module/auth/GoogleSignInButton";
 import { authErrorMessage } from "utils/authErrorMessage";
 import useDocumentMeta from "hooks/useDocumentMeta";
 
@@ -100,6 +101,7 @@ const RegisterPage = () => {
         <Button type="submit" disabled={isSubmitting} isLoading={isSubmitting}>
           Sign Up
         </Button>
+        <GoogleSignInButton></GoogleSignInButton>
       </form>
     </LayoutAuthentication>
   );

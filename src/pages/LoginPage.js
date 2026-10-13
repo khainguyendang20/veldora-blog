@@ -14,6 +14,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "store";
 import { toast } from "react-toastify";
 import { authErrorMessage } from "utils/authErrorMessage";
+import GoogleSignInButton from "module/auth/GoogleSignInButton";
 import useDocumentMeta from "hooks/useDocumentMeta";
 
 const schema = yup.object({
@@ -78,6 +79,9 @@ const LoginPage = () => {
           ></InputPassword>
         </Field>
         <div className="have-account">
+          <Link to="/forgot-password">Forgot your password?</Link>
+        </div>
+        <div className="have-account">
           Do not have an account?
           <Link to="/register" style={{}}>
             Register now
@@ -86,6 +90,7 @@ const LoginPage = () => {
         <Button type="submit" disabled={isSubmitting} isLoading={isSubmitting}>
           Sign In
         </Button>
+        <GoogleSignInButton></GoogleSignInButton>
       </form>
     </LayoutAuthentication>
   );
