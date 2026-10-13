@@ -2,6 +2,7 @@ import { ActionDelete, ActionEdit } from "components/actions";
 import { Toggle } from "components/checkbox";
 import { FieldCheckboxes } from "components/field";
 import { IconSearch } from "components/icons";
+import { Image } from "components/image";
 import Heading from "components/layout/Heading";
 import { Table } from "components/table";
 import { db } from "config/firebase-config";
@@ -11,7 +12,12 @@ import debounce from "lodash/debounce";
 import React, { useMemo, useState } from "react";
 import Swal from "sweetalert2";
 import styled from "styled-components";
-import { getRoleName, userRole, userStatus } from "utils/constants";
+import {
+  avatarDefault,
+  getRoleName,
+  userRole,
+  userStatus,
+} from "utils/constants";
 import { useAuthStore } from "store";
 
 const InfoColStyles = styled.div`
@@ -195,7 +201,7 @@ const UserManagePage = () => {
               <td>
                 <InfoColStyles>
                   <div className="avt">
-                    <img src={user.avatar} alt="" />
+                    <Image src={user.avatar} fallback={avatarDefault} />
                   </div>
                   <div>
                     <h3>{user.fullname}</h3>

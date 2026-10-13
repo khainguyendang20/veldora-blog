@@ -1,6 +1,8 @@
 import { db } from "config/firebase-config";
 import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
+import { Image } from "components/image";
+import { avatarDefault } from "utils/constants";
 
 const AuthorBox = ({ userId = "" }) => {
   const [user, setUser] = useState({});
@@ -18,7 +20,7 @@ const AuthorBox = ({ userId = "" }) => {
   return (
     <div className="author">
       <div className="author-image">
-        <img src={user?.avatar} alt="" />
+        <Image src={user?.avatar} fallback={avatarDefault} />
       </div>
       <div className="author-content">
         <h3 className="author-name">{user?.fullname}</h3>

@@ -25,10 +25,7 @@ const PostItem = ({ data, ...props }) => {
     <PostItemStyles>
       <PostThumbnail
         href={slug}
-        url={
-          thumbnail ||
-          "https://jellywp.com/theme/disto/demo/wp-content/uploads/2019/03/daniel-korpai-1296140-unsplash-780x450.jpg"
-        }
+        url={thumbnail}
       >
         <PostCategory absolute>{categories[0].name}</PostCategory>
       </PostThumbnail>

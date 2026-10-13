@@ -10,14 +10,13 @@ import { useForm } from "react-hook-form";
 import Select from "react-select";
 import slugify from "slugify";
 import { postStatus } from "utils/constants";
-import useFirebaseImage from "hooks/useFireBaseImage";
+import useImageUpload from "hooks/useImageUpload";
 import { collection, doc, getDoc, getDocs, query, where } from "firebase/firestore";
 import { db } from "config/firebase-config";
 import { toast } from "react-toastify";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import { imgbbAPI } from "config/apiConfig";
-import axios from "axios";
+import { uploadImage } from "utils/uploadImage";
 import ImageUploader from "quill-image-uploader";
 
 Quill.register("modules/imageUploader", ImageUploader);
@@ -32,19 +31,7 @@ const quillModules = {
     ["link", "image"],
   ],
   imageUploader: {
-    upload: async (file) => {
-      const bodyFormData = new FormData();
-      bodyFormData.append("image", file);
-      const response = await axios({
-        method: "post",
-        url: imgbbAPI,
-        data: bodyFormData,
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      return response.data.data.url;
-    },
+    upload: async (file) => (await uploadImage(file)).url,
   },
 };
 
@@ -67,7 +54,7 @@ const PostForm = ({
   submitLabel,
   resetAfterSubmit = false,
 }) => {
-  const { control, watch, setValue, handleSubmit, getValues, reset } =
+  const { control, watch, setValue, handleSubmit, reset } =
     useForm({ mode: "onChange", defaultValues });
   const [optionValues, setOptionValues] = useState(
     (defaultValues.categories || []).map(toOption)
@@ -83,12 +70,7 @@ const PostForm = ({
     progress,
     handleSelectImage,
     handleDeleteImage,
-  } = useFirebaseImage(
-    setValue,
-    getValues,
-    defaultValues.image_name,
-    onImageDeleted
-  );
+  } = useImageUpload(onImageDeleted);
 
   useEffect(() => {
     if (defaultValues.thumbnail) setImage(defaultValues.thumbnail);

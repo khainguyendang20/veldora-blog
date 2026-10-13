@@ -18,7 +18,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import LayoutAuthentication from "layout/LayoutAuthentication";
 import slugify from "slugify";
-import { userRole, userStatus } from "utils/constants";
+import { avatarDefault, userRole, userStatus } from "utils/constants";
 
 const schema = yup.object({
   fullname: yup.string().required("Please enter your fullname"),
@@ -55,8 +55,7 @@ const RegisterPage = () => {
       fullname: values.fullname,
       email: values.email,
       password: values.password,
-      avatar:
-        "https://firebasestorage.googleapis.com/v0/b/fspade-blog.appspot.com/o/images%2F3177440.png?alt=media&token=ea29f785-7cef-47a6-af6b-a7c8c89d57d7",
+      avatar: avatarDefault,
       username: slugify(
         values.fullname + "-" + auth.currentUser.uid.slice(0, 10),
         {

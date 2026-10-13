@@ -44,10 +44,7 @@ const PostItemLarge = (props) => {
       <PostThumbnail
         href={slug}
         height="480px"
-        url={
-          thumbnail ||
-          "https://jellywp.com/theme/disto/demo/wp-content/uploads/2018/11/melissa-walker-horn-1058236-unsplash-1920x982.jpg"
-        }
+        url={thumbnail}
       ></PostThumbnail>
       <div className="post-content">
         <div className="post-categories">

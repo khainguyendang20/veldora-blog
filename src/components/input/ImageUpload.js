@@ -2,6 +2,8 @@ import React from "react";
 import PropTypes from "prop-types";
 import styled from "styled-components";
 import { LoadingSpinner } from "components/loading";
+import { Image } from "components/image";
+import { thumbnailPlaceholder } from "utils/constants";
 
 const ImageUploadStyles = styled.label`
   display: flex;
@@ -86,7 +88,7 @@ const ImageUpload = (props) => {
       )}
       {image && (
         <div className="input__image--uploaded">
-          <img src={image} alt="" />
+          <Image src={image} fallback={thumbnailPlaceholder} />
           <button type="button" onClick={handleDeleteImage}>
             <svg
               xmlns="http://www.w3.org/2000/svg"

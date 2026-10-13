@@ -68,10 +68,7 @@ const PostItemMini = ({ isReverse = false, data, ...props }) => {
     <PostMiniItemStyles reverse={isReverse}>
       <PostThumbnail
         href={slug}
-        url={
-          thumbnail ||
-          "https://jellywp.com/theme/disto/demo/wp-content/uploads/2016/12/bartosz-wanot-133401-unsplash-120x120.jpg"
-        }
+        url={thumbnail}
       ></PostThumbnail>
       <div className="post-content">
         <PostCategory>{categories[0].name}</PostCategory>
