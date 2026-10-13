@@ -25,7 +25,7 @@ const LayoutAuthentication = ({ children }) => {
     <AuthenticationStyles>
       <div className="container">
         <Link to="/">
-          <img srcSet="/logo.png 2x" alt="Justure Logo" className="logo" />
+          <img srcSet="/logo.png 2x" alt="Veldora Blog" className="logo" />
         </Link>
         <h1 className="heading">Veldora Blog</h1>
         {children}

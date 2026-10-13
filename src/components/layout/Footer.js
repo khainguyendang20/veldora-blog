@@ -14,7 +14,7 @@ const FooterStyles = styled.div`
 const Footer = () => {
   return (
     <FooterStyles>
-      <p>© Copyright 2023 Veldora Blog</p>
+      <p>© Copyright {new Date().getFullYear()} Veldora Blog</p>
     </FooterStyles>
   );
 };

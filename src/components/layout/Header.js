@@ -187,7 +187,7 @@ const Header = () => {
       <div className="header-main">
         <div className="header-l">
           <NavLink className="logo" to="/">
-            <img srcSet="/logo.png 2x" alt="FSpade Blog" className="logo-img" />
+            <img srcSet="/logo.png 2x" alt="Veldora Blog" className="logo-img" />
             <span className="logo-title">Veldora Blog</span>
           </NavLink>
           {isDesktop ? (

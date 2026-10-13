@@ -5,6 +5,7 @@ import PostItem from "module/post/PostItem";
 import PostsByCategory from "module/home/PostsByCategory";
 import HomeSection from "module/home/HomeSection";
 import HomeFeature from "module/home/HomeFeature";
+import CategoryList from "module/home/CategoryList";
 import styled from "styled-components";
 import {
   collection,
@@ -141,16 +142,7 @@ const HomePage = () => {
             </div>
           </div>
           <div className="home__sidebar">
-            <div>
-              <Heading>Fanpage</Heading>
-              <iframe
-                title="My fanpage"
-                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FAnhbia247&tabs=timeline&height=500&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
-                style={{ border: "none", overflow: "hidden" }}
-                allowFullScreen={false}
-                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-              />
-            </div>
+            <CategoryList></CategoryList>
           </div>
         </HomeMainStyles>
       </HomeSection>
