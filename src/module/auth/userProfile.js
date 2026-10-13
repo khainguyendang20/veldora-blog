@@ -1,6 +1,6 @@
 import { db } from "config/firebase-config";
 import { doc, getDoc, serverTimestamp, writeBatch } from "firebase/firestore";
-import slugify from "slugify";
+import { toSlug } from "utils/toSlug";
 import { avatarDefault, userRole, userStatus } from "utils/constants";
 
 // The public profile (users/{uid}) is readable by anyone, so the email
@@ -13,7 +13,7 @@ export async function createUserProfile(authUser, { fullname, avatar } = {}) {
   batch.set(doc(db, "users", authUser.uid), {
     fullname: name,
     avatar: avatar || avatarDefault,
-    username: slugify(`${name}-${authUser.uid.slice(0, 10)}`, { lower: true }),
+    username: toSlug(`${name}-${authUser.uid.slice(0, 10)}`),
     role: userRole.USER,
     status: userStatus.ACTIVE,
     createdAt: serverTimestamp(),
