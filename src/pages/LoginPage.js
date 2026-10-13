@@ -14,6 +14,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "store";
 import { toast } from "react-toastify";
 import { authErrorMessage } from "utils/authErrorMessage";
+import useDocumentMeta from "hooks/useDocumentMeta";
 
 const schema = yup.object({
   email: yup
@@ -27,6 +28,7 @@ const schema = yup.object({
 });
 
 const LoginPage = () => {
+  useDocumentMeta({ title: "Sign in" });
   const { user } = useAuthStore((state) => state);
   const navigate = useNavigate();
   const {

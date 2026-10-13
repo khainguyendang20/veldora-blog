@@ -6,9 +6,11 @@ import HomeSection from "module/home/HomeSection";
 import PostList from "module/post/PostList";
 import React from "react";
 import { postStatus } from "utils/constants";
+import useDocumentMeta from "hooks/useDocumentMeta";
 
 // Every approved post, newest first
 const BlogPage = () => {
+  useDocumentMeta({ title: "All posts" });
   const { data, loading, error, hasMore, loadingMore, loadMore } =
     usePaginatedQuery(
       () =>

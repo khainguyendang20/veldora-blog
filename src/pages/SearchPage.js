@@ -15,6 +15,7 @@ import { useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { postStatus } from "utils/constants";
 import { normalizeText } from "utils/normalizeText";
+import useDocumentMeta from "hooks/useDocumentMeta";
 
 // Firestore has no full-text search, so the newest approved posts are read
 // once and filtered in the browser. Enough for a small blog; a search
@@ -48,6 +49,7 @@ const matchesSearch = (post, terms) => {
 const SearchPage = () => {
   const [params, setParams] = useSearchParams();
   const searchQuery = params.get("q") || "";
+  useDocumentMeta({ title: searchQuery ? `Search: ${searchQuery}` : "Search" });
   const [input, setInput] = useState(searchQuery);
   const [state, setState] = useState({ posts: [], loading: true, error: null });
 

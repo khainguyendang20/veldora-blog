@@ -15,6 +15,7 @@ import PostRelated from "module/post/PostRelated";
 import { formatDate } from "utils/formatDate";
 import { useAuthStore } from "store";
 import { isStaffRole, postStatus } from "utils/constants";
+import useDocumentMeta from "hooks/useDocumentMeta";
 
 const PostDetailStyles = styled.div`
   padding-bottom: 100px;
@@ -146,6 +147,7 @@ const PostDetailPage = () => {
       : query(bySlug, where("status", "==", postStatus.APPROVED));
   }, [slug, isStaff, isAuthLoading]);
   const postInfo = posts[posts.length - 1];
+  useDocumentMeta({ title: postInfo?.title, description: postInfo?.desc });
   useEffect(() => {
     document.body.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [slug]);

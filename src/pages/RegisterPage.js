@@ -20,6 +20,7 @@ import LayoutAuthentication from "layout/LayoutAuthentication";
 import slugify from "slugify";
 import { avatarDefault, userRole, userStatus } from "utils/constants";
 import { authErrorMessage } from "utils/authErrorMessage";
+import useDocumentMeta from "hooks/useDocumentMeta";
 
 const schema = yup.object({
   fullname: yup.string().required("Please enter your fullname"),
@@ -34,6 +35,7 @@ const schema = yup.object({
 });
 
 const RegisterPage = () => {
+  useDocumentMeta({ title: "Sign up" });
   const navigate = useNavigate();
   const {
     control,

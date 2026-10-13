@@ -10,6 +10,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import { categoryStatus, postStatus } from "utils/constants";
 import NotFoundPage from "./NotFoundPage";
+import useDocumentMeta from "hooks/useDocumentMeta";
 
 // Approved posts of one approved category, newest first
 const CategoryPage = () => {
@@ -24,6 +25,7 @@ const CategoryPage = () => {
     [slug]
   );
   const category = categories[0];
+  useDocumentMeta({ title: category?.name });
   const posts = usePaginatedQuery(
     () =>
       category

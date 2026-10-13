@@ -155,6 +155,12 @@ describe("PostDetailPage extras", () => {
     );
   };
 
+  it("titles the browser tab after the post", () => {
+    openPost(null);
+
+    expect(document.title).toBe("Hello | Veldora Blog");
+  });
+
   it("links the post's categories", () => {
     openPost(null);
 
