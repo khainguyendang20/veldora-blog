@@ -1,7 +1,8 @@
 import React from "react";
 import { render, act, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { getDoc, onSnapshot, query } from "firebase/firestore";
+import { getDoc, onSnapshot, query, where } from "firebase/firestore";
+import { useAuthStore } from "store";
 import PostDetailPage from "pages/PostDetailPage";
 
 vi.mock("config/firebase-config", () => ({ db: {} }));
@@ -67,5 +68,31 @@ describe("PostDetailPage", () => {
     unmount();
 
     expect(unsubscribe).toHaveBeenCalledTimes(1);
+  });
+});
+
+// Firestore rules reject public queries that could return unapproved posts
+describe("PostDetailPage query", () => {
+  beforeEach(() => {
+    window.HTMLElement.prototype.scrollIntoView = vi.fn();
+    onSnapshot.mockReturnValue(vi.fn());
+  });
+
+  it("only asks for approved posts for visitors", () => {
+    useAuthStore.setState({ user: null, isAuthLoading: false });
+    renderAt("/post/hello");
+
+    expect(where).toHaveBeenCalledWith("status", "==", 1);
+  });
+
+  it("lets staff open unapproved posts", () => {
+    useAuthStore.setState({
+      user: { uid: "u1", role: 2 },
+      isAuthLoading: false,
+    });
+    renderAt("/post/hello");
+
+    expect(where).toHaveBeenCalledWith("slug", "==", "hello");
+    expect(where).not.toHaveBeenCalledWith("status", "==", 1);
   });
 });

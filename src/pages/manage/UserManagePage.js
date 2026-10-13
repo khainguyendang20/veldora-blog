@@ -136,9 +136,12 @@ const UserManagePage = () => {
       Swal.fire("Error!", "You cannot delete your own account.", "error");
       return;
     }
+    // The browser cannot delete another user's Firebase Auth account (that
+    // needs the Admin SDK). Without a profile the account can no longer
+    // write anything, but its sign-in still exists until removed by hand.
     Swal.fire({
       title: "Are you sure?",
-      text: "You won't be able to revert this!",
+      text: "This deletes the user's profile and blocks them from posting. Also delete their sign-in under Firebase Console → Authentication.",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",

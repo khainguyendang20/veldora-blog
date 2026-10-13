@@ -38,6 +38,10 @@ export const userRole = {
   USER: 3,
 };
 
+// Admins and mods moderate posts and manage categories
+export const isStaffRole = (role) =>
+  role === userRole.ADMIN || role === userRole.MOD;
+
 export const userStatus = {
   ACTIVE: 1,
   PENDING: 2,

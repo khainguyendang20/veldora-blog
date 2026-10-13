@@ -4,7 +4,7 @@ import { collection, onSnapshot, query, where } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useAuthStore } from "store";
-import { userRole } from "utils/constants";
+import { isStaffRole, userRole } from "utils/constants";
 
 const DashboardStyles = styled.div`
   .stats {
@@ -52,44 +52,23 @@ const DashboardPage = () => {
 
   useEffect(() => {
     if (!user) return;
-
-    // Get posts count
     const postsRef = collection(db, "posts");
-    const unsubscribePosts = onSnapshot(postsRef, (snapshot) => {
-      setStats((prev) => ({ ...prev, posts: snapshot.size }));
-    });
-
-    // Get user's posts count
-    const myPostsRef = query(postsRef, where("user.id", "==", user.uid));
-    const unsubscribeMyPosts = onSnapshot(myPostsRef, (snapshot) => {
-      setStats((prev) => ({ ...prev, myPosts: snapshot.size }));
-    });
-
-    // Get categories count
-    const categoriesRef = collection(db, "categories");
-    const unsubscribeCategories = onSnapshot(categoriesRef, (snapshot) => {
-      setStats((prev) => ({ ...prev, categories: snapshot.size }));
-    });
-
-    // Get users count (Admin only)
-    if (user.role === userRole.ADMIN) {
-      const usersRef = collection(db, "users");
-      const unsubscribeUsers = onSnapshot(usersRef, (snapshot) => {
-        setStats((prev) => ({ ...prev, users: snapshot.size }));
+    const count = (ref, key) =>
+      onSnapshot(ref, (snapshot) => {
+        setStats((prev) => ({ ...prev, [key]: snapshot.size }));
       });
-      return () => {
-        unsubscribePosts();
-        unsubscribeMyPosts();
-        unsubscribeCategories();
-        unsubscribeUsers();
-      };
+    const unsubscribers = [
+      count(query(postsRef, where("user.id", "==", user.uid)), "myPosts"),
+    ];
+    // Firestore rules only let staff read unpublished posts of other users
+    if (isStaffRole(user.role)) {
+      unsubscribers.push(count(postsRef, "posts"));
+      unsubscribers.push(count(collection(db, "categories"), "categories"));
     }
-
-    return () => {
-      unsubscribePosts();
-      unsubscribeMyPosts();
-      unsubscribeCategories();
-    };
+    if (user.role === userRole.ADMIN) {
+      unsubscribers.push(count(collection(db, "users"), "users"));
+    }
+    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
   }, [user]);
 
   return (

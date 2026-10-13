@@ -10,6 +10,8 @@ import PostThumbnail from "module/post/components/PostThumbnail";
 import PostMeta from "module/post/components/PostMeta";
 import AuthorBox from "module/post/components/AuthorBox";
 import { formatDate } from "utils/formatDate";
+import { useAuthStore } from "store";
+import { isStaffRole, postStatus } from "utils/constants";
 
 const PostDetailStyles = styled.div`
   padding-bottom: 100px;
@@ -109,11 +111,16 @@ const PostDetailStyles = styled.div`
 
 const PostDetailPage = () => {
   const { slug } = useParams();
-  const { data: posts } = useFirestoreQuery(
-    () =>
-      slug ? query(collection(db, "posts"), where("slug", "==", slug)) : null,
-    [slug]
-  );
+  const isStaff = useAuthStore((state) => isStaffRole(state.user?.role));
+  // Firestore rules only let everyone else read approved posts, and reject
+  // any query that could return something else
+  const { data: posts } = useFirestoreQuery(() => {
+    if (!slug) return null;
+    const bySlug = query(collection(db, "posts"), where("slug", "==", slug));
+    return isStaff
+      ? bySlug
+      : query(bySlug, where("status", "==", postStatus.APPROVED));
+  }, [slug, isStaff]);
   const postInfo = posts[posts.length - 1] || {};
   useEffect(() => {
     document.body.scrollIntoView({ behavior: "smooth", block: "start" });

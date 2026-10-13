@@ -1,0 +1,90 @@
+rules_version = '2';
+
+// Role and status codes mirror src/utils/constants.js:
+//   role:        1 = admin, 2 = mod, 3 = user
+//   user status: 1 = active, 2 = pending, 3 = banned
+//   post status: 1 = approved, 2 = pending, 3 = rejected
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function profilePath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    // Banned users, and users whose profile was deleted, cannot write
+    function isActive() {
+      return signedIn()
+        && exists(profilePath())
+        && get(profilePath()).data.get('status', 1) != 3;
+    }
+
+    function isAdmin() {
+      return isActive() && get(profilePath()).data.role == 1;
+    }
+
+    function isStaff() {
+      return isActive() && get(profilePath()).data.role in [1, 2];
+    }
+
+    match /users/{userId} {
+      // Profiles are public (author boxes, profile pages)
+      allow read: if true;
+
+      // Registration: own document only, as an active regular user, and
+      // nothing beyond the public profile fields (never a password)
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.keys().hasOnly(
+          ['fullname', 'email', 'avatar', 'username', 'role', 'status', 'createdAt'])
+        && request.resource.data.email.lower() == request.auth.token.email.lower()
+        && request.resource.data.role == 3
+        && request.resource.data.status == 1;
+
+      // Users edit their own profile fields; role and status are admin-only
+      allow update: if isAdmin()
+        || (isActive()
+          && request.auth.uid == userId
+          && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['fullname', 'avatar', 'description']));
+
+      allow delete: if isAdmin();
+    }
+
+    match /posts/{postId} {
+      function isAuthor() {
+        return signedIn() && resource.data.user.id == request.auth.uid;
+      }
+
+      // Anyone reads approved posts; authors and staff also see the rest.
+      // Public queries must therefore filter on status == 1.
+      allow read: if resource.data.status == 1 || isAuthor() || isStaff();
+
+      // Regular users submit posts for review: pending and not featured
+      allow create: if isActive()
+        && request.resource.data.user.id == request.auth.uid
+        && (isStaff()
+          || (request.resource.data.status == 2
+            && request.resource.data.get('featured', false) == false));
+
+      // Authors edit their own posts but cannot change who wrote them or
+      // the moderation fields
+      allow update: if isStaff()
+        || (isActive()
+          && isAuthor()
+          && request.resource.data.user.id == resource.data.user.id
+          && request.resource.data.status == resource.data.status
+          && request.resource.data.get('featured', false)
+            == resource.data.get('featured', false));
+
+      allow delete: if isStaff() || (isActive() && isAuthor());
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isStaff();
+    }
+  }
+}
