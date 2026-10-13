@@ -13,6 +13,7 @@ import AuthorBox from "module/post/components/AuthorBox";
 import PostCategory from "module/post/components/PostCategory";
 import PostRelated from "module/post/PostRelated";
 import CommentSection from "module/comment/CommentSection";
+import PostActions from "module/post/PostActions";
 import { formatDate } from "utils/formatDate";
 import { readingTime } from "utils/readingTime";
 import { useAuthStore } from "store";
@@ -203,6 +204,9 @@ const PostDetailPage = () => {
               __html: DOMPurify.sanitize(postInfo.content || ""),
             }}
           ></div>
+          {postInfo.status === postStatus.APPROVED && (
+            <PostActions postId={postInfo.id}></PostActions>
+          )}
           <AuthorBox userId={user?.id}></AuthorBox>
           <CommentSection post={postInfo}></CommentSection>
         </div>

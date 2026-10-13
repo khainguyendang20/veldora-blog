@@ -51,6 +51,15 @@ service cloud.firestore {
             .hasOnly(['fullname', 'avatar', 'description']));
 
       allow delete: if isAdmin();
+
+      // Posts a user saved for later, keyed by post id; private to them
+      match /bookmarks/{postId} {
+        allow read, delete: if signedIn() && request.auth.uid == userId;
+        allow create: if signedIn()
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt == request.time;
+      }
     }
 
     // Private half of a profile: readable by its owner and admins only
@@ -121,6 +130,20 @@ service cloud.firestore {
 
         // Commenters remove their own; post authors and staff moderate
         allow delete: if (signedIn() && resource.data.user.id == request.auth.uid)
+          || isPostAuthor()
+          || isStaff();
+      }
+
+      // One document per reader who liked the post, keyed by their uid
+      match /likes/{userId} {
+        allow read: if post().status == 1 || isPostAuthor() || isStaff();
+        allow create: if isActive()
+          && request.auth.uid == userId
+          && post().status == 1
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt == request.time;
+        // Post authors and staff clear likes when deleting the post
+        allow delete: if (signedIn() && request.auth.uid == userId)
           || isPostAuthor()
           || isStaff();
       }
