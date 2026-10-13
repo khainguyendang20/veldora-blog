@@ -7,13 +7,13 @@ import { Table } from "components/table";
 import { db } from "config/firebase-config";
 import {
   collection,
-  deleteDoc,
   doc,
   query,
   updateDoc,
   where,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
+import { deletePost } from "module/post/deletePost";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
 import debounce from "lodash/debounce";
 import React, { useMemo, useState } from "react";
@@ -158,10 +158,12 @@ const PostManagePage = () => {
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes, delete it!",
     }).then(async (result) => {
-      if (result.isConfirmed) {
-        const colRef = doc(db, "posts", postId);
-        await deleteDoc(colRef);
+      if (!result.isConfirmed) return;
+      try {
+        await deletePost(postId);
         Swal.fire("Deleted!", "Post has been deleted.", "success");
+      } catch (error) {
+        toast.error("Could not delete the post, please try again.");
       }
     });
   };
@@ -243,7 +245,11 @@ const PostManagePage = () => {
                 }}
               >
                 <PostInfoStyles>
-                  <Image src={post.thumbnail} fallback={thumbnailPlaceholder} />
+                  <Image
+                    src={post.thumbnail}
+                    fallback={thumbnailPlaceholder}
+                    resizeTo={160}
+                  />
                   <span title={post.title} className="truncate">
                     {post.title}
                   </span>

@@ -21,7 +21,7 @@ const AuthorBox = ({ userId = "" }) => {
   return (
     <div className="author">
       <div className="author-image">
-        <Image src={user?.avatar} fallback={avatarDefault} />
+        <Image src={user?.avatar} fallback={avatarDefault} resizeTo={400} />
       </div>
       <div className="author-content">
         <h3 className="author-name">{user?.fullname}</h3>

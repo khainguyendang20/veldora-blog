@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { avatarDefault } from "utils/constants";
 import { Image } from "components/image";
+import useDocumentMeta from "hooks/useDocumentMeta";
 
 const ProfilePageStyles = styled.div`
   position: relative;
@@ -63,11 +64,12 @@ const ProfilePage = () => {
     [username]
   );
   const info = users[users.length - 1] || {};
+  useDocumentMeta({ title: info.fullname, description: info.description });
   return (
     <ProfilePageStyles className="container">
       <div className="profile-cover"></div>
       <div className="profile-avt">
-        <Image src={info.avatar} fallback={avatarDefault} />
+        <Image src={info.avatar} fallback={avatarDefault} resizeTo={400} />
       </div>
       <div className="profile-info">
         <div className="profile-info__name">{info?.fullname}</div>

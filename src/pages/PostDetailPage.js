@@ -12,9 +12,13 @@ import PostMeta from "module/post/components/PostMeta";
 import AuthorBox from "module/post/components/AuthorBox";
 import PostCategory from "module/post/components/PostCategory";
 import PostRelated from "module/post/PostRelated";
+import CommentSection from "module/comment/CommentSection";
+import PostActions from "module/post/PostActions";
 import { formatDate } from "utils/formatDate";
+import { readingTime } from "utils/readingTime";
 import { useAuthStore } from "store";
 import { isStaffRole, postStatus } from "utils/constants";
+import useDocumentMeta from "hooks/useDocumentMeta";
 
 const PostDetailStyles = styled.div`
   padding-bottom: 100px;
@@ -146,6 +150,7 @@ const PostDetailPage = () => {
       : query(bySlug, where("status", "==", postStatus.APPROVED));
   }, [slug, isStaff, isAuthLoading]);
   const postInfo = posts[posts.length - 1];
+  useDocumentMeta({ title: postInfo?.title, description: postInfo?.desc });
   useEffect(() => {
     document.body.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [slug]);
@@ -160,6 +165,7 @@ const PostDetailPage = () => {
           <PostThumbnail
             url={postInfo.thumbnail}
             className="post-feature"
+            imageWidth={1280}
           ></PostThumbnail>
           <div className="post-info">
             {postInfo.categories?.length > 0 && (
@@ -178,6 +184,7 @@ const PostDetailPage = () => {
             <PostMeta
               date={formatDate(postInfo.createdAt)}
               auth={postInfo.user}
+              minutesToRead={readingTime(postInfo.content)}
             ></PostMeta>
             {canEdit && (
               <Link
@@ -197,7 +204,11 @@ const PostDetailPage = () => {
               __html: DOMPurify.sanitize(postInfo.content || ""),
             }}
           ></div>
+          {postInfo.status === postStatus.APPROVED && (
+            <PostActions postId={postInfo.id}></PostActions>
+          )}
           <AuthorBox userId={user?.id}></AuthorBox>
+          <CommentSection post={postInfo}></CommentSection>
         </div>
         <PostRelated
           categoryId={postInfo.categories?.[0]?.id}

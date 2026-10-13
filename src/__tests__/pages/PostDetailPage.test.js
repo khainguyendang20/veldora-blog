@@ -12,6 +12,7 @@ vi.mock("firebase/firestore", () => ({
   where: vi.fn(),
   orderBy: vi.fn(),
   limit: vi.fn(),
+  getCountFromServer: vi.fn(() => new Promise(() => {})),
   doc: vi.fn(),
   getDoc: vi.fn(),
   onSnapshot: vi.fn(),
@@ -155,6 +156,12 @@ describe("PostDetailPage extras", () => {
     );
   };
 
+  it("titles the browser tab after the post", () => {
+    openPost(null);
+
+    expect(document.title).toBe("Hello | Veldora Blog");
+  });
+
   it("links the post's categories", () => {
     openPost(null);
 
@@ -183,8 +190,9 @@ describe("PostDetailPage extras", () => {
     openPost(null);
     expect(where).toHaveBeenCalledWith("categoryIds", "array-contains", "c1");
 
+    // Related posts subscribe last, after the comments
     act(() =>
-      listeners[1]({
+      listeners[listeners.length - 1]({
         forEach: (cb) =>
           ["p1", "p2"].forEach((id) =>
             cb({ id, data: () => ({ ...fullPost, slug: id, title: `Title ${id}` }) })

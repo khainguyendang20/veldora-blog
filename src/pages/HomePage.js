@@ -18,6 +18,7 @@ import shuffle from "lodash/shuffle";
 import { PageLoading } from "components/loading";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
 import { homeCategory, postStatus } from "utils/constants";
+import useDocumentMeta from "hooks/useDocumentMeta";
 
 const RandomPostsStyles = styled.div`
   display: grid;
@@ -73,6 +74,7 @@ const randomCount = 4;
 const poolSize = 24;
 
 const HomePage = () => {
+  useDocumentMeta();
   const { data: posts, loading, error } = useFirestoreQuery(
     () =>
       query(

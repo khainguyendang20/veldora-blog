@@ -67,3 +67,13 @@ describe("PostMeta", () => {
     expect(link).toBeInTheDocument();
   });
 });
+
+describe("PostMeta reading time", () => {
+  it("shows how long the post takes to read", () => {
+    renderWithProviders(
+      <PostMeta auth={{ fullname: "A" }} date="Jan 1, 2024" minutesToRead={4} />
+    );
+
+    expect(screen.getByText("· 4 min read")).toBeInTheDocument();
+  });
+});

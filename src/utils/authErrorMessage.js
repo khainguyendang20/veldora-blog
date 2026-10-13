@@ -12,6 +12,10 @@ const messages = {
   "auth/weak-password": "Password must be at least 6 characters.",
   "auth/network-request-failed":
     "Network error. Check your connection and try again.",
+  "auth/operation-not-allowed": "This sign-in method is not enabled yet.",
+  "auth/popup-blocked": "Allow pop-ups for this site to sign in with Google.",
+  "auth/account-exists-with-different-credential":
+    "An account with this email already exists. Sign in with your password.",
 };
 
 // Turns a Firebase Auth error into a message fit to show the user

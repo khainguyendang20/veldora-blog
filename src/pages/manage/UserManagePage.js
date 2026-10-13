@@ -6,7 +6,7 @@ import { Image } from "components/image";
 import Heading from "components/layout/Heading";
 import { Table } from "components/table";
 import { db } from "config/firebase-config";
-import { collection, deleteDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, doc, updateDoc, writeBatch } from "firebase/firestore";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
 import debounce from "lodash/debounce";
 import React, { useMemo, useState } from "react";
@@ -79,10 +79,24 @@ const UserManagePage = () => {
   const { user: currentUser } = useAuthStore((state) => state);
   const [filter, setFilter] = useState("");
   // Route is admin-only (RequireRole in App.js)
-  const { data: users } = useFirestoreQuery(
+  const { data: profiles } = useFirestoreQuery(
     () => collection(db, "users"),
     []
   );
+  // Emails live apart from the public profiles; only admins read them all
+  const { data: emails } = useFirestoreQuery(
+    () => collection(db, "userEmails"),
+    []
+  );
+  const users = useMemo(() => {
+    const emailById = Object.fromEntries(
+      emails.map((entry) => [entry.id, entry.email])
+    );
+    return profiles.map((profile) => ({
+      ...profile,
+      email: emailById[profile.id] || profile.email,
+    }));
+  }, [profiles, emails]);
 
   const handleFilterChange = useMemo(
     () => debounce((e) => setFilter(e.target.value), 500),
@@ -149,8 +163,11 @@ const UserManagePage = () => {
       confirmButtonText: "Yes, delete it!",
     }).then(async (result) => {
       if (result.isConfirmed) {
-        const colRef = doc(db, "users", userId);
-        await deleteDoc(colRef);
+        // The email lives apart from the profile; remove both together
+        const batch = writeBatch(db);
+        batch.delete(doc(db, "users", userId));
+        batch.delete(doc(db, "userEmails", userId));
+        await batch.commit();
         Swal.fire("Deleted!", "User has been deleted.", "success");
       }
     });
@@ -204,7 +221,7 @@ const UserManagePage = () => {
               <td>
                 <InfoColStyles>
                   <div className="avt">
-                    <Image src={user.avatar} fallback={avatarDefault} />
+                    <Image src={user.avatar} fallback={avatarDefault} resizeTo={160} />
                   </div>
                   <div>
                     <h3>{user.fullname}</h3>

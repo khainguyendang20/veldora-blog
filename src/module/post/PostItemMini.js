@@ -63,7 +63,11 @@ const PostItemMini = ({ isReverse = false, data, ...props }) => {
   const category = categories?.[0];
   return (
     <PostMiniItemStyles reverse={isReverse}>
-      <PostThumbnail href={slug} url={thumbnail}></PostThumbnail>
+      <PostThumbnail
+        href={slug}
+        url={thumbnail}
+        imageWidth={320}
+      ></PostThumbnail>
       <div className="post-content">
         {category && (
           <PostCategory href={`/category/${category.slug}`}>

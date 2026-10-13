@@ -8,18 +8,14 @@ import { Button } from "components/button";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { auth, db } from "config/firebase-config";
+import { auth } from "config/firebase-config";
 import { toast } from "react-toastify";
-import {
-  doc,
-  serverTimestamp,
-  setDoc,
-} from "firebase/firestore";
 import { Link, useNavigate } from "react-router-dom";
 import LayoutAuthentication from "layout/LayoutAuthentication";
-import slugify from "slugify";
-import { avatarDefault, userRole, userStatus } from "utils/constants";
+import { createUserProfile } from "module/auth/userProfile";
+import GoogleSignInButton from "module/auth/GoogleSignInButton";
 import { authErrorMessage } from "utils/authErrorMessage";
+import useDocumentMeta from "hooks/useDocumentMeta";
 
 const schema = yup.object({
   fullname: yup.string().required("Please enter your fullname"),
@@ -34,6 +30,7 @@ const schema = yup.object({
 });
 
 const RegisterPage = () => {
+  useDocumentMeta({ title: "Sign up" });
   const navigate = useNavigate();
   const {
     control,
@@ -42,22 +39,13 @@ const RegisterPage = () => {
   } = useForm({ mode: "onChange", resolver: yupResolver(schema) });
   const handleSignUp = async (values) => {
     try {
-      await createUserWithEmailAndPassword(auth, values.email, values.password);
-      await updateProfile(auth.currentUser, { displayName: values.fullname });
-      await setDoc(doc(db, "users", auth.currentUser.uid), {
-        fullname: values.fullname,
-        email: values.email,
-        avatar: avatarDefault,
-        username: slugify(
-          values.fullname + "-" + auth.currentUser.uid.slice(0, 10),
-          {
-            lower: true,
-          }
-        ),
-        role: userRole.USER,
-        status: userStatus.ACTIVE,
-        createdAt: serverTimestamp(),
-      });
+      const { user } = await createUserWithEmailAndPassword(
+        auth,
+        values.email,
+        values.password
+      );
+      await updateProfile(user, { displayName: values.fullname });
+      await createUserProfile(user, { fullname: values.fullname });
       toast.success("Registered successfully!");
       navigate("/");
     } catch (error) {
@@ -113,6 +101,7 @@ const RegisterPage = () => {
         <Button type="submit" disabled={isSubmitting} isLoading={isSubmitting}>
           Sign Up
         </Button>
+        <GoogleSignInButton></GoogleSignInButton>
       </form>
     </LayoutAuthentication>
   );

@@ -42,10 +42,22 @@ const PostThumbnailStyles = styled.div`
 
 // Links to the post when given its slug as `href`; without one (e.g. on
 // the post page itself) it is just the image
-const PostThumbnail = ({ url, href, height, className = "", children }) => {
+const PostThumbnail = ({
+  url,
+  href,
+  height,
+  className = "",
+  imageWidth = 800,
+  children,
+}) => {
   const image = (
     <>
-      <Image src={url} fallback={thumbnailPlaceholder} loading="lazy" />
+      <Image
+        src={url}
+        fallback={thumbnailPlaceholder}
+        resizeTo={imageWidth}
+        loading="lazy"
+      />
       <div className="overlay"></div>
     </>
   );

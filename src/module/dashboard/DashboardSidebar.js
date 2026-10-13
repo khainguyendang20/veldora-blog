@@ -1,5 +1,6 @@
 import {
   IconBook,
+  IconBookmark,
   IconDashboard,
   IconLogout,
   IconProfile,
@@ -85,8 +86,13 @@ const getItemLinks = (role) => {
     });
   }
 
-  // Profile and Logout for everyone
+  // Saved posts, Profile and Logout for everyone
   baseLinks.push(
+    {
+      title: "Saved",
+      url: "/manage/saved",
+      icon: <IconBookmark size={iconSize} color={iconColor}></IconBookmark>,
+    },
     {
       title: "Profile",
       url: "/manage/profile",
