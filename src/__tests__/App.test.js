@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { onAuthStateChanged } from "firebase/auth";
+import { getRedirectResult, onAuthStateChanged } from "firebase/auth";
 import { onSnapshot } from "firebase/firestore";
 import { useAuthStore } from "store";
 import { userRole } from "utils/constants";
@@ -15,6 +15,8 @@ vi.mock("firebase/auth", () => ({
   createUserWithEmailAndPassword: vi.fn(),
   updateProfile: vi.fn(),
   signOut: vi.fn(),
+  getRedirectResult: vi.fn(),
+  GoogleAuthProvider: vi.fn(),
 }));
 vi.mock("firebase/firestore", () => ({
   collection: vi.fn(),
@@ -54,6 +56,7 @@ describe("App routes", () => {
   beforeEach(() => {
     onAuthStateChanged.mockReturnValue(vi.fn());
     onSnapshot.mockReturnValue(vi.fn());
+    getRedirectResult.mockResolvedValue(null);
   });
 
   it("renders the login page", async () => {

@@ -4,9 +4,11 @@ import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 import {
   createUserWithEmailAndPassword,
+  getRedirectResult,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
+  signInWithRedirect,
 } from "firebase/auth";
 import {
   createUserProfile,
@@ -26,6 +28,8 @@ vi.mock("firebase/auth", () => ({
   updateProfile: vi.fn(),
   sendPasswordResetEmail: vi.fn(),
   signInWithPopup: vi.fn(),
+  signInWithRedirect: vi.fn(),
+  getRedirectResult: vi.fn(),
   GoogleAuthProvider: vi.fn(),
 }));
 vi.mock("module/auth/userProfile", () => ({
@@ -50,6 +54,7 @@ const type = (placeholder, value) =>
 
 beforeEach(() => {
   useAuthStore.setState({ user: null, isAuthLoading: false });
+  getRedirectResult.mockResolvedValue(null);
 });
 
 describe("LoginPage", () => {
@@ -178,6 +183,23 @@ describe("Google sign-in", () => {
 
     await waitFor(() => expect(signInWithPopup).toHaveBeenCalled());
     expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it("falls back to a redirect when the browser blocks the popup", async () => {
+    signInWithPopup.mockRejectedValue({ code: "auth/popup-blocked" });
+    clickGoogle();
+
+    await waitFor(() => expect(signInWithRedirect).toHaveBeenCalledTimes(1));
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it("finishes a redirect sign-in when Google sends the reader back", async () => {
+    const user = { uid: "g1", email: "a@gmail.com" };
+    getRedirectResult.mockResolvedValue({ user });
+    ensureUserProfile.mockResolvedValue();
+    renderPage(<LoginPage />);
+
+    await waitFor(() => expect(ensureUserProfile).toHaveBeenCalledWith(user));
   });
 
   it("explains when Google sign-in is not enabled", async () => {

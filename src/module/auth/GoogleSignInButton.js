@@ -1,6 +1,11 @@
 import { auth } from "config/firebase-config";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import React, { useState } from "react";
+import {
+  getRedirectResult,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+} from "firebase/auth";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import styled from "styled-components";
@@ -34,13 +39,38 @@ const GoogleSignInButton = () => {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
 
+  const finishSignIn = async (user) => {
+    await ensureUserProfile(user);
+    navigate("/");
+  };
+
+  // Coming back from the redirect fallback below lands on this page again
+  useEffect(() => {
+    let cancelled = false;
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result && !cancelled) return finishSignIn(result.user);
+      })
+      .catch((error) => toast.error(authErrorMessage(error)));
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleClick = async () => {
     setBusy(true);
+    const provider = new GoogleAuthProvider();
     try {
-      const { user } = await signInWithPopup(auth, new GoogleAuthProvider());
-      await ensureUserProfile(user);
-      navigate("/");
+      const { user } = await signInWithPopup(auth, provider);
+      await finishSignIn(user);
     } catch (error) {
+      if (error?.code === "auth/popup-blocked") {
+        // Some browsers and in-editor previews block popups; a full-page
+        // redirect to Google needs none
+        await signInWithRedirect(auth, provider);
+        return;
+      }
       if (!dismissed.includes(error?.code)) toast.error(authErrorMessage(error));
     } finally {
       setBusy(false);
