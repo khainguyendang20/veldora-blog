@@ -9,6 +9,7 @@ import {
   getDocs,
   query,
   updateDoc,
+  where,
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { useAuthStore } from "store";
@@ -68,9 +69,13 @@ const docs = {
   "categories/c1": { name: "Tech", slug: "tech", status: 1 },
 };
 
-const snapshotOf = (items) => ({
-  forEach: (cb) => items.forEach(([id, data]) => cb({ id, data: () => data })),
-});
+const snapshotOf = (items) => {
+  const docs = items.map(([id, data]) => ({ id, data: () => data }));
+  return { docs, forEach: (cb) => docs.forEach(cb) };
+};
+
+// Posts (by id) that the slug check finds, whatever the slug asked for
+let postsWithSlug = [];
 
 const renderAt = (path) =>
   render(
@@ -99,7 +104,12 @@ beforeEach(() => {
   query.mockImplementation((col) => col);
   doc.mockImplementation((db, ...segments) => ({ path: segments.join("/") }));
   getDoc.mockImplementation(async (ref) => ({ data: () => docs[ref.path] }));
-  getDocs.mockResolvedValue(snapshotOf([["c1", docs["categories/c1"]]]));
+  postsWithSlug = [];
+  getDocs.mockImplementation(async (q) =>
+    q.name === "posts"
+      ? snapshotOf(postsWithSlug.map((id) => [id, {}]))
+      : snapshotOf([["c1", docs["categories/c1"]]])
+  );
   addDoc.mockResolvedValue({ id: "new" });
   updateDoc.mockResolvedValue();
 });
@@ -212,5 +222,71 @@ describe("as a regular user", () => {
     renderAt("/manage/update-post?id=p1");
 
     expect(await screen.findByText("Access Denied")).toBeInTheDocument();
+  });
+});
+
+describe("slug uniqueness", () => {
+  it("keeps an edited post's own slug", async () => {
+    postsWithSlug = ["p1"];
+    renderAt("/manage/update-post?id=p1");
+    await screen.findByDisplayValue("Old title");
+
+    fireEvent.click(screen.getByText("Update Post"));
+
+    await waitFor(() => expect(updateDoc).toHaveBeenCalledTimes(1));
+    expect(updateDoc.mock.calls[0][1].slug).toBe("old-title");
+  });
+
+  it("adds a suffix when the title's slug is taken", async () => {
+    postsWithSlug = ["other"];
+    renderAt("/manage/add-post");
+    await waitFor(() => expect(getDocs).toHaveBeenCalled());
+
+    fireEvent.change(screen.getByPlaceholderText("Title"), {
+      target: { value: "Hello World" },
+    });
+    fireEvent.click(screen.getByText("Create Post"));
+
+    await waitFor(() => expect(addDoc).toHaveBeenCalledTimes(1));
+    expect(addDoc.mock.calls[0][1].slug).toMatch(/^hello-world-[a-z0-9]{1,4}$/);
+  });
+
+  it("asks for another slug when a typed one is taken", async () => {
+    postsWithSlug = ["other"];
+    renderAt("/manage/add-post");
+    await waitFor(() => expect(getDocs).toHaveBeenCalled());
+
+    fireEvent.change(screen.getByPlaceholderText("Title"), {
+      target: { value: "Hello" },
+    });
+    fireEvent.change(screen.getByLabelText("Slug"), {
+      target: { value: "my-slug" },
+    });
+    fireEvent.click(screen.getByText("Create Post"));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "This slug is already used by another post."
+      )
+    );
+    expect(addDoc).not.toHaveBeenCalled();
+  });
+
+  it("checks only posts a regular user may read", async () => {
+    useAuthStore.setState({
+      user: { uid: "u2", role: 3, fullname: "Reader" },
+      isAuthLoading: false,
+    });
+    renderAt("/manage/add-post");
+    await waitFor(() => expect(getDocs).toHaveBeenCalled());
+
+    fireEvent.change(screen.getByPlaceholderText("Title"), {
+      target: { value: "Hello" },
+    });
+    fireEvent.click(screen.getByText("Create Post"));
+
+    await waitFor(() => expect(addDoc).toHaveBeenCalledTimes(1));
+    expect(where).toHaveBeenCalledWith("status", "==", 1);
+    expect(where).toHaveBeenCalledWith("user.id", "==", "u2");
   });
 });
