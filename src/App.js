@@ -31,6 +31,9 @@ const CategoryManagePage = lazy(() =>
 );
 const UserManagePage = lazy(() => import("pages/manage/UserManagePage"));
 const SavedPostsPage = lazy(() => import("pages/manage/SavedPostsPage"));
+const NotificationsPage = lazy(() =>
+  import("pages/manage/NotificationsPage")
+);
 const ProfileSettingsPage = lazy(() =>
   import("pages/manage/ProfileSettingsPage")
 );
@@ -75,6 +78,10 @@ function AppRoutes() {
         <Route
           path="/manage/dashboard"
           element={<DashboardPage></DashboardPage>}
+        ></Route>
+        <Route
+          path="/manage/notifications"
+          element={<NotificationsPage></NotificationsPage>}
         ></Route>
         <Route
           path="/manage/saved"

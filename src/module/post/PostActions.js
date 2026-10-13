@@ -14,6 +14,10 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuthStore } from "store";
 import styled from "styled-components";
+import {
+  addLikeNotification,
+  removeLikeNotification,
+} from "module/notification/notify";
 
 const PostActionsStyles = styled.div`
   display: flex;
@@ -59,7 +63,8 @@ const useDocExists = (path) => {
 // (Firestore rules require both); a saved post is users/{uid}/bookmarks/{id}.
 const PostActions = ({ post }) => {
   const postId = post.id;
-  const uid = useAuthStore((state) => state.user?.uid);
+  const user = useAuthStore((state) => state.user);
+  const uid = user?.uid;
   const navigate = useNavigate();
   // The post document is live, so its likeCount catches up on its own;
   // until then show the reader's own click
@@ -103,6 +108,8 @@ const PostActions = ({ post }) => {
         batch.update(doc(db, "posts", postId), {
           likeCount: increment(turnOn ? 1 : -1),
         });
+        if (turnOn) addLikeNotification(batch, post, user);
+        else removeLikeNotification(batch, post, uid);
         return batch.commit();
       },
       onCountChange: (delta) => setPendingDelta((value) => value + delta),

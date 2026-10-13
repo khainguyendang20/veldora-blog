@@ -16,6 +16,7 @@ import { getAuth, signOut } from "firebase/auth";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Image } from "components/image";
 import { avatarDefault } from "utils/constants";
+import NotificationBell from "module/notification/NotificationBell";
 
 const HeaderStyles = styled.div`
   position: fixed;
@@ -226,18 +227,21 @@ const Header = () => {
               Login
             </Button>
           ) : (
-            <div
-              ref={userPopoverRef}
-              className="header-r__user"
-              onClick={() => setShowPopover(!showPopover)}
-            >
-              <Image src={user.avatar} fallback={avatarDefault} resizeTo={96} />
-              <UserPopover
-                show={showPopover}
-                setShow={setShowPopover}
-                data={user}
-              ></UserPopover>
-            </div>
+            <>
+              <NotificationBell uid={user.uid}></NotificationBell>
+              <div
+                ref={userPopoverRef}
+                className="header-r__user"
+                onClick={() => setShowPopover(!showPopover)}
+              >
+                <Image src={user.avatar} fallback={avatarDefault} resizeTo={96} />
+                <UserPopover
+                  show={showPopover}
+                  setShow={setShowPopover}
+                  data={user}
+                ></UserPopover>
+              </div>
+            </>
           )}
         </div>
       </div>

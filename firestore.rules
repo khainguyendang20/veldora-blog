@@ -60,6 +60,51 @@ service cloud.firestore {
           && request.resource.data.keys().hasOnly(['createdAt'])
           && request.resource.data.createdAt == request.time;
       }
+
+      // Likes and comments on this user's posts, written by the reader in
+      // the same batch as the like or comment
+      match /notifications/{notificationId} {
+        function postDoc(id) {
+          return /databases/$(database)/documents/posts/$(id);
+        }
+
+        function isValidLike(data) {
+          return notificationId == 'like_' + data.postId + '_' + request.auth.uid
+            && existsAfter(/databases/$(database)/documents/posts/$(data.postId)/likes/$(request.auth.uid));
+        }
+
+        function isValidComment(data) {
+          return notificationId == 'comment_' + data.commentId
+            && getAfter(/databases/$(database)/documents/posts/$(data.postId)/comments/$(data.commentId))
+              .data.user.id == request.auth.uid;
+        }
+
+        allow read: if signedIn() && request.auth.uid == userId;
+
+        allow create: if isActive()
+          && userId != request.auth.uid
+          && request.resource.data.keys().hasOnly(['type', 'postId', 'postSlug',
+            'postTitle', 'actor', 'commentId', 'read', 'createdAt'])
+          && request.resource.data.actor.id == request.auth.uid
+          && request.resource.data.read == false
+          && request.resource.data.createdAt == request.time
+          && get(postDoc(request.resource.data.postId)).data.user.id == userId
+          && ((request.resource.data.type == 'like' && isValidLike(request.resource.data))
+            || (request.resource.data.type == 'comment' && isValidComment(request.resource.data)));
+
+        // The owner only marks notifications as read
+        allow update: if signedIn()
+          && request.auth.uid == userId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+
+        // Owners clear theirs; readers withdraw theirs when unliking or
+        // deleting a comment (even if the owner already cleared it); staff
+        // when moderating comments
+        allow delete: if signedIn() && (request.auth.uid == userId
+          || resource == null
+          || resource.data.actor.id == request.auth.uid
+          || isStaff());
+      }
     }
 
     // Private half of a profile: readable by its owner and admins only
