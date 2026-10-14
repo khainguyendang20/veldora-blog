@@ -2,52 +2,39 @@
 // likes and comments, for posts liked or commented before the counters
 // existed. Count queries cost one read per post and subcollection.
 //
+// Runs as a service account (Admin SDK, unaffected by security rules and
+// App Check enforcement). Point GOOGLE_APPLICATION_CREDENTIALS at the JSON
+// key from Firebase Console > Project settings > Service accounts.
+//
 // Dry run (lists changes only):
-//   ADMIN_EMAIL=... ADMIN_PASSWORD=... node --env-file=.env scripts/backfill-counters.mjs
+//   GOOGLE_APPLICATION_CREDENTIALS=path/to/key.json node scripts/backfill-counters.mjs
 // Apply:
-//   ADMIN_EMAIL=... ADMIN_PASSWORD=... node --env-file=.env scripts/backfill-counters.mjs --write
-import { initializeApp } from "firebase/app";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
-import {
-  collection,
-  doc,
-  getCountFromServer,
-  getDocs,
-  getFirestore,
-  updateDoc,
-} from "firebase/firestore";
+//   GOOGLE_APPLICATION_CREDENTIALS=path/to/key.json node scripts/backfill-counters.mjs --write
+import { applicationDefault, initializeApp } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 
 const write = process.argv.includes("--write");
-const { ADMIN_EMAIL, ADMIN_PASSWORD } = process.env;
-if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
-  console.error("Set ADMIN_EMAIL and ADMIN_PASSWORD.");
+if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+  console.error("Set GOOGLE_APPLICATION_CREDENTIALS to a service account key file.");
   process.exit(1);
 }
 
-const app = initializeApp({
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID,
-});
-const db = getFirestore(app);
-await signInWithEmailAndPassword(getAuth(app), ADMIN_EMAIL, ADMIN_PASSWORD);
+initializeApp({ credential: applicationDefault() });
+const db = getFirestore();
 
-const count = async (postId, name) =>
-  (await getCountFromServer(collection(db, "posts", postId, name))).data().count;
+const count = async (postRef, name) =>
+  (await postRef.collection(name).count().get()).data().count;
 
-const posts = await getDocs(collection(db, "posts"));
+const posts = await db.collection("posts").get();
 let changed = 0;
 for (const postDoc of posts.docs) {
   const post = postDoc.data();
-  const likeCount = await count(postDoc.id, "likes");
-  const commentCount = await count(postDoc.id, "comments");
+  const likeCount = await count(postDoc.ref, "likes");
+  const commentCount = await count(postDoc.ref, "comments");
   if (post.likeCount === likeCount && post.commentCount === commentCount) continue;
   changed++;
   console.log(`${postDoc.id} "${post.title}": likes ${likeCount}, comments ${commentCount}`);
-  if (write) {
-    await updateDoc(doc(db, "posts", postDoc.id), { likeCount, commentCount });
-  }
+  if (write) await postDoc.ref.update({ likeCount, commentCount });
 }
 
 console.log(
