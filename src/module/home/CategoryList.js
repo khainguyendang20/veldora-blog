@@ -11,6 +11,7 @@ const CategoryListStyles = styled.ul`
   display: flex;
   flex-direction: column;
   gap: 4px;
+  list-style: none;
   a {
     display: block;
     padding: 8px 12px;
@@ -28,13 +29,13 @@ const CategoryList = () => {
     () =>
       query(
         collection(db, "categories"),
-        where("status", "==", categoryStatus.APPROVED)
+        where("status", "==", categoryStatus.APPROVED),
       ),
-    []
+    [],
   );
   if (!categories.length) return null;
   const sorted = [...categories].sort((a, b) =>
-    (a.name || "").localeCompare(b.name || "", "vi")
+    (a.name || "").localeCompare(b.name || "", "vi"),
   );
   return (
     <nav aria-label="Categories">

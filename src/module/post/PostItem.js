@@ -9,9 +9,23 @@ import { formatDate } from "utils/formatDate";
 import { readingTime } from "utils/readingTime";
 
 const PostItemStyles = styled.div`
-  /* max-width: 340px; */
   .post-content {
     font-size: 14px;
+  }
+  /* Reading time sits on the cover, opposite the category, so the meta
+     row under the title only holds the author and date */
+  .post-item__reading {
+    position: absolute;
+    right: 10px;
+    bottom: 10px;
+    z-index: 2;
+    padding: 3px 10px;
+    border-radius: 100rem;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    pointer-events: none;
   }
 `;
 
@@ -38,15 +52,17 @@ const PostItem = ({ data, ...props }) => {
             {category.name}
           </PostCategory>
         )}
+        <span className="post-item__reading">
+          {readingTime(content)} min read
+          {likeCount > 0 && ` · ♥ ${likeCount}`}
+          {commentCount > 0 && ` · 💬 ${commentCount}`}
+        </span>
       </PostThumbnail>
       <div className="post-content">
         <PostTitle href={slug}>{title}</PostTitle>
         <PostMeta
           auth={user}
           date={formatDate(createdAt)}
-          minutesToRead={readingTime(content)}
-          likeCount={likeCount}
-          commentCount={commentCount}
         ></PostMeta>
         {desc && <PostDescription>{desc}</PostDescription>}
       </div>

@@ -122,7 +122,7 @@ const HomePage = () => {
       <div
         style={{
           width: "100%",
-          backgroundColor: "#fef7e3",
+          backgroundColor: "var(--color-subtle)",
         }}
       >
         <HomeSection>

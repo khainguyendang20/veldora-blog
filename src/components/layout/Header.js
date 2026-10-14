@@ -97,6 +97,7 @@ const HeaderStyles = styled.div`
       font-size: 28px;
       font-weight: 700;
       color: ${(props) => props.theme.primary};
+      white-space: nowrap;
     }
   }
   .menu {
@@ -105,6 +106,7 @@ const HeaderStyles = styled.div`
     list-style: none;
     column-gap: 20px;
     font-weight: 500;
+    white-space: nowrap;
     li:last-child {
       position: relative;
       background: ${(props) => props.theme.primary};
@@ -113,6 +115,20 @@ const HeaderStyles = styled.div`
       a {
         color: white;
       }
+    }
+  }
+  @media only screen and (min-width: 1025px) and (max-width: 1280px) {
+    padding: 0 24px;
+    .logo-title {
+      font-size: 22px;
+    }
+    .header-l,
+    .header-r,
+    .menu {
+      column-gap: 14px;
+    }
+    .search {
+      max-width: 180px;
     }
   }
   @media only screen and (max-width: 1024px) {

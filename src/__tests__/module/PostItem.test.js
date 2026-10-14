@@ -72,3 +72,20 @@ describe("PostThumbnail", () => {
     expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 });
+
+describe("PostItem reading time", () => {
+  it("shows the reading time on the cover, not in the meta row", () => {
+    renderItem(<PostItem data={{ ...post, content: "<p>Short</p>" }} />);
+
+    expect(screen.getByText("1 min read")).toBeInTheDocument();
+    expect(screen.queryByText(/· \d+ min read/)).not.toBeInTheDocument();
+  });
+
+  it("adds like and comment counts to the cover badge", () => {
+    renderItem(
+      <PostItem data={{ ...post, content: "<p>x</p>", likeCount: 12, commentCount: 4 }} />
+    );
+
+    expect(screen.getByText("1 min read · ♥ 12 · 💬 4")).toBeInTheDocument();
+  });
+});
