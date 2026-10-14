@@ -44,4 +44,16 @@ describe("LayoutDashboard", () => {
 
     expect(screen.getByText("Post manager")).toBeInTheDocument();
   });
+
+  it("keeps the color mode switch within reach", () => {
+    useAuthStore.setState({
+      user: { uid: "1", email: "a@b.c" },
+      isAuthLoading: false,
+    });
+    renderDashboard();
+
+    expect(
+      screen.getByRole("button", { name: /Switch to (dark|light) mode/ })
+    ).toHaveClass("dashboard-theme-toggle");
+  });
 });
