@@ -2,7 +2,7 @@ import { db } from "config/firebase-config";
 import { collection, query, where } from "firebase/firestore";
 import DOMPurify from "dompurify";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
 import NotFoundPage from "./NotFoundPage";
@@ -14,6 +14,9 @@ import PostCategory from "module/post/components/PostCategory";
 import PostRelated from "module/post/PostRelated";
 import CommentSection from "module/comment/CommentSection";
 import PostActions from "module/post/PostActions";
+import TableOfContents from "module/post/TableOfContents";
+import { highlightCode } from "module/post/highlightCode";
+import { addHeadingIds } from "utils/headings";
 import { formatDate } from "utils/formatDate";
 import { readingTime } from "utils/readingTime";
 import { useAuthStore } from "store";
@@ -53,7 +56,7 @@ const PostDetailStyles = styled.div`
       display: inline-block;
       margin-top: 16px;
       padding: 6px 16px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--color-border);
       border-radius: 6px;
       font-size: 14px;
     }
@@ -65,9 +68,10 @@ const PostDetailStyles = styled.div`
       padding: 8px 0;
       width: fit-content;
       border: 1px solid;
-      border-color: #ddd transparent #ddd transparent;
+      border-color: var(--color-border) transparent var(--color-border)
+        transparent;
       & .post-auth-name {
-        color: black;
+        color: var(--color-text);
       }
     }
     &-content {
@@ -154,6 +158,16 @@ const PostDetailPage = () => {
   useEffect(() => {
     document.body.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [slug]);
+  // Content is user-authored HTML, so sanitize it to prevent XSS, then
+  // give its headings ids for the table of contents
+  const content = useMemo(
+    () => addHeadingIds(DOMPurify.sanitize(postInfo?.content || "")),
+    [postInfo?.content]
+  );
+  const contentRef = useRef(null);
+  useEffect(() => {
+    if (contentRef.current) highlightCode(contentRef.current);
+  }, [content.html]);
   if (slug && (isAuthLoading || loading)) return <PageLoading></PageLoading>;
   if (!postInfo) return <NotFoundPage></NotFoundPage>;
   const { user } = postInfo;
@@ -197,15 +211,14 @@ const PostDetailPage = () => {
           </div>
         </div>
         <div className="post-content">
+          <TableOfContents headings={content.headings}></TableOfContents>
           <div
+            ref={contentRef}
             className="entry-content"
-            // Content is user-authored HTML, so sanitize it to prevent XSS
-            dangerouslySetInnerHTML={{
-              __html: DOMPurify.sanitize(postInfo.content || ""),
-            }}
+            dangerouslySetInnerHTML={{ __html: content.html }}
           ></div>
           {postInfo.status === postStatus.APPROVED && (
-            <PostActions postId={postInfo.id}></PostActions>
+            <PostActions post={postInfo}></PostActions>
           )}
           <AuthorBox userId={user?.id}></AuthorBox>
           <CommentSection post={postInfo}></CommentSection>

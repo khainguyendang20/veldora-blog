@@ -1,7 +1,7 @@
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { db } from "config/firebase-config";
 import { collection, limit, query, where } from "firebase/firestore";
-import useFirestoreQuery from "hooks/useFirestoreQuery";
+import useCachedQuery from "hooks/useCachedQuery";
 import PostItemLarge from "module/post/PostItemLarge";
 import React, { lazy, Suspense } from "react";
 import styled from "styled-components";
@@ -28,7 +28,8 @@ const HomeFeature = () => {
   // Re-renders only when a breakpoint is crossed, not on every resize
   const isDesktop = useMediaQuery("only screen and (min-width: 1025px)");
   const isPhone = useMediaQuery("only screen and (max-width: 640px)");
-  const { data: posts } = useFirestoreQuery(
+  const { data: posts } = useCachedQuery(
+    "home:featured",
     () =>
       query(
         collection(db, "posts"),

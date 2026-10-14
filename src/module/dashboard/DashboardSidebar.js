@@ -1,4 +1,5 @@
 import {
+  IconBell,
   IconBook,
   IconBookmark,
   IconDashboard,
@@ -88,6 +89,11 @@ const getItemLinks = (role) => {
 
   // Saved posts, Profile and Logout for everyone
   baseLinks.push(
+    {
+      title: "Notifications",
+      url: "/manage/notifications",
+      icon: <IconBell size={iconSize} color={iconColor}></IconBell>,
+    },
     {
       title: "Saved",
       url: "/manage/saved",

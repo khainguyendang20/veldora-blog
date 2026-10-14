@@ -1,8 +1,8 @@
 import React from "react";
-import { act, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
-import { onSnapshot, orderBy, query, where } from "firebase/firestore";
+import { getDocs, orderBy, query, where } from "firebase/firestore";
 import { theme } from "utils/constants";
 import HomePage from "pages/HomePage";
 
@@ -13,7 +13,8 @@ vi.mock("firebase/firestore", () => ({
   where: vi.fn(),
   orderBy: vi.fn(),
   limit: vi.fn(),
-  onSnapshot: vi.fn(),
+  getDocs: vi.fn(),
+  getDocsFromCache: vi.fn(),
 }));
 // Both sections run their own queries; they have their own tests
 vi.mock("module/home/HomeFeature", () => ({ default: () => null }));
@@ -38,20 +39,19 @@ const renderHome = () =>
     </MemoryRouter>
   );
 
-const emitPosts = (count) => {
-  const onNext = onSnapshot.mock.calls[0][1];
+// Home posts are a one-off cached read (useCachedQuery)
+const servePosts = (count) => {
   const posts = Array.from({ length: count }, (_, i) => makePost(i + 1));
-  act(() =>
-    onNext({
-      forEach: (cb) => posts.forEach((p, i) => cb({ id: `p${i + 1}`, data: () => p })),
-    })
-  );
+  getDocs.mockResolvedValue({
+    empty: count === 0,
+    docs: posts.map((p, i) => ({ id: `p${i + 1}`, data: () => p })),
+  });
 };
 
 describe("HomePage", () => {
   beforeEach(() => {
     query.mockReturnValue({ name: "home-posts" });
-    onSnapshot.mockReturnValue(vi.fn());
+    getDocs.mockReturnValue(new Promise(() => {}));
   });
 
   it("asks for the newest approved posts", () => {
@@ -67,28 +67,27 @@ describe("HomePage", () => {
     expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
   });
 
-  it("shows an empty state when there are no posts", () => {
+  it("shows an empty state when there are no posts", async () => {
+    servePosts(0);
     renderHome();
-    emitPosts(0);
 
-    expect(screen.getByText("No posts yet")).toBeInTheDocument();
+    expect(await screen.findByText("No posts yet")).toBeInTheDocument();
   });
 
-  it("tells the reader when posts fail to load", () => {
+  it("tells the reader when posts fail to load", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
+    getDocs.mockRejectedValue(new Error("The query requires an index"));
     renderHome();
-    const onError = onSnapshot.mock.calls[0][2];
 
-    act(() => onError(new Error("The query requires an index")));
-
-    expect(screen.getByText("Could not load posts")).toBeInTheDocument();
+    expect(await screen.findByText("Could not load posts")).toBeInTheDocument();
     expect(screen.queryByText("No posts yet")).not.toBeInTheDocument();
     console.error.mockRestore();
   });
 
-  it("never repeats a post between recent and random sections", () => {
+  it("never repeats a post between recent and random sections", async () => {
+    servePosts(13);
     renderHome();
-    emitPosts(13);
+    await screen.findByText("Post 1");
 
     // 9 recent + 4 random, each post shown exactly once
     for (let n = 1; n <= 13; n++) {
@@ -97,9 +96,10 @@ describe("HomePage", () => {
     expect(screen.getByText("Random Posts")).toBeInTheDocument();
   });
 
-  it("hides the random section when every post is already recent", () => {
+  it("hides the random section when every post is already recent", async () => {
+    servePosts(5);
     renderHome();
-    emitPosts(5);
+    await screen.findByText("Post 1");
 
     expect(screen.queryByText("Random Posts")).not.toBeInTheDocument();
     expect(screen.getByText("Post 5")).toBeInTheDocument();

@@ -1,11 +1,12 @@
 import { db } from "config/firebase-config";
 import { collection, query, where } from "firebase/firestore";
-import useFirestoreQuery from "hooks/useFirestoreQuery";
+import useCachedQuery from "hooks/useCachedQuery";
 import React from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { avatarDefault } from "utils/constants";
 import { Image } from "components/image";
+import FollowButton from "module/follow/FollowButton";
 import useDocumentMeta from "hooks/useDocumentMeta";
 
 const ProfilePageStyles = styled.div`
@@ -59,7 +60,8 @@ const ProfilePageStyles = styled.div`
 
 const ProfilePage = () => {
   const { username } = useParams();
-  const { data: users } = useFirestoreQuery(
+  const { data: users } = useCachedQuery(
+    `profile:${username}`,
     () => query(collection(db, "users"), where("username", "==", username)),
     [username]
   );
@@ -74,6 +76,9 @@ const ProfilePage = () => {
       <div className="profile-info">
         <div className="profile-info__name">{info?.fullname}</div>
         <div className="profile-info__username">@{info?.username}</div>
+        <div style={{ marginTop: "12px" }}>
+          <FollowButton authorId={info.id}></FollowButton>
+        </div>
         {/* <div className="profile-info__item">
           <span>
             <svg

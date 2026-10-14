@@ -14,7 +14,7 @@ const InputStyles = styled.div`
     transition: all 0.2s ease-in-out;
   }
   input:focus {
-    background: white;
+    background: var(--color-surface);
     border-color: ${(props) => props.theme.grayLight};
   }
   input::-webkit-input-placeholder {

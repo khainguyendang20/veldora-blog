@@ -10,6 +10,14 @@ import DashboardSidebar from "module/dashboard/DashboardSidebar";
 vi.mock("config/firebase-config", () => ({ auth: {}, db: {} }));
 vi.mock("firebase/auth", () => ({ getAuth: vi.fn(), signOut: vi.fn() }));
 vi.mock("@uidotdev/usehooks", () => ({ useMediaQuery: vi.fn() }));
+// Signed in, the header listens for unread notifications
+vi.mock("firebase/firestore", () => ({
+  collection: vi.fn(),
+  limit: vi.fn(),
+  onSnapshot: vi.fn(),
+  query: vi.fn(),
+  where: vi.fn(),
+}));
 
 const renderWithRouter = (ui) => {
   const utils = render(<MemoryRouter>{ui}</MemoryRouter>);
@@ -46,6 +54,20 @@ describe("Header", () => {
     rerender(<Header />);
 
     expect(screen.getByRole("link", { name: "Blog" })).toBe(before);
+  });
+
+  it("adds the Following feed to the menu once signed in", () => {
+    useMediaQuery.mockReturnValue(true);
+    const { rerender } = renderWithRouter(<Header />);
+    expect(screen.queryByRole("link", { name: "Following" })).not.toBeInTheDocument();
+
+    useAuthStore.setState({ user: { uid: "u1" }, isAuthLoading: false });
+    rerender(<Header />);
+
+    expect(screen.getByRole("link", { name: "Following" })).toHaveAttribute(
+      "href",
+      "/following"
+    );
   });
 
   it("does not link to pages that don't exist", () => {

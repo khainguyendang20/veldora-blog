@@ -3,13 +3,13 @@ import { Image } from "components/image";
 import Heading from "components/layout/Heading";
 import { db } from "config/firebase-config";
 import {
-  addDoc,
   collection,
-  deleteDoc,
   doc,
+  increment,
   orderBy,
   query,
   serverTimestamp,
+  writeBatch,
 } from "firebase/firestore";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
 import React, { useState } from "react";
@@ -19,6 +19,10 @@ import { useAuthStore } from "store";
 import styled from "styled-components";
 import { avatarDefault, isStaffRole } from "utils/constants";
 import { formatDate } from "utils/formatDate";
+import {
+  addCommentNotification,
+  removeCommentNotification,
+} from "module/notification/notify";
 
 // Firestore rules enforce the same limit
 export const maxCommentLength = 2000;
@@ -31,6 +35,8 @@ const CommentSectionStyles = styled.section`
     padding: 12px 16px;
     border: 1px solid ${(props) => props.theme.grayLight};
     border-radius: 8px;
+    background: var(--color-surface);
+    color: var(--color-text);
     resize: vertical;
     margin-bottom: 12px;
   }
@@ -39,7 +45,7 @@ const CommentSectionStyles = styled.section`
     justify-content: space-between;
     align-items: center;
     font-size: 13px;
-    color: #888;
+    color: var(--color-muted);
   }
   .comment-form button {
     margin: 0;
@@ -72,7 +78,7 @@ const CommentSectionStyles = styled.section`
     font-weight: 600;
   }
   .comment__date {
-    color: #888;
+    color: var(--color-muted);
     font-size: 12px;
   }
   .comment__content {
@@ -113,7 +119,11 @@ const CommentSection = ({ post }) => {
     if (!text) return;
     setSending(true);
     try {
-      await addDoc(collection(db, "posts", post.id, "comments"), {
+      // The comment and the post's commentCount change together; Firestore
+      // rules check that lastCommentId names the comment being added
+      const commentRef = doc(collection(db, "posts", post.id, "comments"));
+      const batch = writeBatch(db);
+      batch.set(commentRef, {
         content: text,
         // Must match the author's profile; rules check it
         user: {
@@ -124,6 +134,12 @@ const CommentSection = ({ post }) => {
         },
         createdAt: serverTimestamp(),
       });
+      batch.update(doc(db, "posts", post.id), {
+        commentCount: increment(1),
+        lastCommentId: commentRef.id,
+      });
+      addCommentNotification(batch, post, user, commentRef.id);
+      await batch.commit();
       setContent("");
     } catch (error) {
       toast.error("Could not post your comment, please try again.");
@@ -132,9 +148,16 @@ const CommentSection = ({ post }) => {
     }
   };
 
-  const handleDelete = async (commentId) => {
+  const handleDelete = async (comment) => {
     try {
-      await deleteDoc(doc(db, "posts", post.id, "comments", commentId));
+      const batch = writeBatch(db);
+      batch.delete(doc(db, "posts", post.id, "comments", comment.id));
+      batch.update(doc(db, "posts", post.id), {
+        commentCount: increment(-1),
+        lastCommentId: comment.id,
+      });
+      removeCommentNotification(batch, post, comment);
+      await batch.commit();
     } catch (error) {
       toast.error("Could not delete the comment, please try again.");
     }
@@ -201,7 +224,7 @@ const CommentSection = ({ post }) => {
                   <button
                     type="button"
                     className="comment__delete"
-                    onClick={() => handleDelete(comment.id)}
+                    onClick={() => handleDelete(comment)}
                   >
                     Delete
                   </button>

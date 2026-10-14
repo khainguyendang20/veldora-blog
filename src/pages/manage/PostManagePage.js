@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { toast } from "react-toastify";
 import { deletePost } from "module/post/deletePost";
+import { formatDate } from "utils/formatDate";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
 import debounce from "lodash/debounce";
 import React, { useMemo, useState } from "react";
@@ -50,9 +51,10 @@ const StatusTabs = styled.div`
   margin-bottom: 20px;
   button {
     padding: 6px 14px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
     border-radius: 100rem;
-    background: white;
+    background: var(--color-surface);
+    color: var(--color-text);
     cursor: pointer;
     font-size: 14px;
   }
@@ -69,9 +71,10 @@ const ModerationActions = styled.div`
   margin-top: 8px;
   button {
     padding: 2px 8px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
     border-radius: 4px;
-    background: white;
+    background: var(--color-surface);
+    color: var(--color-text);
     cursor: pointer;
     font-size: 12px;
   }
@@ -82,6 +85,8 @@ const statusTabs = [
   { label: "Pending", value: postStatus.PENDING },
   { label: "Approved", value: postStatus.APPROVED },
   { label: "Rejected", value: postStatus.REJECTED },
+  { label: "Drafts", value: postStatus.DRAFT },
+  { label: "Scheduled", value: postStatus.SCHEDULED },
 ];
 
 const StatusBadge = styled.span`
@@ -95,6 +100,12 @@ const StatusBadge = styled.span`
   }
   &.pending {
     background-color: #f39c12;
+  }
+  &.draft {
+    background-color: #7f8c8d;
+  }
+  &.scheduled {
+    background-color: #8e44ad;
   }
   &.rejected {
     background-color: #e74c3c;
@@ -180,8 +191,16 @@ const PostManagePage = () => {
       toast.error("Could not update the post, please try again.");
     }
   };
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status, publishAt) => {
     switch (status) {
+      case postStatus.DRAFT:
+        return <StatusBadge className="draft">Draft</StatusBadge>;
+      case postStatus.SCHEDULED:
+        return (
+          <StatusBadge className="scheduled">
+            Scheduled {formatDate(publishAt)}
+          </StatusBadge>
+        );
       case postStatus.APPROVED:
         return <StatusBadge className="approved">Approved</StatusBadge>;
       case postStatus.PENDING:
@@ -262,7 +281,7 @@ const PostManagePage = () => {
                 ))}
               </td>
               <td>
-                {getStatusBadge(post.status)}
+                {getStatusBadge(post.status, post.publishAt)}
                 {canModerate && (
                   <ModerationActions>
                     {post.status !== postStatus.APPROVED && (

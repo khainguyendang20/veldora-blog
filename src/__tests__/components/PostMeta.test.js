@@ -77,3 +77,14 @@ describe("PostMeta reading time", () => {
     expect(screen.getByText("· 4 min read")).toBeInTheDocument();
   });
 });
+
+describe("PostMeta counters", () => {
+  it("shows likes and comments when there are any", () => {
+    renderWithProviders(
+      <PostMeta auth={{ fullname: "A" }} likeCount={3} commentCount={0} />
+    );
+
+    expect(screen.getByLabelText("3 likes")).toBeInTheDocument();
+    expect(screen.queryByLabelText(/comments/)).not.toBeInTheDocument();
+  });
+});

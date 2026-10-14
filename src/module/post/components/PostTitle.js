@@ -15,7 +15,7 @@ const PostTitleStyles = styled.h3`
   ${(props) =>
     props.color &&
     css`
-      color: props.color;
+      color: ${props.color};
     `};
   @media only screen and (max-width: 640px) {
     font-size: 14px;

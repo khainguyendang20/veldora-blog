@@ -1,11 +1,12 @@
 import React from "react";
 import { render, act, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
-import { getDoc, onSnapshot, query, where } from "firebase/firestore";
+import { getDoc, getDocs, onSnapshot, query, where } from "firebase/firestore";
 import { useAuthStore } from "store";
 import PostDetailPage from "pages/PostDetailPage";
 
 vi.mock("config/firebase-config", () => ({ db: {} }));
+vi.mock("module/post/highlightCode", () => ({ highlightCode: vi.fn() }));
 vi.mock("firebase/firestore", () => ({
   collection: vi.fn(),
   query: vi.fn(),
@@ -15,6 +16,8 @@ vi.mock("firebase/firestore", () => ({
   getCountFromServer: vi.fn(() => new Promise(() => {})),
   doc: vi.fn(),
   getDoc: vi.fn(),
+  getDocs: vi.fn(),
+  getDocsFromCache: vi.fn(),
   onSnapshot: vi.fn(),
 }));
 
@@ -156,6 +159,16 @@ describe("PostDetailPage extras", () => {
     );
   };
 
+  it("lists the post's headings in a table of contents", () => {
+    fullPost.content = "<h2>One</h2><p>a</p><h2>Two</h2><h2>Three</h2>";
+    openPost(null);
+
+    const toc = screen.getByRole("navigation", { name: "Table of contents" });
+    expect(toc).toHaveTextContent("OneTwoThree");
+    expect(screen.getByRole("link", { name: "Two" })).toHaveAttribute("href", "#h-two");
+    fullPost.content = "<p>Body</p>";
+  });
+
   it("titles the browser tab after the post", () => {
     openPost(null);
 
@@ -186,21 +199,19 @@ describe("PostDetailPage extras", () => {
     expect(screen.queryByText("Edit post")).not.toBeInTheDocument();
   });
 
-  it("shows related posts from the same category, excluding this one", () => {
+  it("shows related posts from the same category, excluding this one", async () => {
+    // Related posts are a one-off cached read
+    getDocs.mockResolvedValue({
+      empty: false,
+      docs: ["p1", "p2"].map((id) => ({
+        id,
+        data: () => ({ ...fullPost, slug: id, title: `Title ${id}` }),
+      })),
+    });
     openPost(null);
     expect(where).toHaveBeenCalledWith("categoryIds", "array-contains", "c1");
 
-    // Related posts subscribe last, after the comments
-    act(() =>
-      listeners[listeners.length - 1]({
-        forEach: (cb) =>
-          ["p1", "p2"].forEach((id) =>
-            cb({ id, data: () => ({ ...fullPost, slug: id, title: `Title ${id}` }) })
-          ),
-      })
-    );
-
-    expect(screen.getByText("Related posts")).toBeInTheDocument();
+    expect(await screen.findByText("Related posts")).toBeInTheDocument();
     expect(screen.getByText("Title p2")).toBeInTheDocument();
     expect(screen.queryByText("Title p1")).not.toBeInTheDocument();
   });

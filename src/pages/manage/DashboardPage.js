@@ -19,7 +19,7 @@ const DashboardStyles = styled.div`
     margin-top: 30px;
   }
   .stat-card {
-    background: white;
+    background: var(--color-surface);
     padding: 24px;
     border-radius: 12px;
     box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
@@ -32,7 +32,7 @@ const DashboardStyles = styled.div`
     }
     &__label {
       font-size: 14px;
-      color: #666;
+      color: var(--color-muted);
       text-transform: uppercase;
       letter-spacing: 1px;
     }
@@ -40,7 +40,7 @@ const DashboardStyles = styled.div`
   .welcome {
     margin-bottom: 20px;
     p {
-      color: #666;
+      color: var(--color-muted);
       margin-top: 8px;
     }
   }

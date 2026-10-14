@@ -1,11 +1,12 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: import.meta.env.REACT_APP_FIREBASE_API_KEY,
   // The app's own host: Vite (dev) and vercel.json (production) proxy
@@ -18,7 +19,30 @@ const firebaseConfig = {
   appId: import.meta.env.REACT_APP_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+
+// App Check proves requests come from this app, not a script holding the
+// public API key that could burn the free plan's daily read quota. Must
+// start before Firestore is used. Without a site key (e.g. a fresh local
+// setup) it stays off. In development, the console prints a debug token to
+// register under Firebase Console > App Check > Manage debug tokens.
+const recaptchaSiteKey = import.meta.env.REACT_APP_RECAPTCHA_SITE_KEY;
+if (recaptchaSiteKey) {
+  if (import.meta.env.DEV) {
+    window.FIREBASE_APPCHECK_DEBUG_TOKEN =
+      import.meta.env.REACT_APP_APPCHECK_DEBUG_TOKEN || true;
+  }
+  initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider(recaptchaSiteKey),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
+
+// Keep fetched documents in IndexedDB so useCachedQuery can serve recent
+// public lists from the browser instead of paying for reads again
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager(),
+  }),
+});
 export const auth = getAuth(app);

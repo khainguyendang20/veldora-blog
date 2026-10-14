@@ -35,7 +35,8 @@ const PostMetaStyles = styled.div`
   .post-date {
     column-gap: 6px;
   }
-  .post-reading-time {
+  .post-reading-time,
+  .post-stat {
     display: flex;
     align-items: center;
   }
@@ -48,7 +49,14 @@ const PostMetaStyles = styled.div`
   }
 `;
 
-const PostMeta = ({ color = "black", auth, date, minutesToRead }) => {
+const PostMeta = ({
+  color = "currentColor",
+  auth,
+  date,
+  minutesToRead,
+  likeCount = 0,
+  commentCount = 0,
+}) => {
   return (
     <PostMetaStyles className="post-meta" color={color}>
       <Link
@@ -76,6 +84,16 @@ const PostMeta = ({ color = "black", auth, date, minutesToRead }) => {
       )}
       {minutesToRead > 0 && (
         <span className="post-reading-time">· {minutesToRead} min read</span>
+      )}
+      {likeCount > 0 && (
+        <span className="post-stat" aria-label={`${likeCount} likes`}>
+          · ♥ {likeCount}
+        </span>
+      )}
+      {commentCount > 0 && (
+        <span className="post-stat" aria-label={`${commentCount} comments`}>
+          · 💬 {commentCount}
+        </span>
       )}
     </PostMetaStyles>
   );

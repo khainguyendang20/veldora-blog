@@ -1,12 +1,6 @@
 import { db } from "config/firebase-config";
-import {
-  collection,
-  limit,
-  orderBy,
-  query,
-  where,
-} from "firebase/firestore";
-import useFirestoreQuery from "hooks/useFirestoreQuery";
+import { collection, limit, orderBy, query, where } from "firebase/firestore";
+import useCachedQuery from "hooks/useCachedQuery";
 import PostItemLarge from "module/post/PostItemLarge";
 import PostItemMini from "module/post/PostItemMini";
 import React from "react";
@@ -37,7 +31,8 @@ const PostsByCategoryStyles = styled.div`
 `;
 
 const PostsByCategory = ({ categoryId }) => {
-  const { data: posts } = useFirestoreQuery(
+  const { data: posts } = useCachedQuery(
+    `category-posts:${categoryId}`,
     () =>
       query(
         collection(db, "posts"),

@@ -17,8 +17,18 @@ const PostItemStyles = styled.div`
 
 const PostItem = ({ data, ...props }) => {
   if (!data) return;
-  const { title, slug, thumbnail, createdAt, user, categories, desc, content } =
-    data;
+  const {
+    title,
+    slug,
+    thumbnail,
+    createdAt,
+    user,
+    categories,
+    desc,
+    content,
+    likeCount,
+    commentCount,
+  } = data;
   const category = categories?.[0];
   return (
     <PostItemStyles>
@@ -35,6 +45,8 @@ const PostItem = ({ data, ...props }) => {
           auth={user}
           date={formatDate(createdAt)}
           minutesToRead={readingTime(content)}
+          likeCount={likeCount}
+          commentCount={commentCount}
         ></PostMeta>
         {desc && <PostDescription>{desc}</PostDescription>}
       </div>

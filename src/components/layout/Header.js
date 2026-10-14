@@ -10,12 +10,13 @@ import { useClickOutside } from "hooks/useClickOutSide";
 import React, { useRef } from "react";
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useAuthStore } from "store";
+import { useAuthStore, useThemeStore } from "store";
 import styled from "styled-components";
 import { getAuth, signOut } from "firebase/auth";
 import { useMediaQuery } from "@uidotdev/usehooks";
 import { Image } from "components/image";
 import { avatarDefault } from "utils/constants";
+import NotificationBell from "module/notification/NotificationBell";
 
 const HeaderStyles = styled.div`
   position: fixed;
@@ -24,7 +25,7 @@ const HeaderStyles = styled.div`
   left: 0;
   right: 0;
   display: block;
-  background: white;
+  background: var(--color-surface);
   box-shadow: rgba(33, 35, 38, 0.1) 0px 12px 8px -10px;
   padding: 0 72px;
   max-width: 100dvw;
@@ -58,7 +59,7 @@ const HeaderStyles = styled.div`
       min-width: 180px;
       padding: 12px;
       list-style: none;
-      background: white;
+      background: var(--color-surface);
       display: block;
       right: 0;
       border-radius: 8px;
@@ -147,7 +148,7 @@ const HeaderStyles = styled.div`
 const MobileMenuStyles = styled.div`
   position: fixed;
   inset: 0;
-  background: white;
+  background: var(--color-surface);
   display: block;
   overflow: hidden;
   z-index: 999;
@@ -168,7 +169,44 @@ const menuItems = [
   },
 ];
 
+// The Following feed only makes sense once signed in
+const useMenuItems = () => {
+  const signedIn = useAuthStore((state) => Boolean(state.user));
+  return signedIn
+    ? [
+        ...menuItems.slice(0, 2),
+        { url: "/following", title: "Following" },
+        ...menuItems.slice(2),
+      ]
+    : menuItems;
+};
+
 const ICON_SIZE = 18;
+
+const ThemeToggleStyles = styled.button`
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+`;
+
+const ThemeToggle = () => {
+  const mode = useThemeStore((state) => state.mode);
+  const toggleMode = useThemeStore((state) => state.toggleMode);
+  const next = mode === "dark" ? "light" : "dark";
+  return (
+    <ThemeToggleStyles
+      type="button"
+      onClick={toggleMode}
+      aria-label={`Switch to ${next} mode`}
+      title={`Switch to ${next} mode`}
+    >
+      {mode === "dark" ? "☀" : "☾"}
+    </ThemeToggleStyles>
+  );
+};
 
 const Header = () => {
   const isDesktop = useMediaQuery("only screen and (min-width: 1025px)");
@@ -177,6 +215,7 @@ const Header = () => {
   const userPopoverRef = useRef();
   useClickOutside(userPopoverRef, () => setShowPopover(false));
   const navigate = useNavigate();
+  const items = useMenuItems();
   const handleSearch = (e) => {
     e.preventDefault();
     const q = e.currentTarget.elements.q.value.trim();
@@ -192,7 +231,7 @@ const Header = () => {
           </NavLink>
           {isDesktop ? (
             <ul className="menu">
-              {menuItems.map((item) => (
+              {items.map((item) => (
                 <li key={item.url}>
                   <NavLink to={item.url}>{item.title}</NavLink>
                 </li>
@@ -203,6 +242,7 @@ const Header = () => {
           )}
         </div>
         <div className="header-r">
+          <ThemeToggle></ThemeToggle>
           {isDesktop && (
             <form className="search" role="search" onSubmit={handleSearch}>
               <input
@@ -226,18 +266,21 @@ const Header = () => {
               Login
             </Button>
           ) : (
-            <div
-              ref={userPopoverRef}
-              className="header-r__user"
-              onClick={() => setShowPopover(!showPopover)}
-            >
-              <Image src={user.avatar} fallback={avatarDefault} resizeTo={96} />
-              <UserPopover
-                show={showPopover}
-                setShow={setShowPopover}
-                data={user}
-              ></UserPopover>
-            </div>
+            <>
+              <NotificationBell uid={user.uid}></NotificationBell>
+              <div
+                ref={userPopoverRef}
+                className="header-r__user"
+                onClick={() => setShowPopover(!showPopover)}
+              >
+                <Image src={user.avatar} fallback={avatarDefault} resizeTo={96} />
+                <UserPopover
+                  show={showPopover}
+                  setShow={setShowPopover}
+                  data={user}
+                ></UserPopover>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -279,6 +322,7 @@ const UserPopover = ({ show, setShow, data }) => {
 
 const MobileMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const items = useMenuItems();
 
   return (
     <div>
@@ -293,7 +337,7 @@ const MobileMenu = () => {
             >
               <IconClose />
             </span>
-            {[...menuItems, { url: "/search", title: "Search" }].map((item) => (
+            {[...items, { url: "/search", title: "Search" }].map((item) => (
               <li key={item.url}>
                 <NavLink to={item.url}>{item.title}</NavLink>
               </li>

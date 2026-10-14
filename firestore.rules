@@ -60,6 +60,61 @@ service cloud.firestore {
           && request.resource.data.keys().hasOnly(['createdAt'])
           && request.resource.data.createdAt == request.time;
       }
+
+      // Authors this user follows, keyed by author uid; private to them
+      match /following/{authorId} {
+        allow read, delete: if signedIn() && request.auth.uid == userId;
+        allow create: if isActive()
+          && request.auth.uid == userId
+          && authorId != userId
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt == request.time;
+      }
+
+      // Likes and comments on this user's posts, written by the reader in
+      // the same batch as the like or comment
+      match /notifications/{notificationId} {
+        function postDoc(id) {
+          return /databases/$(database)/documents/posts/$(id);
+        }
+
+        function isValidLike(data) {
+          return notificationId == 'like_' + data.postId + '_' + request.auth.uid
+            && existsAfter(/databases/$(database)/documents/posts/$(data.postId)/likes/$(request.auth.uid));
+        }
+
+        function isValidComment(data) {
+          return notificationId == 'comment_' + data.commentId
+            && getAfter(/databases/$(database)/documents/posts/$(data.postId)/comments/$(data.commentId))
+              .data.user.id == request.auth.uid;
+        }
+
+        allow read: if signedIn() && request.auth.uid == userId;
+
+        allow create: if isActive()
+          && userId != request.auth.uid
+          && request.resource.data.keys().hasOnly(['type', 'postId', 'postSlug',
+            'postTitle', 'actor', 'commentId', 'read', 'createdAt'])
+          && request.resource.data.actor.id == request.auth.uid
+          && request.resource.data.read == false
+          && request.resource.data.createdAt == request.time
+          && get(postDoc(request.resource.data.postId)).data.user.id == userId
+          && ((request.resource.data.type == 'like' && isValidLike(request.resource.data))
+            || (request.resource.data.type == 'comment' && isValidComment(request.resource.data)));
+
+        // The owner only marks notifications as read
+        allow update: if signedIn()
+          && request.auth.uid == userId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+
+        // Owners clear theirs; readers withdraw theirs when unliking or
+        // deleting a comment (even if the owner already cleared it); staff
+        // when moderating comments
+        allow delete: if signedIn() && (request.auth.uid == userId
+          || resource == null
+          || resource.data.actor.id == request.auth.uid
+          || isStaff());
+      }
     }
 
     // Private half of a profile: readable by its owner and admins only
@@ -81,26 +136,66 @@ service cloud.firestore {
         return signedIn() && resource.data.user.id == request.auth.uid;
       }
 
+      function postPath() {
+        return /databases/$(database)/documents/posts/$(postId);
+      }
+
+      function changesOnly(fields) {
+        return request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(fields);
+      }
+
+      function changesAny(fields) {
+        return request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(fields);
+      }
+
+      function movedBy(field, delta) {
+        return request.resource.data.get(field, 0)
+          == resource.data.get(field, 0) + delta;
+      }
+
+      // likeCount and commentCount move by exactly one, in the same batch
+      // as the like or comment that justifies the change
+      function isCounterUpdate() {
+        let like = /databases/$(database)/documents/posts/$(postId)/likes/$(request.auth.uid);
+        let comment = /databases/$(database)/documents/posts/$(postId)/comments/$(request.resource.data.get('lastCommentId', '-'));
+        return isActive() && (
+          (changesOnly(['likeCount']) && (
+            (movedBy('likeCount', 1) && !exists(like) && existsAfter(like))
+            || (movedBy('likeCount', -1) && exists(like) && !existsAfter(like))))
+          || (changesOnly(['commentCount', 'lastCommentId']) && (
+            (movedBy('commentCount', 1) && !exists(comment) && existsAfter(comment))
+            || (movedBy('commentCount', -1) && exists(comment) && !existsAfter(comment)))));
+      }
+
       // Anyone reads approved posts; authors and staff also see the rest.
       // Public queries must therefore filter on status == 1.
       allow read: if resource.data.status == 1 || isAuthor() || isStaff();
 
-      // Regular users submit posts for review: pending and not featured
+      // Regular users keep drafts (4) or submit for review (2), never
+      // featured; publishing and scheduling (5) are for staff
       allow create: if isActive()
         && request.resource.data.user.id == request.auth.uid
         && (isStaff()
-          || (request.resource.data.status == 2
+          || (request.resource.data.status in [2, 4]
             && request.resource.data.get('featured', false) == false));
 
-      // Authors edit their own posts but cannot change who wrote them or
-      // the moderation fields
+      // Authors edit their own posts but cannot change who wrote them, the
+      // moderation fields or the counters
       allow update: if isStaff()
+        || isCounterUpdate()
         || (isActive()
           && isAuthor()
           && request.resource.data.user.id == resource.data.user.id
-          && request.resource.data.status == resource.data.status
+          // Status stays, or moves between draft and review (including
+          // resubmitting a rejected post)
+          && (request.resource.data.status == resource.data.status
+            || (request.resource.data.status in [2, 4]
+              && resource.data.status in [2, 3, 4]))
           && request.resource.data.get('featured', false)
-            == resource.data.get('featured', false));
+            == resource.data.get('featured', false)
+          && !changesAny(['likeCount', 'commentCount', 'lastCommentId']));
 
       allow delete: if isStaff() || (isActive() && isAuthor());
 
@@ -126,10 +221,16 @@ service cloud.firestore {
           && request.resource.data.user.id == request.auth.uid
           && request.resource.data.user.fullname
             == get(profilePath()).data.fullname
-          && request.resource.data.createdAt == request.time;
+          && request.resource.data.createdAt == request.time
+          && getAfter(postPath()).data.get('commentCount', 0)
+            == post().get('commentCount', 0) + 1;
 
-        // Commenters remove their own; post authors and staff moderate
-        allow delete: if (signedIn() && resource.data.user.id == request.auth.uid)
+        // Commenters remove their own (with the counter); post authors and
+        // staff moderate, and clear comments when deleting the post
+        allow delete: if (signedIn()
+            && resource.data.user.id == request.auth.uid
+            && getAfter(postPath()).data.get('commentCount', 0)
+              == post().get('commentCount', 0) - 1)
           || isPostAuthor()
           || isStaff();
       }
@@ -141,9 +242,15 @@ service cloud.firestore {
           && request.auth.uid == userId
           && post().status == 1
           && request.resource.data.keys().hasOnly(['createdAt'])
-          && request.resource.data.createdAt == request.time;
-        // Post authors and staff clear likes when deleting the post
-        allow delete: if (signedIn() && request.auth.uid == userId)
+          && request.resource.data.createdAt == request.time
+          && getAfter(postPath()).data.get('likeCount', 0)
+            == post().get('likeCount', 0) + 1;
+        // Readers unlike (with the counter); post authors and staff clear
+        // likes when deleting the post
+        allow delete: if (signedIn()
+            && request.auth.uid == userId
+            && getAfter(postPath()).data.get('likeCount', 0)
+              == post().get('likeCount', 0) - 1)
           || isPostAuthor()
           || isStaff();
       }

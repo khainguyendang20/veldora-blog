@@ -1,5 +1,5 @@
-import { Radio, Toggle } from "components/checkbox";
-import { Field, FieldCheckboxes } from "components/field";
+import { Toggle } from "components/checkbox";
+import { Field } from "components/field";
 import { Input } from "components/input";
 import ImageUpload from "components/input/ImageUpload";
 import { Label } from "components/label";
@@ -8,7 +8,7 @@ import { Button } from "components/button";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Select from "react-select";
-import slugify from "slugify";
+import { toSlug } from "utils/toSlug";
 import { isStaffRole, postStatus } from "utils/constants";
 import { useAuthStore } from "store";
 import useImageUpload from "hooks/useImageUpload";
@@ -20,13 +20,15 @@ import "react-quill/dist/quill.snow.css";
 import { uploadImage } from "utils/uploadImage";
 import ImageUploader from "quill-image-uploader";
 import { isSlugTaken, randomSlugSuffix } from "./slug";
+import useAutosave from "hooks/useAutosave";
+import PostStatusField from "./PostStatusField";
 
 Quill.register("modules/imageUploader", ImageUploader);
 
 const quillModules = {
   toolbar: [
     ["bold", "italic", "underline", "strike"],
-    ["blockquote"],
+    ["blockquote", "code-block"],
     [{ header: 1 }, { header: 2 }], // custom button values
     [{ list: "ordered" }, { list: "bullet" }],
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
@@ -43,6 +45,14 @@ const emptyPost = {
   status: postStatus.PENDING,
   categories: [],
   featured: false,
+};
+
+// Firestore Timestamp or Date to a datetime-local input value
+const toLocalInput = (value) => {
+  const date = value?.toDate ? value.toDate() : value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return "";
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
 };
 
 const toOption = (category) => ({ label: category.name, value: category.id });
@@ -68,8 +78,38 @@ const PostForm = ({
   );
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [content, setContent] = useState(defaultValues.content || "");
-  const watchStatus = watch("status");
+  const watchStatus = Number(watch("status"));
   const watchFeatured = watch("featured");
+  // datetime-local value ("2026-10-20T08:00") for scheduled posts
+  const [publishAt, setPublishAt] = useState(() =>
+    toLocalInput(defaultValues.publishAt)
+  );
+
+  // Unsaved text survives a closed tab; restoring it is offered below
+  const autosaveFields = {
+    title: watch("title") || "",
+    slug: watch("slug") || "",
+    desc: watch("desc") || "",
+    content,
+  };
+  const autosave = useAutosave(
+    postId || "new-post",
+    autosaveFields,
+    {
+      title: defaultValues.title || "",
+      slug: defaultValues.slug || "",
+      desc: defaultValues.desc || "",
+      content: defaultValues.content || "",
+    }
+  );
+  const restoreAutosave = () => {
+    const { title, slug, desc, content: savedContent } = autosave.saved.values;
+    setValue("title", title);
+    setValue("slug", slug);
+    setValue("desc", desc);
+    setContent(savedContent);
+    autosave.dismiss();
+  };
   const {
     image,
     setImage,
@@ -101,7 +141,7 @@ const PostForm = ({
   // the title just gets a short random suffix.
   const resolveSlug = async (values) => {
     const customSlug = values.slug?.trim();
-    const slug = slugify(customSlug || values.title, { lower: true });
+    const slug = toSlug(customSlug || values.title);
     const checkOptions = { postId, uid, isStaff: canModerate };
     if (!(await isSlugTaken(slug, checkOptions))) return slug;
     if (customSlug) return null;
@@ -109,8 +149,19 @@ const PostForm = ({
   };
 
   const handleSavePost = async (values) => {
+    // Counters belong to likes and comments, which may have changed since
+    // the form loaded; saving these stale copies would undo them
+    // eslint-disable-next-line no-unused-vars
+    const { likeCount, commentCount, lastCommentId, ...fields } = values;
+    const status = Number(values.status);
+    const publishDate =
+      status === postStatus.SCHEDULED && publishAt ? new Date(publishAt) : null;
+    if (status === postStatus.SCHEDULED && !publishDate) {
+      toast.error("Pick when the post should be published.");
+      return;
+    }
     try {
-      const slug = await resolveSlug(values);
+      const slug = await resolveSlug(fields);
       if (!slug) {
         toast.error("This slug is already used by another post.");
         return;
@@ -122,16 +173,19 @@ const PostForm = ({
         })
       );
       await onSubmit({
-        ...values,
+        ...fields,
         thumbnail: image,
         slug,
-        status: Number(values.status),
+        status,
+        publishAt: publishDate,
         categories,
         categoryIds: categories.map((category) => category.id),
         content,
       });
+      autosave.clear();
       if (resetAfterSubmit) {
         reset(emptyPost);
+        setPublishAt("");
         handleResetUpload();
         setOptionValues([]);
         setContent("");
@@ -143,6 +197,20 @@ const PostForm = ({
 
   return (
     <form autoComplete="off" onSubmit={handleSubmit(handleSavePost)}>
+      {autosave.saved && (
+        <div className="autosave-banner" role="status">
+          <span>
+            You have unsaved changes from{" "}
+            {new Date(autosave.saved.savedAt).toLocaleString("vi-VN")}.
+          </span>
+          <button type="button" onClick={restoreAutosave}>
+            Restore
+          </button>
+          <button type="button" onClick={autosave.clear}>
+            Discard
+          </button>
+        </div>
+      )}
       <div className="field-format">
         <Field>
           <Label htmlFor="title">Title</Label>
@@ -191,37 +259,14 @@ const PostForm = ({
         />
       </div>
       <div className="field-format">
-        {canModerate && (
-          <Field>
-            <Label>Status</Label>
-            <FieldCheckboxes>
-              <Radio
-                name="status"
-                control={control}
-                checked={Number(watchStatus) === postStatus.APPROVED}
-                value={postStatus.APPROVED}
-              >
-                Approved
-              </Radio>
-              <Radio
-                name="status"
-                control={control}
-                checked={Number(watchStatus) === postStatus.PENDING}
-                value={postStatus.PENDING}
-              >
-                Pending
-              </Radio>
-              <Radio
-                name="status"
-                control={control}
-                checked={Number(watchStatus) === postStatus.REJECTED}
-                value={postStatus.REJECTED}
-              >
-                Rejected
-              </Radio>
-            </FieldCheckboxes>
-          </Field>
-        )}
+        <PostStatusField
+          control={control}
+          status={watchStatus}
+          savedStatus={Number(defaultValues.status)}
+          canModerate={canModerate}
+          publishAt={publishAt}
+          onPublishAtChange={setPublishAt}
+        ></PostStatusField>
         <Field>
           <Label>Category</Label>
           <Select

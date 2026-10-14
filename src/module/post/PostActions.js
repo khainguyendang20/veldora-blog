@@ -1,19 +1,23 @@
 import { IconBookmark, IconHeart } from "components/icons";
 import { db } from "config/firebase-config";
 import {
-  collection,
   deleteDoc,
   doc,
-  getCountFromServer,
-  onSnapshot,
+  increment,
   serverTimestamp,
   setDoc,
+  writeBatch,
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuthStore } from "store";
+import useDocExists from "hooks/useDocExists";
 import styled from "styled-components";
+import {
+  addLikeNotification,
+  removeLikeNotification,
+} from "module/notification/notify";
 
 const PostActionsStyles = styled.div`
   display: flex;
@@ -25,9 +29,10 @@ const PostActionsStyles = styled.div`
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
     border-radius: 100rem;
-    background: white;
+    background: var(--color-surface);
+    color: var(--color-text);
     cursor: pointer;
     font-size: 14px;
   }
@@ -37,29 +42,19 @@ const PostActionsStyles = styled.div`
   }
 `;
 
-// Whether a document exists, kept live; false while signed out
-const useDocExists = (path) => {
-  const [exists, setExists] = useState(false);
-  const key = path?.join("/");
-  useEffect(() => {
-    if (!path) {
-      setExists(false);
-      return;
-    }
-    return onSnapshot(doc(db, ...path), (snapshot) =>
-      setExists(snapshot.exists())
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-  return [exists, setExists];
-};
-
 // Like and save buttons for a published post. A like is
-// posts/{id}/likes/{uid}; a saved post is users/{uid}/bookmarks/{id}.
-const PostActions = ({ postId }) => {
-  const uid = useAuthStore((state) => state.user?.uid);
+// posts/{id}/likes/{uid}, written in one batch with the post's likeCount
+// (Firestore rules require both); a saved post is users/{uid}/bookmarks/{id}.
+const PostActions = ({ post }) => {
+  const postId = post.id;
+  const user = useAuthStore((state) => state.user);
+  const uid = user?.uid;
   const navigate = useNavigate();
-  const [likeCount, setLikeCount] = useState(null);
+  // The post document is live, so its likeCount catches up on its own;
+  // until then show the reader's own click
+  const [pendingDelta, setPendingDelta] = useState(0);
+  const likeCount = (post.likeCount || 0) + pendingDelta;
+  useEffect(() => setPendingDelta(0), [post.likeCount]);
   const [liked, setLiked] = useDocExists(
     uid ? ["posts", postId, "likes", uid] : null
   );
@@ -67,32 +62,17 @@ const PostActions = ({ postId }) => {
     uid ? ["users", uid, "bookmarks", postId] : null
   );
 
-  // A count query costs one read, not one per like
-  useEffect(() => {
-    let cancelled = false;
-    getCountFromServer(collection(db, "posts", postId, "likes"))
-      .then((snapshot) => {
-        if (!cancelled) setLikeCount(snapshot.data().count);
-      })
-      .catch((error) => console.error(error));
-    return () => {
-      cancelled = true;
-    };
-  }, [postId]);
-
   // Flip the button at once and undo it if the write fails
-  const toggle = async ({ on, setOn, makeRef, onCountChange }) => {
+  const toggle = async ({ on, setOn, write, onCountChange }) => {
     if (!uid) {
       toast.info("Sign in to like and save posts.");
       navigate("/login");
       return;
     }
-    const ref = makeRef();
     setOn(!on);
     onCountChange?.(on ? -1 : 1);
     try {
-      if (on) await deleteDoc(ref);
-      else await setDoc(ref, { createdAt: serverTimestamp() });
+      await write(!on);
     } catch (error) {
       setOn(on);
       onCountChange?.(on ? 1 : -1);
@@ -104,16 +84,31 @@ const PostActions = ({ postId }) => {
     toggle({
       on: liked,
       setOn: setLiked,
-      makeRef: () => doc(db, "posts", postId, "likes", uid),
-      onCountChange: (delta) =>
-        setLikeCount((count) => (count === null ? count : count + delta)),
+      write: (turnOn) => {
+        const batch = writeBatch(db);
+        const likeRef = doc(db, "posts", postId, "likes", uid);
+        if (turnOn) batch.set(likeRef, { createdAt: serverTimestamp() });
+        else batch.delete(likeRef);
+        batch.update(doc(db, "posts", postId), {
+          likeCount: increment(turnOn ? 1 : -1),
+        });
+        if (turnOn) addLikeNotification(batch, post, user);
+        else removeLikeNotification(batch, post, uid);
+        return batch.commit();
+      },
+      onCountChange: (delta) => setPendingDelta((value) => value + delta),
     });
 
   const handleSave = () =>
     toggle({
       on: saved,
       setOn: setSaved,
-      makeRef: () => doc(db, "users", uid, "bookmarks", postId),
+      write: (turnOn) => {
+        const ref = doc(db, "users", uid, "bookmarks", postId);
+        return turnOn
+          ? setDoc(ref, { createdAt: serverTimestamp() })
+          : deleteDoc(ref);
+      },
     });
 
   return (
@@ -121,7 +116,7 @@ const PostActions = ({ postId }) => {
       <button type="button" aria-pressed={liked} onClick={handleLike}>
         <IconHeart size={18} color="currentColor" filled={liked} />
         {liked ? "Liked" : "Like"}
-        {likeCount !== null && <span>· {likeCount}</span>}
+        <span>· {likeCount}</span>
       </button>
       <button type="button" aria-pressed={saved} onClick={handleSave}>
         <IconBookmark size={18} color="currentColor" filled={saved} />

@@ -12,7 +12,7 @@ const TextareaStyles = styled.div`
     border: 1px solid ${(props) => props.theme.grayLight};
     border-radius: 8px;
     transition: all 0.2s linear;
-    color: ${(props) => props.theme.black};
+    color: var(--color-text);
     font-size: 14px;
     resize: none;
     min-height: 200px;

@@ -6,7 +6,7 @@ import { Label } from "components/label";
 import React from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
-import slugify from "slugify";
+import { toSlug } from "utils/toSlug";
 import { categoryStatus } from "utils/constants";
 
 const emptyCategory = {
@@ -36,7 +36,7 @@ const CategoryForm = ({
     try {
       await onSubmit({
         ...values,
-        slug: slugify(values.slug || values.name, { lower: true }),
+        slug: toSlug(values.slug || values.name),
         status: Number(values.status),
       });
       if (resetAfterSubmit) reset(emptyCategory);
