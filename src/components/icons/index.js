@@ -13,3 +13,6 @@ export { default as IconBookmark } from "./IconBookmark";
 export { default as IconHeart } from "./IconHeart";
 export { default as IconBell } from "./IconBell";
 export { default as IconShare } from "./IconShare";
+export { default as IconMoon } from "./IconMoon";
+export { default as IconSun } from "./IconSun";
+export { default as IconTag } from "./IconTag";

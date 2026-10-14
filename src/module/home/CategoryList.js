@@ -1,3 +1,4 @@
+import { IconTag } from "components/icons";
 import Heading from "components/layout/Heading";
 import { db } from "config/firebase-config";
 import { collection, query, where } from "firebase/firestore";
@@ -13,9 +14,15 @@ const CategoryListStyles = styled.ul`
   gap: 4px;
   list-style: none;
   a {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     padding: 8px 12px;
     border-radius: 6px;
+    svg {
+      width: 16px;
+      height: 16px;
+    }
   }
   a:hover {
     background: ${(props) => props.theme.gray1};
@@ -43,7 +50,10 @@ const CategoryList = () => {
       <CategoryListStyles>
         {sorted.map((category) => (
           <li key={category.id}>
-            <Link to={`/category/${category.slug}`}>{category.name}</Link>
+            <Link to={`/category/${category.slug}`}>
+              <IconTag />
+              {category.name}
+            </Link>
           </li>
         ))}
       </CategoryListStyles>
