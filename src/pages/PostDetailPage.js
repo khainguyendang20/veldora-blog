@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
 import NotFoundPage from "./NotFoundPage";
-import { PageLoading } from "components/loading";
+import { PostDetailSkeleton } from "module/post/PostSkeletons";
 import PostThumbnail from "module/post/components/PostThumbnail";
 import PostMeta from "module/post/components/PostMeta";
 import AuthorBox from "module/post/components/AuthorBox";
@@ -168,7 +168,9 @@ const PostDetailPage = () => {
   useEffect(() => {
     if (contentRef.current) highlightCode(contentRef.current);
   }, [content.html]);
-  if (slug && (isAuthLoading || loading)) return <PageLoading></PageLoading>;
+  if (slug && (isAuthLoading || loading)) {
+    return <PostDetailSkeleton></PostDetailSkeleton>;
+  }
   if (!postInfo) return <NotFoundPage></NotFoundPage>;
   const { user } = postInfo;
   const canEdit = isStaff || (uid && user?.id === uid);

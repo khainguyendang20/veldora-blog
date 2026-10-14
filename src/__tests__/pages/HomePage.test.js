@@ -61,10 +61,10 @@ describe("HomePage", () => {
     expect(orderBy).toHaveBeenCalledWith("createdAt", "desc");
   });
 
-  it("shows a spinner while loading", () => {
+  it("shows a placeholder while loading", () => {
     renderHome();
 
-    expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: /^Loading/ })).toBeInTheDocument();
   });
 
   it("shows an empty state when there are no posts", async () => {

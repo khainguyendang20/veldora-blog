@@ -1,5 +1,5 @@
 import { Button } from "components/button";
-import { PageLoading } from "components/loading";
+import { PostGridSkeleton } from "./PostSkeletons";
 import React from "react";
 import styled from "styled-components";
 import PostItem from "./PostItem";
@@ -38,7 +38,7 @@ const PostList = ({
   onLoadMore,
   emptyText = "No posts yet.",
 }) => {
-  if (loading) return <PageLoading></PageLoading>;
+  if (loading) return <PostGridSkeleton count={6}></PostGridSkeleton>;
   return (
     <PostListStyles>
       {posts.length > 0 ? (

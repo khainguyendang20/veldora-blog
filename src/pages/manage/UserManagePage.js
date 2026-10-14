@@ -2,7 +2,7 @@ import { ActionDelete } from "components/actions";
 import { Toggle } from "components/checkbox";
 import { Image } from "components/image";
 import { PageHeader, SearchInput } from "components/admin";
-import { Table } from "components/table";
+import { Table, TableSkeletonRows } from "components/table";
 import { db } from "config/firebase-config";
 import { collection, doc, updateDoc, writeBatch } from "firebase/firestore";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
@@ -77,7 +77,7 @@ const UserManagePage = () => {
   const { user: currentUser } = useAuthStore((state) => state);
   const [filter, setFilter] = useState("");
   // Route is admin-only (RequireRole in App.js)
-  const { data: profiles } = useFirestoreQuery(
+  const { data: profiles, loading } = useFirestoreQuery(
     () => collection(db, "users"),
     []
   );
@@ -201,6 +201,7 @@ const UserManagePage = () => {
           </tr>
         </thead>
         <tbody>
+          {loading && <TableSkeletonRows columns={5}></TableSkeletonRows>}
           {filteredUsers.map((user) => (
             <tr key={user.id}>
               <td>

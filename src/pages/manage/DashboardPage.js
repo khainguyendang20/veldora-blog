@@ -1,5 +1,6 @@
 import { PageHeader } from "components/admin";
 import { Button } from "components/button";
+import { Skeleton } from "components/skeleton";
 import { db } from "config/firebase-config";
 import {
   collection,
@@ -151,7 +152,11 @@ const DashboardPage = () => {
               }
             >
               <div className="stat-card__label">{card.label}</div>
-              <div className="stat-card__number">{stats[card.key] ?? "–"}</div>
+              <div className="stat-card__number">
+                {stats[card.key] ?? (
+                  <Skeleton width="48px" height="32px"></Skeleton>
+                )}
+              </div>
             </Link>
           ))}
       </div>

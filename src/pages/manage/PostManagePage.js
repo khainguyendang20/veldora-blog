@@ -2,7 +2,7 @@ import { ActionDelete, ActionEdit, ActionView } from "components/actions";
 import { PageHeader, SearchInput } from "components/admin";
 import { Button } from "components/button";
 import { Image } from "components/image";
-import { Table } from "components/table";
+import { Table, TableSkeletonRows } from "components/table";
 import { db } from "config/firebase-config";
 import { collection, doc, query, updateDoc, where } from "firebase/firestore";
 import { toast } from "react-toastify";
@@ -168,7 +168,7 @@ const PostManagePage = () => {
   );
 
   // Admin and Mod can see all posts, regular users only see their own
-  const { data: posts } = useFirestoreQuery(() => {
+  const { data: posts, loading } = useFirestoreQuery(() => {
     if (!uid) return null;
     const colRef = collection(db, "posts");
     if (role === userRole.ADMIN || role === userRole.MOD) return colRef;
@@ -274,7 +274,8 @@ const PostManagePage = () => {
           </tr>
         </thead>
         <tbody>
-          {!filteredPosts.length && (
+          {loading && <TableSkeletonRows columns={5}></TableSkeletonRows>}
+          {!loading && !filteredPosts.length && (
             <tr>
               <td colSpan={5} className="table-empty">
                 No posts here yet.

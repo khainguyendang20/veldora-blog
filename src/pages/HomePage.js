@@ -9,7 +9,7 @@ import CategoryList from "module/home/CategoryList";
 import styled from "styled-components";
 import { collection, limit, orderBy, query, where } from "firebase/firestore";
 import shuffle from "lodash/shuffle";
-import { PageLoading } from "components/loading";
+import { HomeSkeleton } from "module/post/PostSkeletons";
 import useCachedQuery from "hooks/useCachedQuery";
 import { homeCategory, postStatus } from "utils/constants";
 import useDocumentMeta from "hooks/useDocumentMeta";
@@ -89,7 +89,7 @@ const HomePage = () => {
     () => shuffle(posts.slice(recentCount)).slice(0, randomCount),
     [posts]
   );
-  if (loading) return <PageLoading></PageLoading>;
+  if (loading) return <HomeSkeleton></HomeSkeleton>;
   if (error) {
     return (
       <HomeSection>

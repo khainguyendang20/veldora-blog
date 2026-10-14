@@ -167,3 +167,14 @@ describe("PostManagePage moderation", () => {
     expect(screen.queryByText("Live one")).not.toBeInTheDocument();
   });
 });
+
+describe("PostManagePage loading", () => {
+  it("shows placeholder rows, not the empty state, until posts arrive", () => {
+    collection.mockReturnValue({ name: "posts" });
+    onSnapshot.mockReturnValue(vi.fn());
+    renderAs({ uid: "u1", role: userRole.MOD });
+
+    expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
+    expect(screen.queryByText("No posts here yet.")).not.toBeInTheDocument();
+  });
+});
