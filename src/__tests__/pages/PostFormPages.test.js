@@ -143,6 +143,9 @@ describe("UpdatePostPage", () => {
     expect(payload).not.toHaveProperty("likeCount");
     expect(payload).not.toHaveProperty("commentCount");
     expect(payload).not.toHaveProperty("lastCommentId");
+    // Featuring happens in the posts table; a stale flag must not undo it
+    expect(payload).not.toHaveProperty("featured");
+    expect(screen.queryByText("Featured on the home page")).not.toBeInTheDocument();
   });
 });
 
@@ -192,7 +195,7 @@ describe("as a regular user", () => {
     await waitFor(() => expect(getDocs).toHaveBeenCalled());
 
     expect(screen.queryByText("Approved")).not.toBeInTheDocument();
-    expect(screen.queryByText("Featured Post:")).not.toBeInTheDocument();
+    expect(screen.queryByText("Featured on the home page")).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByPlaceholderText("Title"), {
       target: { value: "Draft" },

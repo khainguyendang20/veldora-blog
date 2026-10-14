@@ -1,4 +1,4 @@
-import { IconBookmark, IconHeart } from "components/icons";
+import { IconBookmark, IconHeart, IconShare } from "components/icons";
 import { db } from "config/firebase-config";
 import {
   deleteDoc,
@@ -21,9 +21,12 @@ import {
 
 const PostActionsStyles = styled.div`
   display: flex;
-  justify-content: center;
-  gap: 12px;
-  margin: 32px 0;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 40px 0 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
   button {
     display: flex;
     align-items: center;
@@ -99,6 +102,21 @@ const PostActions = ({ post }) => {
       onCountChange: (delta) => setPendingDelta((value) => value + delta),
     });
 
+  // The system share sheet where there is one (phones), else copy the link
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: post.title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copied");
+      }
+    } catch (error) {
+      // The reader closed the share sheet
+    }
+  };
+
   const handleSave = () =>
     toggle({
       on: saved,
@@ -121,6 +139,10 @@ const PostActions = ({ post }) => {
       <button type="button" aria-pressed={saved} onClick={handleSave}>
         <IconBookmark size={18} color="currentColor" filled={saved} />
         {saved ? "Saved" : "Save"}
+      </button>
+      <button type="button" onClick={handleShare}>
+        <IconShare size={18} color="currentColor" />
+        Share
       </button>
     </PostActionsStyles>
   );

@@ -1,13 +1,19 @@
 import { db } from "config/firebase-config";
-import { collection, query, where } from "firebase/firestore";
+import { collection, orderBy, query, where } from "firebase/firestore";
 import useCachedQuery from "hooks/useCachedQuery";
+import usePaginatedQuery from "hooks/usePaginatedQuery";
 import React from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import { avatarDefault } from "utils/constants";
+import { avatarDefault, postStatus } from "utils/constants";
 import { Image } from "components/image";
+import Heading from "components/layout/Heading";
 import FollowButton from "module/follow/FollowButton";
+import HomeSection from "module/home/HomeSection";
+import PostList from "module/post/PostList";
+import { ProfileSkeleton } from "module/post/PostSkeletons";
 import useDocumentMeta from "hooks/useDocumentMeta";
+import NotFoundPage from "./NotFoundPage";
 
 const ProfilePageStyles = styled.div`
   position: relative;
@@ -25,7 +31,7 @@ const ProfilePageStyles = styled.div`
     width: 200px;
     height: 200px;
     border-radius: 100rem;
-    border: 4px solid ${(props) => props.theme.grayLight};
+    border: 4px solid var(--color-bg);
     overflow: hidden;
     img {
       width: 100%;
@@ -39,80 +45,79 @@ const ProfilePageStyles = styled.div`
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 4px;
+    padding: 0 16px;
     &__name {
       font-size: 24px;
       font-weight: bold;
     }
     &__username {
-      color: ${(props) => props.theme.grayDark};
+      color: var(--color-muted);
     }
-    &__item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      span svg {
-        width: 24px;
-        height: 24px;
-      }
+    &__bio {
+      max-width: 560px;
+      margin-top: 8px;
+      line-height: 1.6;
     }
   }
 `;
 
 const ProfilePage = () => {
   const { username } = useParams();
-  const { data: users } = useCachedQuery(
+  const { data: users, loading } = useCachedQuery(
     `profile:${username}`,
     () => query(collection(db, "users"), where("username", "==", username)),
     [username]
   );
-  const info = users[users.length - 1] || {};
-  useDocumentMeta({ title: info.fullname, description: info.description });
+  const info = users[users.length - 1];
+  useDocumentMeta({ title: info?.fullname, description: info?.description });
+  // The author's published posts, newest first
+  const posts = usePaginatedQuery(
+    () =>
+      info?.id
+        ? query(
+            collection(db, "posts"),
+            where("status", "==", postStatus.APPROVED),
+            where("user.id", "==", info.id),
+            orderBy("createdAt", "desc")
+          )
+        : null,
+    [info?.id]
+  );
+
+  if (loading) return <ProfileSkeleton></ProfileSkeleton>;
+  if (!info) return <NotFoundPage></NotFoundPage>;
   return (
-    <ProfilePageStyles className="container">
-      <div className="profile-cover"></div>
-      <div className="profile-avt">
-        <Image src={info.avatar} fallback={avatarDefault} resizeTo={400} />
-      </div>
-      <div className="profile-info">
-        <div className="profile-info__name">{info?.fullname}</div>
-        <div className="profile-info__username">@{info?.username}</div>
-        <div style={{ marginTop: "12px" }}>
-          <FollowButton authorId={info.id}></FollowButton>
+    <>
+      <ProfilePageStyles className="container">
+        <div className="profile-cover"></div>
+        <div className="profile-avt">
+          <Image src={info.avatar} fallback={avatarDefault} resizeTo={400} />
         </div>
-        {/* <div className="profile-info__item">
-          <span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width={32}
-              height={32}
-              viewBox="0 0 24 24"
-            >
-              <path
-                fill="currentColor"
-                d="M22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6zm-2 0l-8 5l-8-5h16zm0 12H4V8l8 5l8-5v10z"
-              />
-            </svg>
-          </span>
-          <p>{info.email}</p>
+        <div className="profile-info">
+          <div className="profile-info__name">{info.fullname}</div>
+          <div className="profile-info__username">@{info.username}</div>
+          {info.description && (
+            <p className="profile-info__bio">{info.description}</p>
+          )}
+          <div style={{ marginTop: "12px" }}>
+            <FollowButton authorId={info.id}></FollowButton>
+          </div>
         </div>
-        <div className="profile-info__item">
-          <span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width={32}
-              height={32}
-              viewBox="0 0 256 256"
-            >
-              <path
-                fill="currentColor"
-                d="M224 48h-64a40 40 0 0 0-32 16a40 40 0 0 0-32-16H32a16 16 0 0 0-16 16v128a16 16 0 0 0 16 16h64a24 24 0 0 1 24 24a8 8 0 0 0 16 0a24 24 0 0 1 24-24h64a16 16 0 0 0 16-16V64a16 16 0 0 0-16-16ZM96 192H32V64h64a24 24 0 0 1 24 24v112a39.81 39.81 0 0 0-24-8Zm128 0h-64a39.81 39.81 0 0 0-24 8V88a24 24 0 0 1 24-24h64ZM160 88h40a8 8 0 0 1 0 16h-40a8 8 0 0 1 0-16Zm48 40a8 8 0 0 1-8 8h-40a8 8 0 0 1 0-16h40a8 8 0 0 1 8 8Zm0 32a8 8 0 0 1-8 8h-40a8 8 0 0 1 0-16h40a8 8 0 0 1 8 8Z"
-              />
-            </svg>
-          </span>
-          <p>52 posts</p>
-        </div> */}
-      </div>
-    </ProfilePageStyles>
+      </ProfilePageStyles>
+      <HomeSection>
+        <Heading>Posts</Heading>
+        <PostList
+          posts={posts.data}
+          loading={posts.loading}
+          error={posts.error}
+          hasMore={posts.hasMore}
+          loadingMore={posts.loadingMore}
+          onLoadMore={posts.loadMore}
+          emptyText={`${info.fullname || "This author"} hasn't published anything yet.`}
+        ></PostList>
+      </HomeSection>
+    </>
   );
 };
 

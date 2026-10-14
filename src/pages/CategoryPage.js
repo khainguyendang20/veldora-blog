@@ -1,5 +1,5 @@
 import Heading from "components/layout/Heading";
-import { PageLoading } from "components/loading";
+import { PostGridSkeleton } from "module/post/PostSkeletons";
 import { db } from "config/firebase-config";
 import { collection, orderBy, query, where } from "firebase/firestore";
 import useCachedQuery from "hooks/useCachedQuery";
@@ -39,7 +39,13 @@ const CategoryPage = () => {
         : null,
     [category?.id]
   );
-  if (categoryLoading) return <PageLoading></PageLoading>;
+  if (categoryLoading) {
+    return (
+      <HomeSection>
+        <PostGridSkeleton></PostGridSkeleton>
+      </HomeSection>
+    );
+  }
   if (!category) return <NotFoundPage></NotFoundPage>;
   return (
     <HomeSection>

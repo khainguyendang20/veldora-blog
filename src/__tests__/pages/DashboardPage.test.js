@@ -1,6 +1,7 @@
 import React from "react";
 import { act, render, screen } from "@testing-library/react";
 import { ThemeProvider } from "styled-components";
+import { MemoryRouter } from "react-router-dom";
 import {
   collection,
   getCountFromServer,
@@ -24,9 +25,11 @@ const counts = { "my-posts": 2, pending: 3, posts: 10, categories: 4, users: 7 }
 const renderAs = (user) => {
   useAuthStore.setState({ user, isAuthLoading: false });
   return render(
-    <ThemeProvider theme={theme}>
-      <DashboardPage />
-    </ThemeProvider>
+    <MemoryRouter>
+      <ThemeProvider theme={theme}>
+        <DashboardPage />
+      </ThemeProvider>
+    </MemoryRouter>
   );
 };
 
@@ -79,5 +82,15 @@ describe("DashboardPage", () => {
     );
 
     expect(getCountFromServer).toHaveBeenCalledTimes(1);
+  });
+
+  it("links staff from the pending count to the review queue", async () => {
+    renderAs({ uid: "u1", role: 2 });
+
+    const card = await screen.findByRole("link", { name: /Pending review/ });
+    expect(card).toHaveAttribute("href", "/manage/post?status=pending");
+    expect(
+      await screen.findByRole("button", { name: "Review 3 pending" })
+    ).toBeInTheDocument();
   });
 });

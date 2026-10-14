@@ -1,14 +1,8 @@
 import { IconBell } from "components/icons";
-import { db } from "config/firebase-config";
-import { collection, limit, query, where } from "firebase/firestore";
-import useFirestoreQuery from "hooks/useFirestoreQuery";
+import useUnreadNotifications from "hooks/useUnreadNotifications";
 import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-
-// The listener reads at most this many unread notifications; beyond that
-// the badge just says "9+"
-const badgeLimit = 10;
 
 const NotificationBellStyles = styled(Link)`
   position: relative;
@@ -33,17 +27,7 @@ const NotificationBellStyles = styled(Link)`
 `;
 
 const NotificationBell = ({ uid }) => {
-  const { data: unread } = useFirestoreQuery(
-    () =>
-      query(
-        collection(db, "users", uid, "notifications"),
-        where("read", "==", false),
-        limit(badgeLimit)
-      ),
-    [uid]
-  );
-  const count = unread.length;
-  const label = count >= badgeLimit ? `${badgeLimit - 1}+` : String(count);
+  const { count, label } = useUnreadNotifications(uid);
   return (
     <NotificationBellStyles
       to="/manage/notifications"

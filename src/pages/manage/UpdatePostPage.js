@@ -1,4 +1,4 @@
-import Heading from "components/layout/Heading";
+import { PageHeader } from "components/admin";
 import { db } from "config/firebase-config";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import FormContainer from "layout/FormContainer";
@@ -44,27 +44,29 @@ const UpdatePostPage = () => {
     post && (isStaffRole(user?.role) || post.user?.id === user?.uid);
   if (denied || (post && !canEdit)) {
     return (
-      <FormContainer>
-        <Heading>Access Denied</Heading>
-        <p>You can only edit your own posts.</p>
-      </FormContainer>
+      <PageHeader
+        title="Access Denied"
+        description="You can only edit your own posts."
+      ></PageHeader>
     );
   }
 
   return (
-    <FormContainer>
-      <Heading>Update post</Heading>
-      {post && (
-        <PostForm
-          key={postId}
-          defaultValues={post}
-          postId={postId}
-          onSubmit={handleUpdatePost}
-          onImageDeleted={handleImageDeleted}
-          submitLabel="Update Post"
-        ></PostForm>
-      )}
-    </FormContainer>
+    <>
+      <PageHeader title="Edit post"></PageHeader>
+      <FormContainer>
+        {post && (
+          <PostForm
+            key={postId}
+            defaultValues={post}
+            postId={postId}
+            onSubmit={handleUpdatePost}
+            onImageDeleted={handleImageDeleted}
+            submitLabel="Update Post"
+          ></PostForm>
+        )}
+      </FormContainer>
+    </>
   );
 };
 

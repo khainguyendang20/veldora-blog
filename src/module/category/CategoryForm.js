@@ -78,9 +78,16 @@ const CategoryForm = ({
           </Radio>
         </FieldCheckboxes>
       </Field>
-      <Button type="submit" isLoading={isSubmitting} disabled={isSubmitting}>
-        {submitLabel}
-      </Button>
+      <div className="form-actions">
+        <Button
+          type="submit"
+          size="md"
+          isLoading={isSubmitting}
+          disabled={isSubmitting}
+        >
+          {submitLabel}
+        </Button>
+      </div>
     </form>
   );
 };

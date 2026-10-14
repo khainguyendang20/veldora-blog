@@ -1,4 +1,4 @@
-import Heading from "components/layout/Heading";
+import { PageHeader } from "components/admin";
 import { db } from "config/firebase-config";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import FormContainer from "layout/FormContainer";
@@ -15,6 +15,8 @@ const AddNewPostPage = () => {
     // must be the auth uid: Firestore rules check it for ownership.
     await addDoc(collection(db, "posts"), {
       ...payload,
+      // Staff feature posts from the posts table once they are live
+      featured: false,
       user: {
         id: user.uid,
         fullname: user.fullname || "",
@@ -27,14 +29,19 @@ const AddNewPostPage = () => {
   };
 
   return (
-    <FormContainer>
-      <Heading>Add new post</Heading>
-      <PostForm
-        onSubmit={handleCreatePost}
-        submitLabel="Create Post"
-        resetAfterSubmit
-      ></PostForm>
-    </FormContainer>
+    <>
+      <PageHeader
+        title="New post"
+        description="Drafts stay private until you submit them for review."
+      ></PageHeader>
+      <FormContainer>
+        <PostForm
+          onSubmit={handleCreatePost}
+          submitLabel="Create Post"
+          resetAfterSubmit
+        ></PostForm>
+      </FormContainer>
+    </>
   );
 };
 

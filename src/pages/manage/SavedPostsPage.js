@@ -1,4 +1,4 @@
-import Heading from "components/layout/Heading";
+import { PageHeader } from "components/admin";
 import { db } from "config/firebase-config";
 import {
   collection,
@@ -41,7 +41,11 @@ const SavedPostsPage = () => {
           bookmarks.docs.map((bookmark) => readPost(bookmark.id))
         );
         if (!cancelled) {
-          setState({ posts: posts.filter(Boolean), loading: false, error: null });
+          setState({
+            posts: posts.filter(Boolean),
+            loading: false,
+            error: null,
+          });
         }
       } catch (error) {
         console.error(error);
@@ -56,7 +60,10 @@ const SavedPostsPage = () => {
 
   return (
     <>
-      <Heading>Saved posts</Heading>
+      <PageHeader
+        title="Saved"
+        description="Posts you saved to read later."
+      ></PageHeader>
       <PostList
         posts={state.posts}
         loading={state.loading}

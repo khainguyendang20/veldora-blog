@@ -1,4 +1,3 @@
-import { Toggle } from "components/checkbox";
 import { Field } from "components/field";
 import { Input } from "components/input";
 import ImageUpload from "components/input/ImageUpload";
@@ -44,7 +43,6 @@ const emptyPost = {
   slug: "",
   status: postStatus.PENDING,
   categories: [],
-  featured: false,
 };
 
 // Firestore Timestamp or Date to a datetime-local input value
@@ -69,8 +67,8 @@ const PostForm = ({
 }) => {
   const { control, watch, setValue, handleSubmit, reset } =
     useForm({ mode: "onChange", defaultValues });
-  // Only staff moderate; Firestore rules reject status/featured changes
-  // from anyone else, so regular users never see those controls
+  // Only staff moderate; Firestore rules reject status changes from anyone
+  // else, so regular users never see those controls
   const canModerate = useAuthStore((state) => isStaffRole(state.user?.role));
   const uid = useAuthStore((state) => state.user?.uid);
   const [optionValues, setOptionValues] = useState(
@@ -79,7 +77,6 @@ const PostForm = ({
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [content, setContent] = useState(defaultValues.content || "");
   const watchStatus = Number(watch("status"));
-  const watchFeatured = watch("featured");
   // datetime-local value ("2026-10-20T08:00") for scheduled posts
   const [publishAt, setPublishAt] = useState(() =>
     toLocalInput(defaultValues.publishAt)
@@ -149,10 +146,12 @@ const PostForm = ({
   };
 
   const handleSavePost = async (values) => {
-    // Counters belong to likes and comments, which may have changed since
-    // the form loaded; saving these stale copies would undo them
+    // Counters belong to likes and comments, and `featured` to the posts
+    // table; any may have changed since the form loaded, and saving these
+    // stale copies would undo them
     // eslint-disable-next-line no-unused-vars
-    const { likeCount, commentCount, lastCommentId, ...fields } = values;
+    const { likeCount, commentCount, lastCommentId, featured, ...fields } =
+      values;
     const status = Number(values.status);
     const publishDate =
       status === postStatus.SCHEDULED && publishAt ? new Date(publishAt) : null;
@@ -218,7 +217,11 @@ const PostForm = ({
         </Field>
         <Field>
           <Label htmlFor="slug">Slug</Label>
-          <Input name="slug" control={control}></Input>
+          <Input
+            name="slug"
+            control={control}
+            placeholder="Made from the title if left empty"
+          ></Input>
         </Field>
       </div>
       <div className="field-format">
@@ -242,12 +245,12 @@ const PostForm = ({
         </Field>
       </div>
       <div
-        className="entry-content"
+        className="entry-content post-editor"
         style={{
-          marginBottom: "40px",
+          marginBottom: "24px",
           display: "flex",
           flexDirection: "column",
-          gap: "20px",
+          gap: "8px",
         }}
       >
         <Label>Contents</Label>
@@ -281,24 +284,11 @@ const PostForm = ({
           />
         </Field>
       </div>
-      {canModerate && (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "20px",
-            margin: "12px 0 24px",
-          }}
-        >
-          <Label>Featured Post:</Label>
-          <Toggle
-            on={watchFeatured === true}
-            onClick={() => setValue("featured", !watchFeatured)}
-          ></Toggle>
-        </div>
-      )}
-      <Button type="submit">{submitLabel}</Button>
+      <div className="form-actions">
+        <Button type="submit" size="md">
+          {submitLabel}
+        </Button>
+      </div>
     </form>
   );
 };

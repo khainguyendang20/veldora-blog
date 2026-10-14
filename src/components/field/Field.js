@@ -4,8 +4,8 @@ import styled from "styled-components";
 const FieldStyles = styled.div`
   display: flex;
   flex-direction: column;
-  row-gap: 20px;
-  margin-bottom: 40px;
+  row-gap: 8px;
+  margin-bottom: 24px;
   &:last-child {
     margin-bottom: 0;
   }

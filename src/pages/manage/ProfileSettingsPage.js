@@ -3,7 +3,7 @@ import { Field } from "components/field";
 import { Input } from "components/input";
 import ImageUpload from "components/input/ImageUpload";
 import { Label } from "components/label";
-import Heading from "components/layout/Heading";
+import { PageHeader } from "components/admin";
 import { Textarea } from "components/textarea";
 import { db } from "config/firebase-config";
 import {
@@ -19,7 +19,6 @@ import useImageUpload from "hooks/useImageUpload";
 import FormContainer from "layout/FormContainer";
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuthStore } from "store";
 
@@ -82,41 +81,58 @@ const ProfileSettingsPage = () => {
   };
 
   return (
-    <FormContainer>
-      <Heading>Profile</Heading>
-      {user.username && (
-        <p style={{ marginBottom: "24px" }}>
-          <Link to={`/profile/${user.username}`}>View your public profile</Link>
-        </p>
-      )}
-      <form onSubmit={handleSubmit(handleSave)} autoComplete="off">
-        <div className="field-format">
-          <Field>
-            <Label>Avatar</Label>
-            <ImageUpload
-              name="avatar"
-              progress={progress}
-              image={image}
-              onChange={handleSelectImage}
-              handleDeleteImage={handleDeleteImage}
-            ></ImageUpload>
-          </Field>
-          <Field>
-            <Label htmlFor="fullname">Full name</Label>
-            <Input name="fullname" control={control}></Input>
-            <Label htmlFor="description">Bio</Label>
-            <Textarea
-              name="description"
-              control={control}
-              placeholder="A few words about you..."
-            ></Textarea>
-          </Field>
-        </div>
-        <Button type="submit" disabled={isSubmitting} isLoading={isSubmitting}>
-          Save profile
-        </Button>
-      </form>
-    </FormContainer>
+    <>
+      <PageHeader
+        title="Profile"
+        description="How you appear on your posts and comments."
+      >
+        {user.username && (
+          <Button
+            size="md"
+            variant="secondary"
+            href={`/profile/${user.username}`}
+          >
+            View your public profile
+          </Button>
+        )}
+      </PageHeader>
+      <FormContainer>
+        <form onSubmit={handleSubmit(handleSave)} autoComplete="off">
+          <div className="field-format">
+            <Field>
+              <Label>Avatar</Label>
+              <ImageUpload
+                name="avatar"
+                progress={progress}
+                image={image}
+                onChange={handleSelectImage}
+                handleDeleteImage={handleDeleteImage}
+              ></ImageUpload>
+            </Field>
+            <Field>
+              <Label htmlFor="fullname">Full name</Label>
+              <Input name="fullname" control={control}></Input>
+              <Label htmlFor="description">Bio</Label>
+              <Textarea
+                name="description"
+                control={control}
+                placeholder="A few words about you..."
+              ></Textarea>
+            </Field>
+          </div>
+          <div className="form-actions">
+            <Button
+              type="submit"
+              size="md"
+              disabled={isSubmitting}
+              isLoading={isSubmitting}
+            >
+              Save profile
+            </Button>
+          </div>
+        </form>
+      </FormContainer>
+    </>
   );
 };
 

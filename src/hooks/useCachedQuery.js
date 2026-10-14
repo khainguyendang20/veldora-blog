@@ -20,6 +20,10 @@ const writeFreshUntil = (key, time) => {
   }
 };
 
+// Makes the next read of `key` in this browser go to the server, e.g. so
+// staff see their own change on the home page straight away
+export const forgetCachedQuery = (key) => writeFreshUntil(key, 0);
+
 const toData = (snapshot) =>
   snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
 

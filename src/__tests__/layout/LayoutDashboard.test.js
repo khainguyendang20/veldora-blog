@@ -4,8 +4,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { useAuthStore } from "store";
 import LayoutDashboard from "layout/LayoutDashboard";
 
-// Header and sidebar pull in Firebase; they are not under test here.
-vi.mock("components/layout/Header", () => ({ default: () => null }));
+// The sidebar pulls in Firebase; it is not under test here.
 vi.mock("module/dashboard/DashboardSidebar", () => ({ default: () => null }));
 
 const renderDashboard = () =>
@@ -44,5 +43,17 @@ describe("LayoutDashboard", () => {
     renderDashboard();
 
     expect(screen.getByText("Post manager")).toBeInTheDocument();
+  });
+
+  it("keeps the color mode switch within reach", () => {
+    useAuthStore.setState({
+      user: { uid: "1", email: "a@b.c" },
+      isAuthLoading: false,
+    });
+    renderDashboard();
+
+    expect(
+      screen.getByRole("button", { name: /Switch to (dark|light) mode/ })
+    ).toHaveClass("dashboard-theme-toggle");
   });
 });

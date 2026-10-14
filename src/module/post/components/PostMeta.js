@@ -13,9 +13,19 @@ const PostMetaStyles = styled.div`
   }
   font-size: 12px;
   display: flex;
-  column-gap: 8px;
+  align-items: center;
+  column-gap: 10px;
   margin: 8px 0;
+  min-width: 0;
+  white-space: nowrap;
   color: ${(props) => props.color};
+  .post-auth {
+    min-width: 0;
+    flex-shrink: 1;
+  }
+  .post-date {
+    flex-shrink: 0;
+  }
   .post-auth,
   .post-date {
     display: flex;
@@ -24,12 +34,15 @@ const PostMetaStyles = styled.div`
     &-avt {
       width: 25px;
       height: 25px;
+      flex-shrink: 0;
       object-fit: cover;
       border-radius: 100rem;
     }
 
     &-name {
       font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
   }
   .post-date {

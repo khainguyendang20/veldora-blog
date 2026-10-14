@@ -4,22 +4,31 @@ import styled from "styled-components";
 import { Outlet } from "react-router-dom";
 import Footer from "./Footer";
 
-const HomeMainStyles = styled.div`
-  margin-top: ${(props) => props.theme.headerHeight};
+// The page fills at least the viewport and the main area takes the spare
+// height, so the footer stays at the bottom on short pages
+const LayoutStyles = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  .home-main {
+    flex: 1;
+    margin-top: ${(props) => props.theme.headerHeight};
+  }
 `;
 
 const Layout = ({ children }) => {
   return (
-    <>
+    <LayoutStyles>
       <Header></Header>
-      <HomeMainStyles className="home-main">
+      <main className="home-main">
         {children}
         <Suspense fallback={null}>
           <Outlet></Outlet>
         </Suspense>
-      </HomeMainStyles>
+      </main>
       <Footer></Footer>
-    </>
+    </LayoutStyles>
   );
 };
 

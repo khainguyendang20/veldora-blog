@@ -10,6 +10,7 @@ const Image = ({ src, fallback, resizeTo, alt = "", ...rest }) => {
   const url = cloudinaryUrl(src, resizeTo);
   const [failedSrc, setFailedSrc] = useState(null);
   const showFallback = !url || failedSrc === url;
+  if (showFallback && !fallback) return null;
   return (
     <img
       src={showFallback ? fallback : url}
@@ -22,7 +23,7 @@ const Image = ({ src, fallback, resizeTo, alt = "", ...rest }) => {
 
 Image.propTypes = {
   src: PropTypes.string,
-  fallback: PropTypes.string.isRequired,
+  fallback: PropTypes.string,
   resizeTo: PropTypes.number,
   alt: PropTypes.string,
 };

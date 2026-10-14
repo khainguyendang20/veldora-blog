@@ -5,6 +5,7 @@ import useCachedQuery from "hooks/useCachedQuery";
 import PostItemLarge from "module/post/PostItemLarge";
 import React, { lazy, Suspense } from "react";
 import styled from "styled-components";
+import { featuredCacheKey, featuredLimit } from "utils/constants";
 
 const FeatureCarousel = lazy(() => import("./FeatureCarousel"));
 
@@ -29,13 +30,13 @@ const HomeFeature = () => {
   const isDesktop = useMediaQuery("only screen and (min-width: 1025px)");
   const isPhone = useMediaQuery("only screen and (max-width: 640px)");
   const { data: posts } = useCachedQuery(
-    "home:featured",
+    featuredCacheKey,
     () =>
       query(
         collection(db, "posts"),
         where("status", "==", 1),
         where("featured", "==", true),
-        limit(4)
+        limit(featuredLimit)
       ),
     []
   );

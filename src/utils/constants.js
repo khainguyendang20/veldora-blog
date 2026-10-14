@@ -10,6 +10,9 @@ export const theme = {
 
 // Same accents, darker surfaces. Plain colors used outside styled
 // components live as CSS variables in styles/index.scss.
+// Dashboard sidebar: full width, and the icon rail on tablets and phones
+export const dashboardSidebar = { width: "248px", railWidth: "72px" };
+
 export const darkTheme = {
   ...theme,
   grayLight: "#2f3542",
@@ -32,6 +35,11 @@ export const categoryStatus = {
   UNAPPROVED: 0,
   APPROVED: 1,
 };
+
+// The home page shows this many featured posts; the posts table won't let
+// staff feature more, so which ones appear is never left to chance
+export const featuredLimit = 4;
+export const featuredCacheKey = "home:featured";
 
 // Category ids featured as sections on the home page
 export const homeCategory = {

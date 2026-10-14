@@ -6,134 +6,165 @@ import React, { useEffect, useMemo, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import styled from "styled-components";
 import NotFoundPage from "./NotFoundPage";
-import { PageLoading } from "components/loading";
-import PostThumbnail from "module/post/components/PostThumbnail";
-import PostMeta from "module/post/components/PostMeta";
+import { Image } from "components/image";
+import { PostDetailSkeleton } from "module/post/PostSkeletons";
 import AuthorBox from "module/post/components/AuthorBox";
 import PostCategory from "module/post/components/PostCategory";
 import PostRelated from "module/post/PostRelated";
 import CommentSection from "module/comment/CommentSection";
 import PostActions from "module/post/PostActions";
-import TableOfContents from "module/post/TableOfContents";
+import TableOfContents, {
+  hasTableOfContents,
+} from "module/post/TableOfContents";
 import { highlightCode } from "module/post/highlightCode";
 import { addHeadingIds } from "utils/headings";
 import { formatDate } from "utils/formatDate";
 import { readingTime } from "utils/readingTime";
+import { postSummary } from "utils/postSummary";
 import { useAuthStore } from "store";
-import { isStaffRole, postStatus } from "utils/constants";
+import { avatarDefault, isStaffRole, postStatus } from "utils/constants";
 import useDocumentMeta from "hooks/useDocumentMeta";
 
+// The header and cover span the article's full width (1016px). The text
+// is a 720px reading column: beside the table-of-contents rail on wide
+// screens, or centred when the post is too short to have one.
 const PostDetailStyles = styled.div`
-  padding-bottom: 100px;
-  .post {
-    &-header {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      align-items: center;
-      gap: 40px;
-      margin: 40px 0;
-    }
-    &-feature {
-      width: 100%;
-      max-width: 640px;
-      height: 466px;
-      border-radius: 20px;
-    }
-    &-heading {
-      font-weight: bold;
-      font-size: 36px;
-      margin-bottom: 16px;
-    }
-    &-categories {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-    &-edit {
-      display: inline-block;
-      margin-top: 16px;
-      padding: 6px 16px;
-      border: 1px solid var(--color-border);
-      border-radius: 6px;
-      font-size: 14px;
-    }
-    &-info {
-      text-align: center;
-    }
-    &-info .post-meta {
-      margin: 0 auto;
-      padding: 8px 0;
-      width: fit-content;
-      border: 1px solid;
-      border-color: var(--color-border) transparent var(--color-border)
-        transparent;
-      & .post-auth-name {
-        color: var(--color-text);
-      }
-    }
-    &-content {
-      max-width: 700px;
-      margin: 40px auto 80px auto;
-    }
+  padding: 48px 20px 80px;
+  .article {
+    max-width: 1016px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "header"
+      "cover"
+      "toc"
+      "body";
   }
-  .author {
-    margin-top: 40px;
-    margin-bottom: 80px;
+  .article__toc,
+  .article__body {
+    width: 100%;
+    max-width: 720px;
+    justify-self: center;
+  }
+  .article__header {
+    grid-area: header;
+    margin-bottom: 32px;
+  }
+  .article__categories {
     display: flex;
-    border-radius: 20px;
-    background: ${(props) => props.theme.gray1};
-    &-image {
-      width: 200px;
-      height: 200px;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .article__title {
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+  }
+  .article__lead {
+    max-width: 820px;
+    margin-top: 16px;
+    font-size: 20px;
+    line-height: 1.6;
+    color: var(--color-muted);
+  }
+  .article__byline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 28px;
+  }
+  .article__author {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    img {
+      width: 44px;
+      height: 44px;
       flex-shrink: 0;
-      border-radius: inherit;
-    }
-    &-image img {
-      width: 100%;
-      height: 100%;
+      border-radius: 100rem;
       object-fit: cover;
-      border-radius: inherit;
-    }
-    &-content {
-      flex: 1;
-      padding: 20px;
-    }
-    &-name {
-      font-weight: bold;
-      margin-bottom: 10px;
-      font-size: 20px;
-    }
-    &-desc {
-      font-size: 14px;
-      line-height: 2;
     }
   }
-  @media screen and (max-width: 1023.98px) {
-    padding-bottom: 40px;
-    .post {
-      &-header {
-        flex-direction: column;
-      }
-      &-feature {
-        height: auto;
-      }
-      &-heading {
-        font-size: 26px;
-        padding: 24px;
-      }
-      &-content {
-        margin: 40px auto;
-      }
+  .article__edit {
+    padding: 8px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .article__edit:hover {
+    border-color: ${(props) => props.theme.primary};
+    color: ${(props) => props.theme.primary};
+  }
+  .article__author-name {
+    font-weight: 600;
+  }
+  .article__author-meta {
+    font-size: 14px;
+    color: var(--color-muted);
+  }
+  .article__cover {
+    grid-area: cover;
+    margin-bottom: 40px;
+    img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      object-fit: cover;
+      border-radius: 16px;
     }
-    .author {
-      flex-direction: column;
-      &-image {
-        width: 100%;
-        height: auto;
-      }
+  }
+  .article__toc {
+    grid-area: toc;
+    margin-bottom: 32px;
+  }
+  .article__body {
+    grid-area: body;
+    min-width: 0;
+  }
+  .article__related {
+    max-width: 1016px;
+    margin: 64px auto 0;
+  }
+  /* Wide screens: the table of contents moves into a rail beside the text */
+  @media only screen and (min-width: 1200px) {
+    .article--with-toc {
+      grid-template-columns: minmax(0, 720px) 240px;
+      grid-template-areas:
+        "header header"
+        "cover cover"
+        "body toc";
+      column-gap: 56px;
+    }
+    .article--with-toc .article__toc,
+    .article--with-toc .article__body {
+      justify-self: stretch;
+    }
+    .article__toc {
+      margin-bottom: 0;
+    }
+    .article__toc > * {
+      position: sticky;
+      top: calc(${(props) => props.theme.headerHeight} + 24px);
+    }
+  }
+  @media only screen and (max-width: 768px) {
+    padding: 28px 16px 64px;
+    .article__title {
+      font-size: 30px;
+    }
+    .article__lead {
+      font-size: 18px;
+    }
+    .article__cover img {
+      border-radius: 12px;
     }
   }
 `;
@@ -154,7 +185,10 @@ const PostDetailPage = () => {
       : query(bySlug, where("status", "==", postStatus.APPROVED));
   }, [slug, isStaff, isAuthLoading]);
   const postInfo = posts[posts.length - 1];
-  useDocumentMeta({ title: postInfo?.title, description: postInfo?.desc });
+  useDocumentMeta({
+    title: postInfo?.title,
+    description: postInfo ? postSummary(postInfo) : undefined,
+  });
   useEffect(() => {
     document.body.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [slug]);
@@ -168,50 +202,87 @@ const PostDetailPage = () => {
   useEffect(() => {
     if (contentRef.current) highlightCode(contentRef.current);
   }, [content.html]);
-  if (slug && (isAuthLoading || loading)) return <PageLoading></PageLoading>;
+  if (slug && (isAuthLoading || loading)) {
+    return <PostDetailSkeleton></PostDetailSkeleton>;
+  }
   if (!postInfo) return <NotFoundPage></NotFoundPage>;
   const { user } = postInfo;
   const canEdit = isStaff || (uid && user?.id === uid);
+  const withToc = hasTableOfContents(content.headings);
+  // Only a hand-written description makes a lead; an excerpt would repeat
+  // the opening paragraph
+  const lead = (postInfo.desc || "").trim();
+  const author = (
+    <>
+      <Image src={user?.avatar} fallback={avatarDefault} resizeTo={96} />
+      <div>
+        <div className="article__author-name">
+          {user?.fullname || "Unknown author"}
+        </div>
+        <div className="article__author-meta">
+          {formatDate(postInfo.createdAt)} · {readingTime(postInfo.content)} min
+          read
+        </div>
+      </div>
+    </>
+  );
   return (
-    <PostDetailStyles className="container">
-      <div className="container">
-        <div className="post-header">
-          <PostThumbnail
-            url={postInfo.thumbnail}
-            className="post-feature"
-            imageWidth={1280}
-          ></PostThumbnail>
-          <div className="post-info">
-            {postInfo.categories?.length > 0 && (
-              <div className="post-categories">
-                {postInfo.categories.map((category) => (
-                  <PostCategory
-                    key={category.id}
-                    href={`/category/${category.slug}`}
-                  >
-                    {category.name}
-                  </PostCategory>
-                ))}
-              </div>
+    <PostDetailStyles>
+      <article
+        className={withToc ? "article article--with-toc" : "article"}
+      >
+        <header className="article__header">
+          {postInfo.categories?.length > 0 && (
+            <div className="article__categories">
+              {postInfo.categories.map((category) => (
+                <PostCategory
+                  key={category.id}
+                  href={`/category/${category.slug}`}
+                >
+                  {category.name}
+                </PostCategory>
+              ))}
+            </div>
+          )}
+          <h1 className="article__title">{postInfo.title}</h1>
+          {lead && <p className="article__lead">{lead}</p>}
+          <div className="article__byline">
+            {user?.username ? (
+              <Link
+                to={`/profile/${user.username}`}
+                className="article__author"
+              >
+                {author}
+              </Link>
+            ) : (
+              <div className="article__author">{author}</div>
             )}
-            <h1 className="post-heading">{postInfo.title}</h1>
-            <PostMeta
-              date={formatDate(postInfo.createdAt)}
-              auth={postInfo.user}
-              minutesToRead={readingTime(postInfo.content)}
-            ></PostMeta>
             {canEdit && (
               <Link
                 to={`/manage/update-post?id=${postInfo.id}`}
-                className="post-edit"
+                className="article__edit"
               >
                 Edit post
               </Link>
             )}
           </div>
-        </div>
-        <div className="post-content">
-          <TableOfContents headings={content.headings}></TableOfContents>
+        </header>
+        {postInfo.thumbnail && (
+          <figure className="article__cover">
+            <Image
+              src={postInfo.thumbnail}
+              fallback=""
+              resizeTo={1600}
+              alt=""
+            />
+          </figure>
+        )}
+        {withToc && (
+          <aside className="article__toc">
+            <TableOfContents headings={content.headings}></TableOfContents>
+          </aside>
+        )}
+        <div className="article__body">
           <div
             ref={contentRef}
             className="entry-content"
@@ -223,6 +294,8 @@ const PostDetailPage = () => {
           <AuthorBox userId={user?.id}></AuthorBox>
           <CommentSection post={postInfo}></CommentSection>
         </div>
+      </article>
+      <div className="article__related">
         <PostRelated
           categoryId={postInfo.categories?.[0]?.id}
           postId={postInfo.id}

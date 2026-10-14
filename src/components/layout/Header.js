@@ -10,7 +10,8 @@ import { useClickOutside } from "hooks/useClickOutSide";
 import React, { useRef } from "react";
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useAuthStore, useThemeStore } from "store";
+import { useAuthStore } from "store";
+import ThemeToggle from "./ThemeToggle";
 import styled from "styled-components";
 import { getAuth, signOut } from "firebase/auth";
 import { useMediaQuery } from "@uidotdev/usehooks";
@@ -97,6 +98,7 @@ const HeaderStyles = styled.div`
       font-size: 28px;
       font-weight: 700;
       color: ${(props) => props.theme.primary};
+      white-space: nowrap;
     }
   }
   .menu {
@@ -105,6 +107,7 @@ const HeaderStyles = styled.div`
     list-style: none;
     column-gap: 20px;
     font-weight: 500;
+    white-space: nowrap;
     li:last-child {
       position: relative;
       background: ${(props) => props.theme.primary};
@@ -113,6 +116,20 @@ const HeaderStyles = styled.div`
       a {
         color: white;
       }
+    }
+  }
+  @media only screen and (min-width: 1025px) and (max-width: 1280px) {
+    padding: 0 24px;
+    .logo-title {
+      font-size: 22px;
+    }
+    .header-l,
+    .header-r,
+    .menu {
+      column-gap: 14px;
+    }
+    .search {
+      max-width: 180px;
     }
   }
   @media only screen and (max-width: 1024px) {
@@ -182,31 +199,6 @@ const useMenuItems = () => {
 };
 
 const ICON_SIZE = 18;
-
-const ThemeToggleStyles = styled.button`
-  border: 0;
-  background: none;
-  color: inherit;
-  font-size: 22px;
-  line-height: 1;
-  cursor: pointer;
-`;
-
-const ThemeToggle = () => {
-  const mode = useThemeStore((state) => state.mode);
-  const toggleMode = useThemeStore((state) => state.toggleMode);
-  const next = mode === "dark" ? "light" : "dark";
-  return (
-    <ThemeToggleStyles
-      type="button"
-      onClick={toggleMode}
-      aria-label={`Switch to ${next} mode`}
-      title={`Switch to ${next} mode`}
-    >
-      {mode === "dark" ? "☀" : "☾"}
-    </ThemeToggleStyles>
-  );
-};
 
 const Header = () => {
   const isDesktop = useMediaQuery("only screen and (min-width: 1025px)");

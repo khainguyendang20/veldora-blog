@@ -1,5 +1,6 @@
 import { Image } from "components/image";
-import Heading from "components/layout/Heading";
+import { PageHeader } from "components/admin";
+import { Button } from "components/button";
 import { db } from "config/firebase-config";
 import {
   collection,
@@ -22,17 +23,6 @@ import { formatDate } from "utils/formatDate";
 const pageSize = 30;
 
 const NotificationsStyles = styled.div`
-  .notifications__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .notifications__mark-all {
-    border: 0;
-    background: none;
-    color: ${(props) => props.theme.primary};
-    cursor: pointer;
-  }
   .notification {
     display: flex;
     gap: 12px;
@@ -95,18 +85,16 @@ const NotificationsPage = () => {
 
   return (
     <NotificationsStyles>
-      <div className="notifications__header">
-        <Heading>Notifications</Heading>
+      <PageHeader
+        title="Notifications"
+        description="Likes and comments on your posts."
+      >
         {unread.length > 0 && (
-          <button
-            type="button"
-            className="notifications__mark-all"
-            onClick={markAllRead}
-          >
+          <Button size="md" variant="secondary" onClick={markAllRead}>
             Mark all as read
-          </button>
+          </Button>
         )}
-      </div>
+      </PageHeader>
       {!loading && !notifications.length && (
         <p>Likes and comments on your posts will show up here.</p>
       )}

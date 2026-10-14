@@ -1,9 +1,7 @@
 import { ActionDelete, ActionEdit, ActionView } from "components/actions";
 import { Button } from "components/button";
 import { Toggle } from "components/checkbox";
-import { FieldCheckboxes } from "components/field";
-import { IconSearch } from "components/icons";
-import Heading from "components/layout/Heading";
+import { PageHeader, SearchInput } from "components/admin";
 import { Table } from "components/table";
 import { db } from "config/firebase-config";
 import {
@@ -106,40 +104,39 @@ const CategoryManagePage = () => {
 
   return (
     <>
-      <FieldCheckboxes>
-        <Heading>Category Manage</Heading>
-        <div
-          className="search"
-          style={{ marginBottom: "30px", marginLeft: "auto" }}
-        >
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Type to search... "
-            onChange={handleFilterChange}
-          />
-          <span className="search-icon">
-            <IconSearch></IconSearch>
-          </span>
-        </div>
-      </FieldCheckboxes>
+      <PageHeader title="Categories" description="Group posts by topic.">
+        <SearchInput
+          aria-label="Search categories"
+          onChange={handleFilterChange}
+        />
+        <Button size="md" href="/manage/add-category">
+          New category
+        </Button>
+      </PageHeader>
       <Table>
         <thead>
           <tr>
-            <th>ID</th>
             <th>Name</th>
             <th>Slug</th>
             <th>Approved</th>
-            <th>Actions</th>
+            <th aria-label="Actions"></th>
           </tr>
         </thead>
         <tbody>
+          {!visibleCategories.length && (
+            <tr>
+              <td colSpan={4} className="table-empty">
+                No categories found.
+              </td>
+            </tr>
+          )}
           {visibleCategories.length > 0 &&
             visibleCategories.map((category) => (
               <tr key={category.id}>
-                <td>{category.id}</td>
-                <td>{category.name}</td>
-                <td>{category.slug}</td>
+                <td>
+                  <strong>{category.name}</strong>
+                </td>
+                <td style={{ color: "var(--color-muted)" }}>{category.slug}</td>
                 <td>
                   <Toggle
                     on={category.status === 1}
@@ -148,8 +145,11 @@ const CategoryManagePage = () => {
                   ></Toggle>
                 </td>
                 <td>
-                  <FieldCheckboxes>
-                    <ActionView></ActionView>
+                  <div className="table-actions">
+                    <ActionView
+                      label="View on the blog"
+                      onClick={() => navigate(`/category/${category.slug}`)}
+                    ></ActionView>
                     <ActionEdit
                       onClick={() =>
                         navigate(`/manage/edit-category?id=${category.id}`)
@@ -158,14 +158,24 @@ const CategoryManagePage = () => {
                     <ActionDelete
                       onClick={() => handleDeleteCategory(category.id)}
                     ></ActionDelete>
-                  </FieldCheckboxes>
+                  </div>
                 </td>
               </tr>
             ))}
         </tbody>
       </Table>
       {!searchTerm && categories.length < allCategories.length && (
-        <Button onClick={handleLoadMore}>Load more</Button>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            marginTop: "20px",
+          }}
+        >
+          <Button size="md" variant="secondary" onClick={handleLoadMore}>
+            Load more
+          </Button>
+        </div>
       )}
     </>
   );

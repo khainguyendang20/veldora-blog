@@ -59,10 +59,9 @@ describe("ProfileSettingsPage", () => {
 
     expect(screen.getByLabelText("Full name")).toHaveValue("Alice");
     expect(screen.getByLabelText("Bio")).toHaveValue("Old bio");
-    expect(screen.getByRole("link", { name: "View your public profile" })).toHaveAttribute(
-      "href",
-      "/profile/alice"
-    );
+    expect(
+      screen.getByRole("button", { name: "View your public profile" })
+    ).toBeInTheDocument();
   });
 
   it("saves only the fields users may change and syncs their posts", async () => {

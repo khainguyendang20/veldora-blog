@@ -48,11 +48,11 @@ describe("PostDetailPage", () => {
     useAuthStore.setState({ user: null, isAuthLoading: false });
   });
 
-  it("shows a spinner until the post arrives", () => {
+  it("shows a placeholder until the post arrives", () => {
     onSnapshot.mockReturnValue(vi.fn());
     renderAt("/post/hello");
 
-    expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: /^Loading/ })).toBeInTheDocument();
   });
 
   it("waits for the session before querying", () => {
@@ -60,7 +60,7 @@ describe("PostDetailPage", () => {
     renderAt("/post/hello");
 
     expect(onSnapshot).not.toHaveBeenCalled();
-    expect(screen.getByRole("status", { name: "Loading" })).toBeInTheDocument();
+    expect(screen.getByRole("status", { name: /^Loading/ })).toBeInTheDocument();
   });
 
   it("shows the not found page for an unknown slug", () => {
