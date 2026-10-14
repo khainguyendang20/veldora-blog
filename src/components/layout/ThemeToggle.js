@@ -1,3 +1,4 @@
+import { IconMoon, IconSun } from "components/icons";
 import React from "react";
 import { useThemeStore } from "store";
 import styled from "styled-components";
@@ -10,6 +11,8 @@ const ThemeToggleStyles = styled.button`
   cursor: pointer;
   .theme-toggle__icon {
     font-size: 22px;
+    width: 22px;
+    height: 22px;
   }
 `;
 
@@ -33,7 +36,11 @@ const ThemeToggle = ({ showLabel = false, className }) => {
         className="theme-toggle__icon sidebar__link-icon"
         aria-hidden="true"
       >
-        {mode === "dark" ? "☀" : "☾"}
+        {mode === "dark" ? (
+          <IconSun className="theme-toggle__icon" />
+        ) : (
+          <IconMoon className="theme-toggle__icon" />
+        )}
       </span>
       {showLabel && (
         <span className="sidebar__link-title">
