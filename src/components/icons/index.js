@@ -12,3 +12,4 @@ export { default as IconUsers } from "./IconUsers";
 export { default as IconBookmark } from "./IconBookmark";
 export { default as IconHeart } from "./IconHeart";
 export { default as IconBell } from "./IconBell";
+export { default as IconShare } from "./IconShare";

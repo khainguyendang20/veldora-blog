@@ -93,35 +93,39 @@ export const HomeSkeleton = () => (
   </SkeletonGroup>
 );
 
+// Mirrors the post page: header, byline and cover in a 720px column
 const DetailSkeletonStyles = styled.div`
-  max-width: 1280px;
+  max-width: 760px;
   margin: 0 auto;
-  padding: 40px 16px 100px;
-  .detail-skeleton__header {
+  padding: 48px 20px 80px;
+  .detail-skeleton__byline {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 48px;
+    gap: 12px;
+    margin: 28px 0 32px;
   }
   .detail-skeleton__body {
-    max-width: 700px;
-    margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
+    margin-top: 40px;
   }
 `;
 
 export const PostDetailSkeleton = () => (
   <SkeletonGroup label="Loading post">
     <DetailSkeletonStyles>
-      <div className="detail-skeleton__header">
-        <Skeleton width="min(640px, 100%)" height="360px" radius="20px" />
-        <Skeleton width="90px" height="22px" />
-        <Skeleton width="min(560px, 90%)" height="36px" />
-        <Skeleton width="240px" height="16px" />
+      <Skeleton width="90px" height="22px" />
+      <Skeleton height="40px" style={{ marginTop: "16px" }} />
+      <Skeleton width="65%" height="40px" style={{ marginTop: "10px" }} />
+      <div className="detail-skeleton__byline">
+        <Skeleton width="44px" height="44px" radius="100rem" />
+        <div style={{ flex: 1 }}>
+          <Skeleton width="160px" height="14px" />
+          <Skeleton width="120px" height="12px" style={{ marginTop: "8px" }} />
+        </div>
       </div>
+      <Skeleton height="auto" radius="16px" style={{ aspectRatio: "16 / 9" }} />
       <div className="detail-skeleton__body">
         {[100, 96, 100, 88, 100, 72].map((width, i) => (
           <Skeleton key={i} width={`${width}%`} height="16px" />

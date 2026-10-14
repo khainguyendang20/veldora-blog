@@ -1,94 +1,129 @@
+// Article typography, shared by the post page and the post editor so a
+// post looks the same while it is written and once published
 .entry-content,
 .entry-content .ql-snow .ql-editor {
+  font-family: inherit;
+  font-size: 18px;
+  line-height: 1.8;
+  color: var(--color-text);
+  overflow-wrap: break-word;
+
+  // Even rhythm between blocks; headings pull the next block closer
+  > * + * {
+    margin-top: 1.25em;
+  }
+  > :first-child {
+    margin-top: 0;
+  }
   p {
-    display: inline;
-    line-height: 1 !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 0;
   }
-  a {
-    display: inline-block;
-  }
-  font-family: "Epilogue", sans-serif;
-  font-size: 16px;
+  h1,
   h2,
   h3,
   h4 {
-    font-weight: bold;
-    margin-bottom: 20px;
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
   }
-  h2 {
+  > :is(h1, h2, h3, h4) {
+    margin-top: 1.8em;
+  }
+  > :is(h1, h2, h3, h4) + * {
+    margin-top: 0.6em;
+  }
+  h1 {
     font-size: 32px;
   }
-  h3 {
-    font-size: 26px;
+  h2 {
+    font-size: 28px;
   }
-  h4 {
+  h3 {
     font-size: 22px;
   }
-  p {
-    margin-bottom: 20px;
-    line-height: 2;
+  h4 {
+    font-size: 19px;
   }
-  figure {
-    margin-bottom: 20px;
+  a {
+    display: inline;
+    color: #2980b9;
+    text-decoration: underline;
+    text-underline-offset: 3px;
   }
-  figure img {
-    border-radius: 20px;
-    margin-bottom: 10px;
+  strong {
+    font-weight: 700;
   }
-  figcaption {
-    text-align: center;
+  blockquote {
+    padding: 4px 0 4px 20px;
+    border-left: 4px solid #2980b9;
+    color: var(--color-muted);
     font-style: italic;
-    font-size: 14px;
-    color: #6b6b6b;
   }
   ul {
-    list-style-type: disc;
+    list-style: disc;
   }
   ol {
     list-style: decimal;
   }
   ul,
   ol {
-    margin-bottom: 20px;
-    padding-left: 40px;
-    margin-left: 0;
-    li {
-      margin-bottom: 10px;
-    }
+    padding-left: 1.5em;
+  }
+  li + li {
+    margin-top: 0.4em;
+  }
+  :not(pre) > code {
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    background: var(--color-subtle);
+    font-size: 0.88em;
+  }
+  pre {
+    overflow-x: auto;
+    padding: 16px 20px;
+    border-radius: 10px;
+    background: #0d1117;
+    color: #e6edf3;
+    font-size: 14px;
+    line-height: 1.6;
   }
   img {
-    border-radius: 8px;
-    margin: 20px 0;
-    object-fit: cover;
-    height: 100%;
-    width: 100%;
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 12px;
   }
-  @media screen and (max-width: 1023.98px) {
+  figure img {
+    margin-bottom: 8px;
+  }
+  figcaption {
+    text-align: center;
+    font-style: italic;
     font-size: 14px;
-    h2 {
+    color: var(--color-muted);
+  }
+  hr {
+    border: 0;
+    border-top: 1px solid var(--color-border);
+    margin: 2em 0;
+  }
+  @media screen and (max-width: 768px) {
+    font-size: 17px;
+    h1 {
       font-size: 26px;
     }
-    h3 {
-      font-size: 24px;
+    h2 {
+      font-size: 23px;
     }
-    h4 {
+    h3 {
       font-size: 20px;
     }
-  }
-  @media only screen and (max-width: 768px) {
-    padding: 0 24px;
   }
 }
 
 // Table of contents links land below the fixed header
 .entry-content :is(h1, h2, h3) {
   scroll-margin-top: 90px;
-}
-
-.entry-content pre {
-  overflow-x: auto;
-  padding: 16px;
-  border-radius: 8px;
-  font-size: 14px;
 }
