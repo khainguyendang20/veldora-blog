@@ -19,6 +19,7 @@ import { highlightCode } from "module/post/highlightCode";
 import { addHeadingIds } from "utils/headings";
 import { formatDate } from "utils/formatDate";
 import { readingTime } from "utils/readingTime";
+import { postSummary } from "utils/postSummary";
 import { useAuthStore } from "store";
 import { isStaffRole, postStatus } from "utils/constants";
 import useDocumentMeta from "hooks/useDocumentMeta";
@@ -154,7 +155,10 @@ const PostDetailPage = () => {
       : query(bySlug, where("status", "==", postStatus.APPROVED));
   }, [slug, isStaff, isAuthLoading]);
   const postInfo = posts[posts.length - 1];
-  useDocumentMeta({ title: postInfo?.title, description: postInfo?.desc });
+  useDocumentMeta({
+    title: postInfo?.title,
+    description: postInfo ? postSummary(postInfo) : undefined,
+  });
   useEffect(() => {
     document.body.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [slug]);

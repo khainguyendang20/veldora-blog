@@ -89,3 +89,13 @@ describe("PostItem reading time", () => {
     expect(screen.getByText("1 min read · ♥ 12 · 💬 4")).toBeInTheDocument();
   });
 });
+
+describe("PostItem summary fallback", () => {
+  it("summarizes the content when the post has no description", () => {
+    renderItem(
+      <PostItem data={{ ...post, desc: "", content: "<p>Opening line of the post.</p>" }} />
+    );
+
+    expect(screen.getByText("Opening line of the post.")).toBeInTheDocument();
+  });
+});

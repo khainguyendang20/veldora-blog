@@ -7,6 +7,7 @@ import PostDescription from "./components/PostDescription";
 import PostThumbnail from "./components/PostThumbnail";
 import { formatDate } from "utils/formatDate";
 import { readingTime } from "utils/readingTime";
+import { postSummary } from "utils/postSummary";
 
 const PostItemStyles = styled.div`
   .post-content {
@@ -44,6 +45,7 @@ const PostItem = ({ data, ...props }) => {
     commentCount,
   } = data;
   const category = categories?.[0];
+  const summary = postSummary({ desc, content });
   return (
     <PostItemStyles>
       <PostThumbnail href={slug} url={thumbnail}>
@@ -64,7 +66,7 @@ const PostItem = ({ data, ...props }) => {
           auth={user}
           date={formatDate(createdAt)}
         ></PostMeta>
-        {desc && <PostDescription>{desc}</PostDescription>}
+        {summary && <PostDescription>{summary}</PostDescription>}
       </div>
     </PostItemStyles>
   );
