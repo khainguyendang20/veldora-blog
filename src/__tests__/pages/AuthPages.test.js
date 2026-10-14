@@ -47,8 +47,8 @@ const renderPage = (ui) =>
     </MemoryRouter>
   );
 
-const type = (placeholder, value) =>
-  fireEvent.change(screen.getByPlaceholderText(placeholder), {
+const type = (label, value) =>
+  fireEvent.change(screen.getByLabelText(label), {
     target: { value },
   });
 
@@ -58,10 +58,10 @@ beforeEach(() => {
 });
 
 describe("LoginPage", () => {
-  it("labels the submit button Sign In", () => {
+  it("labels the submit button Sign in", () => {
     renderPage(<LoginPage />);
 
-    expect(screen.getByRole("button", { name: "Sign In" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
   });
 
   it("shows a friendly message for wrong credentials", async () => {
@@ -71,10 +71,10 @@ describe("LoginPage", () => {
     });
     renderPage(<LoginPage />);
 
-    type("Enter your email address...", "a@b.co");
-    type("Enter your password...", "secret123");
+    type("Email", "a@b.co");
+    type("Password", "secret123");
     // Submitting right after typing used to be ignored by a stale isValid
-    fireEvent.click(screen.getByRole("button", { name: "Sign In" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
 
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith("Incorrect email or password.")
@@ -84,9 +84,9 @@ describe("LoginPage", () => {
 
 describe("RegisterPage", () => {
   const fillForm = () => {
-    type("Enter your fullname...", "Alice");
-    type("Enter your email address...", "a@b.co");
-    type("Enter your password...", "secret123");
+    type("Full name", "Alice");
+    type("Email", "a@b.co");
+    type("Password", "secret123");
   };
 
   it("reports an email that is already registered", async () => {
@@ -96,7 +96,7 @@ describe("RegisterPage", () => {
     renderPage(<RegisterPage />);
 
     fillForm();
-    fireEvent.click(screen.getByRole("button", { name: "Sign Up" }));
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith(
@@ -115,10 +115,10 @@ describe("RegisterPage success", () => {
     createUserProfile.mockResolvedValue();
     renderPage(<RegisterPage />);
 
-    type("Enter your fullname...", "Alice");
-    type("Enter your email address...", "a@b.co");
-    type("Enter your password...", "secret123");
-    fireEvent.click(screen.getByRole("button", { name: "Sign Up" }));
+    type("Full name", "Alice");
+    type("Email", "a@b.co");
+    type("Password", "secret123");
+    fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 
     await waitFor(() =>
       expect(createUserProfile).toHaveBeenCalledWith(user, { fullname: "Alice" })
@@ -130,7 +130,7 @@ describe("RegisterPage success", () => {
 describe("ForgotPasswordPage", () => {
   const requestReset = () => {
     renderPage(<ForgotPasswordPage />);
-    type("Enter your email address...", "a@b.co");
+    type("Email", "a@b.co");
     fireEvent.click(screen.getByRole("button", { name: "Send reset link" }));
   };
 
@@ -217,7 +217,65 @@ describe("LoginPage links", () => {
     renderPage(<LoginPage />);
 
     expect(
-      screen.getByRole("link", { name: "Forgot your password?" })
+      screen.getByRole("link", { name: "Forgot password?" })
     ).toHaveAttribute("href", "/forgot-password");
+  });
+});
+
+describe("auth form fields", () => {
+  it("lets password managers fill a saved password on sign in", () => {
+    renderPage(<LoginPage />);
+
+    expect(screen.getByLabelText("Email")).toHaveAttribute("autocomplete", "email");
+    expect(screen.getByLabelText("Password")).toHaveAttribute(
+      "autocomplete",
+      "current-password"
+    );
+  });
+
+  it("asks password managers for a new password on sign up", () => {
+    renderPage(<RegisterPage />);
+
+    expect(screen.getByLabelText("Password")).toHaveAttribute(
+      "autocomplete",
+      "new-password"
+    );
+    expect(screen.getByLabelText("Full name")).toHaveAttribute("autocomplete", "name");
+  });
+
+  it("shows and hides the password", () => {
+    renderPage(<LoginPage />);
+    const password = screen.getByLabelText("Password");
+    expect(password).toHaveAttribute("type", "password");
+
+    fireEvent.click(screen.getByRole("button", { name: "Show password" }));
+
+    expect(password).toHaveAttribute("type", "text");
+    expect(screen.getByRole("button", { name: "Hide password" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+  });
+
+  it("ties a validation error to its field", async () => {
+    renderPage(<LoginPage />);
+
+    type("Email", "not-an-email");
+
+    const email = screen.getByLabelText("Email");
+    await waitFor(() => expect(email).toHaveAttribute("aria-invalid", "true"));
+    expect(email).toHaveAccessibleDescription("Enter a valid email address");
+  });
+
+  it("lets the reader try another address after requesting a reset", async () => {
+    sendPasswordResetEmail.mockResolvedValue();
+    renderPage(<ForgotPasswordPage />);
+    type("Email", "a@b.co");
+    fireEvent.click(screen.getByRole("button", { name: "Send reset link" }));
+    await screen.findByRole("heading", { name: "Check your email" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Try another email" }));
+
+    expect(screen.getByRole("heading", { name: "Reset your password" })).toBeInTheDocument();
   });
 });

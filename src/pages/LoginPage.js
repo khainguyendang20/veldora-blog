@@ -20,12 +20,12 @@ import useDocumentMeta from "hooks/useDocumentMeta";
 const schema = yup.object({
   email: yup
     .string()
-    .email("Please enter valid email")
-    .required("Please enter your email"),
+    .email("Enter a valid email address")
+    .required("Enter your email address"),
   password: yup
     .string()
-    .min(8, "Your password must be least 8 characters or greater")
-    .required("Please enter your password"),
+    .min(8, "Passwords are at least 8 characters")
+    .required("Enter your password"),
 });
 
 const LoginPage = () => {
@@ -50,48 +50,53 @@ const LoginPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(user)]);
   return (
-    <LayoutAuthentication>
-      <form
-        onSubmit={handleSubmit(handleLogin)}
-        autoComplete="off"
-        className="form"
-      >
+    <LayoutAuthentication
+      title="Welcome back"
+      subtitle="Sign in to follow writers, save posts and publish your own."
+    >
+      <GoogleSignInButton></GoogleSignInButton>
+      <p className="auth__divider">or sign in with email</p>
+      <form onSubmit={handleSubmit(handleLogin)} noValidate>
         <Field>
-          <Label htmlFor="email">Email Address</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
             type="email"
             name="email"
-            className="input"
-            placeholder="Enter your email address..."
+            placeholder="you@example.com"
+            autoComplete="email"
             control={control}
             error={errors?.email?.message}
           ></Input>
         </Field>
         <Field>
-          <Label htmlFor="password">Password</Label>
+          <div className="auth__label-row">
+            <Label htmlFor="password">Password</Label>
+            <Link to="/forgot-password" className="auth__link">
+              Forgot password?
+            </Link>
+          </div>
           <InputPassword
-            type="password"
-            name="password"
-            className="input"
-            placeholder="Enter your password..."
+            placeholder="Your password"
+            autoComplete="current-password"
             control={control}
             error={errors?.password?.message}
           ></InputPassword>
         </Field>
-        <div className="have-account">
-          <Link to="/forgot-password">Forgot your password?</Link>
-        </div>
-        <div className="have-account">
-          Do not have an account?
-          <Link to="/register" style={{}}>
-            Register now
-          </Link>
-        </div>
-        <Button type="submit" disabled={isSubmitting} isLoading={isSubmitting}>
-          Sign In
+        <Button
+          type="submit"
+          className="auth__submit"
+          disabled={isSubmitting}
+          isLoading={isSubmitting}
+        >
+          Sign in
         </Button>
-        <GoogleSignInButton></GoogleSignInButton>
       </form>
+      <p className="auth__switch">
+        New to Veldora Blog?{" "}
+        <Link to="/register" className="auth__link">
+          Create an account
+        </Link>
+      </p>
     </LayoutAuthentication>
   );
 };

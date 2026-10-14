@@ -63,7 +63,11 @@ describe("App routes", () => {
     renderAt("/login");
 
     expect(
-      await screen.findByText("Email Address", {}, { timeout: 5000 })
+      await screen.findByRole(
+        "heading",
+        { name: "Welcome back" },
+        { timeout: 5000 }
+      )
     ).toBeInTheDocument();
   });
 
