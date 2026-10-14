@@ -1,5 +1,5 @@
-import { Radio, Toggle } from "components/checkbox";
-import { Field, FieldCheckboxes } from "components/field";
+import { Toggle } from "components/checkbox";
+import { Field } from "components/field";
 import { Input } from "components/input";
 import ImageUpload from "components/input/ImageUpload";
 import { Label } from "components/label";
@@ -20,6 +20,8 @@ import "react-quill/dist/quill.snow.css";
 import { uploadImage } from "utils/uploadImage";
 import ImageUploader from "quill-image-uploader";
 import { isSlugTaken, randomSlugSuffix } from "./slug";
+import useAutosave from "hooks/useAutosave";
+import PostStatusField from "./PostStatusField";
 
 Quill.register("modules/imageUploader", ImageUploader);
 
@@ -45,6 +47,14 @@ const emptyPost = {
   featured: false,
 };
 
+// Firestore Timestamp or Date to a datetime-local input value
+const toLocalInput = (value) => {
+  const date = value?.toDate ? value.toDate() : value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return "";
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 16);
+};
+
 const toOption = (category) => ({ label: category.name, value: category.id });
 
 // Shared form for creating and editing posts. Builds the Firestore payload
@@ -68,8 +78,38 @@ const PostForm = ({
   );
   const [categoryOptions, setCategoryOptions] = useState([]);
   const [content, setContent] = useState(defaultValues.content || "");
-  const watchStatus = watch("status");
+  const watchStatus = Number(watch("status"));
   const watchFeatured = watch("featured");
+  // datetime-local value ("2026-10-20T08:00") for scheduled posts
+  const [publishAt, setPublishAt] = useState(() =>
+    toLocalInput(defaultValues.publishAt)
+  );
+
+  // Unsaved text survives a closed tab; restoring it is offered below
+  const autosaveFields = {
+    title: watch("title") || "",
+    slug: watch("slug") || "",
+    desc: watch("desc") || "",
+    content,
+  };
+  const autosave = useAutosave(
+    postId || "new-post",
+    autosaveFields,
+    {
+      title: defaultValues.title || "",
+      slug: defaultValues.slug || "",
+      desc: defaultValues.desc || "",
+      content: defaultValues.content || "",
+    }
+  );
+  const restoreAutosave = () => {
+    const { title, slug, desc, content: savedContent } = autosave.saved.values;
+    setValue("title", title);
+    setValue("slug", slug);
+    setValue("desc", desc);
+    setContent(savedContent);
+    autosave.dismiss();
+  };
   const {
     image,
     setImage,
@@ -113,6 +153,13 @@ const PostForm = ({
     // the form loaded; saving these stale copies would undo them
     // eslint-disable-next-line no-unused-vars
     const { likeCount, commentCount, lastCommentId, ...fields } = values;
+    const status = Number(values.status);
+    const publishDate =
+      status === postStatus.SCHEDULED && publishAt ? new Date(publishAt) : null;
+    if (status === postStatus.SCHEDULED && !publishDate) {
+      toast.error("Pick when the post should be published.");
+      return;
+    }
     try {
       const slug = await resolveSlug(fields);
       if (!slug) {
@@ -129,13 +176,16 @@ const PostForm = ({
         ...fields,
         thumbnail: image,
         slug,
-        status: Number(values.status),
+        status,
+        publishAt: publishDate,
         categories,
         categoryIds: categories.map((category) => category.id),
         content,
       });
+      autosave.clear();
       if (resetAfterSubmit) {
         reset(emptyPost);
+        setPublishAt("");
         handleResetUpload();
         setOptionValues([]);
         setContent("");
@@ -147,6 +197,20 @@ const PostForm = ({
 
   return (
     <form autoComplete="off" onSubmit={handleSubmit(handleSavePost)}>
+      {autosave.saved && (
+        <div className="autosave-banner" role="status">
+          <span>
+            You have unsaved changes from{" "}
+            {new Date(autosave.saved.savedAt).toLocaleString("vi-VN")}.
+          </span>
+          <button type="button" onClick={restoreAutosave}>
+            Restore
+          </button>
+          <button type="button" onClick={autosave.clear}>
+            Discard
+          </button>
+        </div>
+      )}
       <div className="field-format">
         <Field>
           <Label htmlFor="title">Title</Label>
@@ -195,37 +259,14 @@ const PostForm = ({
         />
       </div>
       <div className="field-format">
-        {canModerate && (
-          <Field>
-            <Label>Status</Label>
-            <FieldCheckboxes>
-              <Radio
-                name="status"
-                control={control}
-                checked={Number(watchStatus) === postStatus.APPROVED}
-                value={postStatus.APPROVED}
-              >
-                Approved
-              </Radio>
-              <Radio
-                name="status"
-                control={control}
-                checked={Number(watchStatus) === postStatus.PENDING}
-                value={postStatus.PENDING}
-              >
-                Pending
-              </Radio>
-              <Radio
-                name="status"
-                control={control}
-                checked={Number(watchStatus) === postStatus.REJECTED}
-                value={postStatus.REJECTED}
-              >
-                Rejected
-              </Radio>
-            </FieldCheckboxes>
-          </Field>
-        )}
+        <PostStatusField
+          control={control}
+          status={watchStatus}
+          savedStatus={Number(defaultValues.status)}
+          canModerate={canModerate}
+          publishAt={publishAt}
+          onPublishAtChange={setPublishAt}
+        ></PostStatusField>
         <Field>
           <Label>Category</Label>
           <Select

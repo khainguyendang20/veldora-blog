@@ -211,3 +211,24 @@ a {
     opacity: 0;
   }
 }
+
+// Offer to restore text autosaved by the post form
+.autosave-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  button {
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--color-border);
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+}

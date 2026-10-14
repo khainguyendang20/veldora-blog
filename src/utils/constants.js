@@ -21,6 +21,11 @@ export const postStatus = {
   APPROVED: 1,
   PENDING: 2,
   REJECTED: 3,
+  // Only its author (and staff) can see it
+  DRAFT: 4,
+  // Published by the daily cron (api/cron/publish-scheduled) once
+  // publishAt has passed
+  SCHEDULED: 5,
 };
 
 export const categoryStatus = {

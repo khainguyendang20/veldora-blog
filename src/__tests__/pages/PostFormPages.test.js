@@ -297,3 +297,91 @@ describe("slug uniqueness", () => {
     expect(where).toHaveBeenCalledWith("user.id", "==", "u2");
   });
 });
+
+describe("drafts, scheduling and autosave", () => {
+  const setRole = (role) =>
+    useAuthStore.setState({
+      user: { uid: "u2", email: "r@b.c", role, fullname: "Writer" },
+      isAuthLoading: false,
+    });
+
+  const startPost = async () => {
+    renderAt("/manage/add-post");
+    await waitFor(() => expect(getDocs).toHaveBeenCalled());
+    fireEvent.change(screen.getByPlaceholderText("Title"), {
+      target: { value: "Hello" },
+    });
+  };
+
+  it("lets authors keep a post as a draft", async () => {
+    setRole(3);
+    await startPost();
+
+    fireEvent.click(screen.getByLabelText("Draft"));
+    fireEvent.click(screen.getByText("Create Post"));
+
+    await waitFor(() => expect(addDoc).toHaveBeenCalledTimes(1));
+    expect(addDoc.mock.calls[0][1]).toMatchObject({ status: 4 });
+    expect(screen.queryByLabelText("Scheduled")).not.toBeInTheDocument();
+  });
+
+  it("shows authors a published post's status without letting them change it", async () => {
+    setRole(3);
+    useAuthStore.setState({
+      user: { uid: "u1", email: "a@b.c", role: 3, fullname: "Author" },
+      isAuthLoading: false,
+    });
+    renderAt("/manage/update-post?id=p1");
+
+    expect(await screen.findByText("Published")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Draft")).not.toBeInTheDocument();
+  });
+
+  it("asks staff for a time before scheduling", async () => {
+    setRole(1);
+    await startPost();
+
+    fireEvent.click(screen.getByLabelText("Scheduled"));
+    fireEvent.click(screen.getByText("Create Post"));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "Pick when the post should be published."
+      )
+    );
+    expect(addDoc).not.toHaveBeenCalled();
+  });
+
+  it("schedules a post for the chosen time", async () => {
+    setRole(1);
+    await startPost();
+
+    fireEvent.click(screen.getByLabelText("Scheduled"));
+    fireEvent.change(screen.getByLabelText("Publish at"), {
+      target: { value: "2026-12-01T08:30" },
+    });
+    fireEvent.click(screen.getByText("Create Post"));
+
+    await waitFor(() => expect(addDoc).toHaveBeenCalledTimes(1));
+    const payload = addDoc.mock.calls[0][1];
+    expect(payload.status).toBe(5);
+    expect(payload.publishAt).toEqual(new Date("2026-12-01T08:30"));
+  });
+
+  it("offers to restore unsaved text from an earlier visit", async () => {
+    setRole(3);
+    localStorage.setItem(
+      "autosave:new-post",
+      JSON.stringify({
+        values: { title: "Unsaved title", slug: "", desc: "", content: "<p>x</p>" },
+        savedAt: Date.now(),
+      })
+    );
+    renderAt("/manage/add-post");
+
+    fireEvent.click(await screen.findByRole("button", { name: "Restore" }));
+
+    expect(screen.getByPlaceholderText("Title")).toHaveValue("Unsaved title");
+    expect(screen.queryByRole("button", { name: "Restore" })).not.toBeInTheDocument();
+  });
+});

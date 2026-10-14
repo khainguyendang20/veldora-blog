@@ -173,11 +173,12 @@ service cloud.firestore {
       // Public queries must therefore filter on status == 1.
       allow read: if resource.data.status == 1 || isAuthor() || isStaff();
 
-      // Regular users submit posts for review: pending and not featured
+      // Regular users keep drafts (4) or submit for review (2), never
+      // featured; publishing and scheduling (5) are for staff
       allow create: if isActive()
         && request.resource.data.user.id == request.auth.uid
         && (isStaff()
-          || (request.resource.data.status == 2
+          || (request.resource.data.status in [2, 4]
             && request.resource.data.get('featured', false) == false));
 
       // Authors edit their own posts but cannot change who wrote them, the
@@ -187,7 +188,11 @@ service cloud.firestore {
         || (isActive()
           && isAuthor()
           && request.resource.data.user.id == resource.data.user.id
-          && request.resource.data.status == resource.data.status
+          // Status stays, or moves between draft and review (including
+          // resubmitting a rejected post)
+          && (request.resource.data.status == resource.data.status
+            || (request.resource.data.status in [2, 4]
+              && resource.data.status in [2, 3, 4]))
           && request.resource.data.get('featured', false)
             == resource.data.get('featured', false)
           && !changesAny(['likeCount', 'commentCount', 'lastCommentId']));
