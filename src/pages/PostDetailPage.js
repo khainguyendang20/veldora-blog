@@ -13,7 +13,9 @@ import PostCategory from "module/post/components/PostCategory";
 import PostRelated from "module/post/PostRelated";
 import CommentSection from "module/comment/CommentSection";
 import PostActions from "module/post/PostActions";
-import TableOfContents from "module/post/TableOfContents";
+import TableOfContents, {
+  hasTableOfContents,
+} from "module/post/TableOfContents";
 import { highlightCode } from "module/post/highlightCode";
 import { addHeadingIds } from "utils/headings";
 import { formatDate } from "utils/formatDate";
@@ -23,19 +25,27 @@ import { useAuthStore } from "store";
 import { avatarDefault, isStaffRole, postStatus } from "utils/constants";
 import useDocumentMeta from "hooks/useDocumentMeta";
 
-// One readable column (720px) for the header and text; the cover spans
-// the column plus the table-of-contents rail beside it on wide screens
+// The header and cover span the article's full width (1016px). The text
+// is a 720px reading column: beside the table-of-contents rail on wide
+// screens, or centred when the post is too short to have one.
 const PostDetailStyles = styled.div`
   padding: 48px 20px 80px;
   .article {
+    max-width: 1016px;
+    margin: 0 auto;
     display: grid;
-    grid-template-columns: minmax(0, 720px);
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       "header"
       "cover"
       "toc"
       "body";
-    justify-content: center;
+  }
+  .article__toc,
+  .article__body {
+    width: 100%;
+    max-width: 720px;
+    justify-self: center;
   }
   .article__header {
     grid-area: header;
@@ -54,6 +64,7 @@ const PostDetailStyles = styled.div`
     letter-spacing: -0.01em;
   }
   .article__lead {
+    max-width: 820px;
     margin-top: 16px;
     font-size: 20px;
     line-height: 1.6;
@@ -114,10 +125,6 @@ const PostDetailStyles = styled.div`
     grid-area: toc;
     margin-bottom: 32px;
   }
-  /* Short posts have no table of contents */
-  .article__toc:empty {
-    display: none;
-  }
   .article__body {
     grid-area: body;
     min-width: 0;
@@ -128,13 +135,17 @@ const PostDetailStyles = styled.div`
   }
   /* Wide screens: the table of contents moves into a rail beside the text */
   @media only screen and (min-width: 1200px) {
-    .article {
+    .article--with-toc {
       grid-template-columns: minmax(0, 720px) 240px;
       grid-template-areas:
-        "header ."
+        "header header"
         "cover cover"
         "body toc";
       column-gap: 56px;
+    }
+    .article--with-toc .article__toc,
+    .article--with-toc .article__body {
+      justify-self: stretch;
     }
     .article__toc {
       margin-bottom: 0;
@@ -197,6 +208,7 @@ const PostDetailPage = () => {
   if (!postInfo) return <NotFoundPage></NotFoundPage>;
   const { user } = postInfo;
   const canEdit = isStaff || (uid && user?.id === uid);
+  const withToc = hasTableOfContents(content.headings);
   // Only a hand-written description makes a lead; an excerpt would repeat
   // the opening paragraph
   const lead = (postInfo.desc || "").trim();
@@ -216,7 +228,9 @@ const PostDetailPage = () => {
   );
   return (
     <PostDetailStyles>
-      <article className="article">
+      <article
+        className={withToc ? "article article--with-toc" : "article"}
+      >
         <header className="article__header">
           {postInfo.categories?.length > 0 && (
             <div className="article__categories">
@@ -263,9 +277,11 @@ const PostDetailPage = () => {
             />
           </figure>
         )}
-        <aside className="article__toc">
-          <TableOfContents headings={content.headings}></TableOfContents>
-        </aside>
+        {withToc && (
+          <aside className="article__toc">
+            <TableOfContents headings={content.headings}></TableOfContents>
+          </aside>
+        )}
         <div className="article__body">
           <div
             ref={contentRef}

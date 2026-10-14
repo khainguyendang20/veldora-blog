@@ -3,6 +3,7 @@ import styled from "styled-components";
 
 // Short posts don't need one
 const minHeadings = 3;
+export const hasTableOfContents = (headings) => headings.length >= minHeadings;
 
 const TableOfContentsStyles = styled.nav`
   border-left: 2px solid var(--color-border);
@@ -40,7 +41,7 @@ const TableOfContentsStyles = styled.nav`
 `;
 
 const TableOfContents = ({ headings }) => {
-  if (headings.length < minHeadings) return null;
+  if (!hasTableOfContents(headings)) return null;
   // Indent relative to the post's top heading level
   const top = Math.min(...headings.map((heading) => heading.level));
   return (
