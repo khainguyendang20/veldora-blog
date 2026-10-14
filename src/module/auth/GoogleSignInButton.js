@@ -20,7 +20,8 @@ const GoogleButtonStyles = styled.button`
   padding: 14px 20px;
   border: 1px solid ${(props) => props.theme.grayLight};
   border-radius: 8px;
-  background: white;
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;

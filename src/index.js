@@ -4,7 +4,8 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { ThemeProvider } from "styled-components";
 import { GlobalStyles } from "./styles/GlobalStyles";
-import { theme } from "./utils/constants";
+import { darkTheme, theme } from "./utils/constants";
+import { useThemeStore } from "./store";
 import { BrowserRouter } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -14,16 +15,23 @@ import { createRoot } from "react-dom/client";
 const container = document.getElementById("root");
 const root = createRoot(container);
 
-root.render(
-  <React.StrictMode>
-    <ThemeProvider theme={theme}>
+const ThemedApp = () => {
+  const mode = useThemeStore((state) => state.mode);
+  return (
+    <ThemeProvider theme={mode === "dark" ? darkTheme : theme}>
       <GlobalStyles></GlobalStyles>
       <BrowserRouter>
         <ScrollToTop />
         <App />
-        <ToastContainer></ToastContainer>
+        <ToastContainer theme={mode}></ToastContainer>
       </BrowserRouter>
     </ThemeProvider>
+  );
+};
+
+root.render(
+  <React.StrictMode>
+    <ThemedApp />
   </React.StrictMode>
 );
 

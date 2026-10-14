@@ -50,7 +50,7 @@ const PostMetaStyles = styled.div`
 `;
 
 const PostMeta = ({
-  color = "black",
+  color = "currentColor",
   auth,
   date,
   minutesToRead,

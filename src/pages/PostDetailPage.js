@@ -56,7 +56,7 @@ const PostDetailStyles = styled.div`
       display: inline-block;
       margin-top: 16px;
       padding: 6px 16px;
-      border: 1px solid #ddd;
+      border: 1px solid var(--color-border);
       border-radius: 6px;
       font-size: 14px;
     }
@@ -68,9 +68,10 @@ const PostDetailStyles = styled.div`
       padding: 8px 0;
       width: fit-content;
       border: 1px solid;
-      border-color: #ddd transparent #ddd transparent;
+      border-color: var(--color-border) transparent var(--color-border)
+        transparent;
       & .post-auth-name {
-        color: black;
+        color: var(--color-text);
       }
     }
     &-content {

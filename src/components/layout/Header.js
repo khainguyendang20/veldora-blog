@@ -10,7 +10,7 @@ import { useClickOutside } from "hooks/useClickOutSide";
 import React, { useRef } from "react";
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useAuthStore } from "store";
+import { useAuthStore, useThemeStore } from "store";
 import styled from "styled-components";
 import { getAuth, signOut } from "firebase/auth";
 import { useMediaQuery } from "@uidotdev/usehooks";
@@ -25,7 +25,7 @@ const HeaderStyles = styled.div`
   left: 0;
   right: 0;
   display: block;
-  background: white;
+  background: var(--color-surface);
   box-shadow: rgba(33, 35, 38, 0.1) 0px 12px 8px -10px;
   padding: 0 72px;
   max-width: 100dvw;
@@ -59,7 +59,7 @@ const HeaderStyles = styled.div`
       min-width: 180px;
       padding: 12px;
       list-style: none;
-      background: white;
+      background: var(--color-surface);
       display: block;
       right: 0;
       border-radius: 8px;
@@ -148,7 +148,7 @@ const HeaderStyles = styled.div`
 const MobileMenuStyles = styled.div`
   position: fixed;
   inset: 0;
-  background: white;
+  background: var(--color-surface);
   display: block;
   overflow: hidden;
   z-index: 999;
@@ -170,6 +170,31 @@ const menuItems = [
 ];
 
 const ICON_SIZE = 18;
+
+const ThemeToggleStyles = styled.button`
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+`;
+
+const ThemeToggle = () => {
+  const mode = useThemeStore((state) => state.mode);
+  const toggleMode = useThemeStore((state) => state.toggleMode);
+  const next = mode === "dark" ? "light" : "dark";
+  return (
+    <ThemeToggleStyles
+      type="button"
+      onClick={toggleMode}
+      aria-label={`Switch to ${next} mode`}
+      title={`Switch to ${next} mode`}
+    >
+      {mode === "dark" ? "☀" : "☾"}
+    </ThemeToggleStyles>
+  );
+};
 
 const Header = () => {
   const isDesktop = useMediaQuery("only screen and (min-width: 1025px)");
@@ -204,6 +229,7 @@ const Header = () => {
           )}
         </div>
         <div className="header-r">
+          <ThemeToggle></ThemeToggle>
           {isDesktop && (
             <form className="search" role="search" onSubmit={handleSearch}>
               <input

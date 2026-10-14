@@ -52,7 +52,7 @@ const NotificationsStyles = styled.div`
   }
   .notification__date {
     font-size: 12px;
-    color: #888;
+    color: var(--color-muted);
   }
 `;
 

@@ -50,9 +50,10 @@ const StatusTabs = styled.div`
   margin-bottom: 20px;
   button {
     padding: 6px 14px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
     border-radius: 100rem;
-    background: white;
+    background: var(--color-surface);
+    color: var(--color-text);
     cursor: pointer;
     font-size: 14px;
   }
@@ -69,9 +70,10 @@ const ModerationActions = styled.div`
   margin-top: 8px;
   button {
     padding: 2px 8px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
     border-radius: 4px;
-    background: white;
+    background: var(--color-surface);
+    color: var(--color-text);
     cursor: pointer;
     font-size: 12px;
   }

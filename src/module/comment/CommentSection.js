@@ -35,6 +35,8 @@ const CommentSectionStyles = styled.section`
     padding: 12px 16px;
     border: 1px solid ${(props) => props.theme.grayLight};
     border-radius: 8px;
+    background: var(--color-surface);
+    color: var(--color-text);
     resize: vertical;
     margin-bottom: 12px;
   }
@@ -43,7 +45,7 @@ const CommentSectionStyles = styled.section`
     justify-content: space-between;
     align-items: center;
     font-size: 13px;
-    color: #888;
+    color: var(--color-muted);
   }
   .comment-form button {
     margin: 0;
@@ -76,7 +78,7 @@ const CommentSectionStyles = styled.section`
     font-weight: 600;
   }
   .comment__date {
-    color: #888;
+    color: var(--color-muted);
     font-size: 12px;
   }
   .comment__content {

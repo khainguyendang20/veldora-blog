@@ -29,9 +29,10 @@ const PostActionsStyles = styled.div`
     align-items: center;
     gap: 8px;
     padding: 8px 16px;
-    border: 1px solid #ddd;
+    border: 1px solid var(--color-border);
     border-radius: 100rem;
-    background: white;
+    background: var(--color-surface);
+    color: var(--color-text);
     cursor: pointer;
     font-size: 14px;
   }

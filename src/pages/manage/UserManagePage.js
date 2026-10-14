@@ -66,7 +66,9 @@ const RoleBadge = styled.span`
 const RoleSelect = styled.select`
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
   font-size: 14px;
   cursor: pointer;
   &:focus {
