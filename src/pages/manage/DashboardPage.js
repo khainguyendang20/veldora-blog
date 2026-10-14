@@ -1,4 +1,5 @@
-import Heading from "components/layout/Heading";
+import { PageHeader } from "components/admin";
+import { Button } from "components/button";
 import { db } from "config/firebase-config";
 import {
   collection,
@@ -7,6 +8,7 @@ import {
   where,
 } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { useAuthStore } from "store";
 import { isStaffRole, postStatus, userRole } from "utils/constants";
@@ -14,34 +16,35 @@ import { isStaffRole, postStatus, userRole } from "utils/constants";
 const DashboardStyles = styled.div`
   .stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-    margin-top: 30px;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
   }
   .stat-card {
-    background: var(--color-surface);
-    padding: 24px;
+    display: block;
+    padding: 20px;
     border-radius: 12px;
-    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
-    text-align: center;
-    &__number {
-      font-size: 36px;
-      font-weight: 700;
-      color: ${(props) => props.theme.primary};
-      margin-bottom: 8px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    transition:
+      border-color 0.15s,
+      transform 0.15s;
+    &:hover {
+      border-color: ${(props) => props.theme.primary};
+      transform: translateY(-1px);
     }
     &__label {
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 500;
       color: var(--color-muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
     }
-  }
-  .welcome {
-    margin-bottom: 20px;
-    p {
-      color: var(--color-muted);
+    &__number {
       margin-top: 8px;
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    &--highlight .stat-card__number {
+      color: ${(props) => props.theme.primary};
     }
   }
 `;
@@ -49,11 +52,37 @@ const DashboardStyles = styled.div`
 // Which counts each role sees; Firestore rules only let staff read other
 // users' unpublished posts
 const statCards = [
-  { key: "myPosts", label: "My Posts", visible: () => true },
-  { key: "pending", label: "Pending review", visible: isStaffRole },
-  { key: "posts", label: "Total Posts", visible: isStaffRole },
-  { key: "categories", label: "Categories", visible: isStaffRole },
-  { key: "users", label: "Users", visible: (role) => role === userRole.ADMIN },
+  {
+    key: "myPosts",
+    label: "My posts",
+    to: "/manage/post",
+    visible: () => true,
+  },
+  {
+    key: "pending",
+    label: "Pending review",
+    to: "/manage/post?status=pending",
+    visible: isStaffRole,
+    highlight: true,
+  },
+  {
+    key: "posts",
+    label: "All posts",
+    to: "/manage/post",
+    visible: isStaffRole,
+  },
+  {
+    key: "categories",
+    label: "Categories",
+    to: "/manage/category",
+    visible: isStaffRole,
+  },
+  {
+    key: "users",
+    label: "Users",
+    to: "/manage/user",
+    visible: (role) => role === userRole.ADMIN,
+  },
 ];
 
 const DashboardPage = () => {
@@ -91,20 +120,39 @@ const DashboardPage = () => {
     };
   }, [uid, role]);
 
+  const name = user?.fullname || user?.displayName || "there";
   return (
     <DashboardStyles>
-      <div className="welcome">
-        <Heading>Dashboard</Heading>
-        <p>Welcome back, {user?.fullname || user?.displayName || "User"}!</p>
-      </div>
+      <PageHeader title="Dashboard" description={`Welcome back, ${name}.`}>
+        {isStaffRole(role) && stats.pending > 0 && (
+          <Button
+            size="md"
+            variant="secondary"
+            href="/manage/post?status=pending"
+          >
+            Review {stats.pending} pending
+          </Button>
+        )}
+        <Button size="md" href="/manage/add-post">
+          New post
+        </Button>
+      </PageHeader>
       <div className="stats">
         {statCards
           .filter((card) => card.visible(role))
           .map((card) => (
-            <div className="stat-card" key={card.key}>
-              <div className="stat-card__number">{stats[card.key] ?? "–"}</div>
+            <Link
+              to={card.to}
+              key={card.key}
+              className={
+                card.highlight && stats[card.key] > 0
+                  ? "stat-card stat-card--highlight"
+                  : "stat-card"
+              }
+            >
               <div className="stat-card__label">{card.label}</div>
-            </div>
+              <div className="stat-card__number">{stats[card.key] ?? "–"}</div>
+            </Link>
           ))}
       </div>
     </DashboardStyles>

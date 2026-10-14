@@ -10,6 +10,9 @@ export const theme = {
 
 // Same accents, darker surfaces. Plain colors used outside styled
 // components live as CSS variables in styles/index.scss.
+// Dashboard sidebar: full width, and the icon rail on tablets and phones
+export const dashboardSidebar = { width: "248px", railWidth: "72px" };
+
 export const darkTheme = {
   ...theme,
   grayLight: "#2f3542",

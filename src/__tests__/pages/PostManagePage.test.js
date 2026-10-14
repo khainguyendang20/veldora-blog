@@ -28,10 +28,10 @@ vi.mock("react-toastify", () => ({
   toast: { success: vi.fn(), error: vi.fn() },
 }));
 
-const renderAs = (user) => {
+const renderAs = (user, path = "/manage/post") => {
   useAuthStore.setState({ user, isAuthLoading: false });
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={[path]}>
       <PostManagePage />
     </MemoryRouter>
   );
@@ -154,5 +154,16 @@ describe("PostManagePage moderation", () => {
 
     expect(screen.queryByRole("button", { name: "Approve" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Reject" })).not.toBeInTheDocument();
+  });
+
+  it("opens the filter named in the address", () => {
+    renderAs({ uid: "u1", role: userRole.MOD }, "/manage/post?status=pending");
+    emitPosts();
+
+    expect(screen.getByRole("button", { name: "Pending (2)" })).toHaveAttribute(
+      "aria-pressed",
+      "true"
+    );
+    expect(screen.queryByText("Live one")).not.toBeInTheDocument();
   });
 });

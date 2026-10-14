@@ -192,7 +192,7 @@ describe("as a regular user", () => {
     await waitFor(() => expect(getDocs).toHaveBeenCalled());
 
     expect(screen.queryByText("Approved")).not.toBeInTheDocument();
-    expect(screen.queryByText("Featured Post:")).not.toBeInTheDocument();
+    expect(screen.queryByText("Featured on the home page")).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByPlaceholderText("Title"), {
       target: { value: "Draft" },

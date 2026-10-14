@@ -13,148 +13,179 @@ import { signOut } from "firebase/auth";
 import React from "react";
 import { NavLink } from "react-router-dom";
 import styled from "styled-components";
-import { theme, userRole } from "utils/constants";
+import { dashboardSidebar, isStaffRole, userRole } from "utils/constants";
 import { useAuthStore } from "store";
 
-const DashboardSidebarStyles = styled.div`
+const DashboardSidebarStyles = styled.nav`
+  position: fixed;
+  top: ${(props) => props.theme.headerHeight};
+  bottom: 0;
+  left: 0;
+  width: ${dashboardSidebar.width};
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  gap: 40px;
+  gap: 4px;
   padding: 20px 12px;
-  border-radius: 12px;
-  position: fixed;
-  top: 50%;
-  transform: translateY(-50%);
-  left: 20px;
-  min-width: 80px;
-  box-shadow: rgba(0, 0, 0, 0.2) 0px 12px 28px 0px,
-    rgba(0, 0, 0, 0.1) 0px 2px 4px 0px,
-    rgba(255, 255, 255, 0.05) 0px 0px 0px 1px inset;
+  overflow-y: auto;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  z-index: 20;
+  .sidebar__group {
+    margin: 16px 12px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+  .sidebar__group:first-child {
+    margin-top: 0;
+  }
   .sidebar__link {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    &--active {
-      span {
-        svg {
-          stroke: ${(props) => props.theme.primary};
-        }
-      }
-    }
-    &-title {
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 8px;
+    background: none;
+    color: var(--color-text);
+    font-size: 15px;
+    font-weight: 500;
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background 0.15s,
+      color 0.15s;
+  }
+  .sidebar__link:hover {
+    background: var(--color-subtle);
+  }
+  .sidebar__link--active {
+    background: rgba(41, 128, 185, 0.12);
+    color: ${(props) => props.theme.primary};
+  }
+  .sidebar__link-icon {
+    display: flex;
+    flex-shrink: 0;
+  }
+  .sidebar__logout {
+    margin-top: auto;
+  }
+  /* Tablets and phones: an icon rail; titles show as tooltips */
+  @media only screen and (max-width: 1024px) {
+    width: ${dashboardSidebar.railWidth};
+    padding: 16px 10px;
+    .sidebar__group,
+    .sidebar__link-title {
       display: none;
     }
-    &:hover .sidebar__link-title {
-      /* display: block; */
+    .sidebar__link {
+      justify-content: center;
+      padding: 12px 0;
     }
   }
 `;
 
-const iconSize = 38;
-const iconColor = theme.grayDark;
+const iconProps = { size: 20, color: "currentColor" };
 
-const getItemLinks = (role) => {
-  const baseLinks = [
+// Grouped links for the signed-in user's role
+const getLinkGroups = (role) => {
+  const groups = [
     {
-      title: "Dashboard",
-      url: "/manage/dashboard",
-      icon: <IconDashboard size={iconSize} color={iconColor}></IconDashboard>,
+      title: "Content",
+      links: [
+        {
+          title: "Dashboard",
+          url: "/manage/dashboard",
+          icon: <IconDashboard {...iconProps} />,
+        },
+        {
+          title: "Posts",
+          url: "/manage/post",
+          icon: <IconBook {...iconProps} />,
+        },
+      ],
     },
     {
-      title: "Post",
-      url: "/manage/post",
-      icon: <IconBook size={iconSize} color={iconColor}></IconBook>,
+      title: "Account",
+      links: [
+        {
+          title: "Notifications",
+          url: "/manage/notifications",
+          icon: <IconBell {...iconProps} />,
+        },
+        {
+          title: "Saved",
+          url: "/manage/saved",
+          icon: <IconBookmark {...iconProps} />,
+        },
+        {
+          title: "Profile",
+          url: "/manage/profile",
+          icon: <IconProfile {...iconProps} />,
+        },
+      ],
     },
   ];
-
-  // Category management - only for Admin and Mod
-  if (role === userRole.ADMIN || role === userRole.MOD) {
-    baseLinks.push({
-      title: "Category",
+  if (isStaffRole(role)) {
+    groups[0].links.push({
+      title: "Categories",
       url: "/manage/category",
-      icon: <IconTags size={iconSize} color={iconColor}></IconTags>,
+      icon: <IconTags {...iconProps} />,
     });
   }
-
-  // User management - only for Admin
   if (role === userRole.ADMIN) {
-    baseLinks.push({
-      title: "Users",
-      url: "/manage/user",
-      icon: <IconUsers size={iconSize} color={iconColor}></IconUsers>,
+    groups.push({
+      title: "Admin",
+      links: [
+        {
+          title: "Users",
+          url: "/manage/user",
+          icon: <IconUsers {...iconProps} />,
+        },
+      ],
     });
   }
-
-  // Saved posts, Profile and Logout for everyone
-  baseLinks.push(
-    {
-      title: "Notifications",
-      url: "/manage/notifications",
-      icon: <IconBell size={iconSize} color={iconColor}></IconBell>,
-    },
-    {
-      title: "Saved",
-      url: "/manage/saved",
-      icon: <IconBookmark size={iconSize} color={iconColor}></IconBookmark>,
-    },
-    {
-      title: "Profile",
-      url: "/manage/profile",
-      icon: <IconProfile size={iconSize} color={iconColor}></IconProfile>,
-    },
-    {
-      title: "Logout",
-      url: "/",
-      icon: <IconLogout size={iconSize - 4} color={iconColor}></IconLogout>,
-      onClick: () => signOut(auth),
-    }
-  );
-
-  return baseLinks;
+  return groups;
 };
 
 const DashboardSidebar = () => {
-  const { user } = useAuthStore((state) => state);
-  const itemLinks = getItemLinks(user?.role);
-  
+  const role = useAuthStore((state) => state.user?.role);
   return (
-    <DashboardSidebarStyles className="sidebar">
-      {itemLinks.map((item) => {
-        if (item.onClick)
-          return (
-            <div
-              className="sidebar__link"
-              key={item.title}
-              role="button"
-              tabIndex={0}
-              aria-label={item.title}
-              title={item.title}
-              onClick={item.onClick}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") item.onClick();
-              }}
+    <DashboardSidebarStyles className="sidebar" aria-label="Dashboard">
+      {getLinkGroups(role).map((group) => (
+        <React.Fragment key={group.title}>
+          <p className="sidebar__group">{group.title}</p>
+          {group.links.map((link) => (
+            <NavLink
+              key={link.url}
+              to={link.url}
+              className={({ isActive }) =>
+                isActive
+                  ? "sidebar__link sidebar__link--active"
+                  : "sidebar__link"
+              }
+              title={link.title}
             >
-              <span className="sidebar__link-icon">{item.icon}</span>
-              <span className="sidebar__link-title">{item.title}</span>
-            </div>
-          );
-        return (
-          <NavLink
-            to={item.url}
-            className={({ isActive }) =>
-              isActive ? "sidebar__link sidebar__link--active" : "sidebar__link"
-            }
-            key={item.title}
-            aria-label={item.title}
-            title={item.title}
-          >
-            <span className="sidebar__link-icon">{item.icon}</span>
-            <span className="sidebar__link-title">{item.title}</span>
-          </NavLink>
-        );
-      })}
+              <span className="sidebar__link-icon">{link.icon}</span>
+              <span className="sidebar__link-title">{link.title}</span>
+            </NavLink>
+          ))}
+        </React.Fragment>
+      ))}
+      <button
+        type="button"
+        className="sidebar__link sidebar__logout"
+        title="Logout"
+        onClick={() => signOut(auth)}
+      >
+        <span className="sidebar__link-icon">
+          <IconLogout {...iconProps} />
+        </span>
+        <span className="sidebar__link-title">Logout</span>
+      </button>
     </DashboardSidebarStyles>
   );
 };

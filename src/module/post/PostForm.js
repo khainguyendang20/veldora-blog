@@ -218,7 +218,11 @@ const PostForm = ({
         </Field>
         <Field>
           <Label htmlFor="slug">Slug</Label>
-          <Input name="slug" control={control}></Input>
+          <Input
+            name="slug"
+            control={control}
+            placeholder="Made from the title if left empty"
+          ></Input>
         </Field>
       </div>
       <div className="field-format">
@@ -242,12 +246,12 @@ const PostForm = ({
         </Field>
       </div>
       <div
-        className="entry-content"
+        className="entry-content post-editor"
         style={{
-          marginBottom: "40px",
+          marginBottom: "24px",
           display: "flex",
           flexDirection: "column",
-          gap: "20px",
+          gap: "8px",
         }}
       >
         <Label>Contents</Label>
@@ -286,19 +290,21 @@ const PostForm = ({
           style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
-            gap: "20px",
-            margin: "12px 0 24px",
+            gap: "16px",
           }}
         >
-          <Label>Featured Post:</Label>
+          <Label>Featured on the home page</Label>
           <Toggle
             on={watchFeatured === true}
             onClick={() => setValue("featured", !watchFeatured)}
           ></Toggle>
         </div>
       )}
-      <Button type="submit">{submitLabel}</Button>
+      <div className="form-actions">
+        <Button type="submit" size="md">
+          {submitLabel}
+        </Button>
+      </div>
     </form>
   );
 };

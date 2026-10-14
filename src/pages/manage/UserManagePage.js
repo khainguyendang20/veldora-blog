@@ -1,9 +1,7 @@
 import { ActionDelete } from "components/actions";
 import { Toggle } from "components/checkbox";
-import { FieldCheckboxes } from "components/field";
-import { IconSearch } from "components/icons";
 import { Image } from "components/image";
-import Heading from "components/layout/Heading";
+import { PageHeader, SearchInput } from "components/admin";
 import { Table } from "components/table";
 import { db } from "config/firebase-config";
 import { collection, doc, updateDoc, writeBatch } from "firebase/firestore";
@@ -23,43 +21,41 @@ import { useAuthStore } from "store";
 const InfoColStyles = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-  .avt {
-    width: 50px;
-    height: 50px;
-    padding: 6px;
-    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
-    border-radius: 100rem;
-    img {
-      border-radius: 100rem;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  }
+  gap: 12px;
   img {
-    width: 100%;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 100rem;
+    object-fit: cover;
+  }
+  h3 {
+    font-size: 14px;
+    font-weight: 600;
   }
   p {
     font-size: 13px;
-    color: gray;
+    color: var(--color-muted);
   }
 `;
 
 const RoleBadge = styled.span`
-  padding: 4px 12px;
-  border-radius: 8px;
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 100rem;
   font-size: 12px;
   font-weight: 600;
-  color: white;
   &.admin {
-    background-color: #e74c3c;
+    color: #e74c3c;
+    background-color: rgba(231, 76, 60, 0.14);
   }
   &.mod {
-    background-color: #f39c12;
+    color: #e67e22;
+    background-color: rgba(230, 126, 34, 0.14);
   }
   &.user {
-    background-color: #3498db;
+    color: #2980b9;
+    background-color: rgba(41, 128, 185, 0.14);
   }
 `;
 
@@ -188,50 +184,39 @@ const UserManagePage = () => {
 
   return (
     <>
-      <FieldCheckboxes>
-        <Heading>User Manager</Heading>
-        <div
-          className="search"
-          style={{ marginBottom: "30px", marginLeft: "auto" }}
-        >
-          <input
-            type="text"
-            className="search-input"
-            placeholder="Type to search..."
-            onChange={handleFilterChange}
-          />
-          <span className="search-icon">
-            <IconSearch></IconSearch>
-          </span>
-        </div>
-      </FieldCheckboxes>
+      <PageHeader
+        title="Users"
+        description="Roles and access for everyone who signed up."
+      >
+        <SearchInput aria-label="Search users" onChange={handleFilterChange} />
+      </PageHeader>
       <Table>
         <thead>
           <tr>
-            <th>ID</th>
-            <th>Info</th>
+            <th>User</th>
             <th>Email</th>
             <th>Role</th>
-            <th>Status</th>
-            <th>Actions</th>
+            <th>Active</th>
+            <th aria-label="Actions"></th>
           </tr>
         </thead>
         <tbody>
           {filteredUsers.map((user) => (
             <tr key={user.id}>
-              <td title={user.id}>{user.id.slice(0, 10) + "..."}</td>
               <td>
                 <InfoColStyles>
-                  <div className="avt">
-                    <Image src={user.avatar} fallback={avatarDefault} resizeTo={160} />
-                  </div>
+                  <Image
+                    src={user.avatar}
+                    fallback={avatarDefault}
+                    resizeTo={96}
+                  />
                   <div>
                     <h3>{user.fullname}</h3>
                     <p>@{user.username}</p>
                   </div>
                 </InfoColStyles>
               </td>
-              <td>{user.email}</td>
+              <td style={{ color: "var(--color-muted)" }}>{user.email}</td>
               <td>
                 {user.id === currentUser?.uid ? (
                   <RoleBadge className={getRoleClass(user.role)}>
@@ -256,11 +241,12 @@ const UserManagePage = () => {
               </td>
               <td>
                 {user.id !== currentUser?.uid && (
-                  <FieldCheckboxes>
+                  <div className="table-actions">
                     <ActionDelete
+                      label="Delete user"
                       onClick={() => handleDeleteUser(user.id)}
                     ></ActionDelete>
-                  </FieldCheckboxes>
+                  </div>
                 )}
               </td>
             </tr>

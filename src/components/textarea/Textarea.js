@@ -7,21 +7,25 @@ const TextareaStyles = styled.div`
   width: 100%;
   textarea {
     width: 100%;
-    padding: 16px 20px;
-    background-color: transparent;
-    border: 1px solid ${(props) => props.theme.grayLight};
+    min-height: 140px;
+    padding: 12px 14px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: 8px;
-    transition: all 0.2s linear;
     color: var(--color-text);
-    font-size: 14px;
-    resize: none;
-    min-height: 200px;
+    font-size: 15px;
+    resize: vertical;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
   }
-  textarea::-webkit-input-placeholder {
-    color: #b2b3bd;
+  textarea:focus {
+    outline: none;
+    border-color: ${(props) => props.theme.primary};
+    box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.18);
   }
-  textarea::-moz-input-placeholder {
-    color: #b2b3bd;
+  textarea::placeholder {
+    color: var(--color-muted);
   }
 `;
 /**

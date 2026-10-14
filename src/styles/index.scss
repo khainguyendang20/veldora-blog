@@ -23,6 +23,8 @@
   --color-text: #1b1b1f;
   --color-muted: #666b73;
   --color-border: #dddddd;
+  // Table headers, hover rows, quiet backgrounds
+  --color-subtle: #f5f6f8;
 }
 :root[data-theme="dark"] {
   --color-bg: #12151b;
@@ -30,6 +32,7 @@
   --color-text: #e4e6eb;
   --color-muted: #9aa0a8;
   --color-border: #2f3542;
+  --color-subtle: #232833;
   color-scheme: dark;
 }
 
@@ -109,17 +112,6 @@ a {
   }
 }
 
-.button-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border: 1px solid gray;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
 .search {
   max-width: 240px;
   position: relative;
@@ -130,6 +122,9 @@ a {
     width: 100%;
     outline: none;
     padding-right: 24px;
+    border: 0;
+    background: transparent;
+    color: inherit;
   }
   &-icon {
     position: absolute;
@@ -231,4 +226,52 @@ a {
     color: inherit;
     cursor: pointer;
   }
+}
+
+// Room to write in the post editor
+.post-editor .ql-editor {
+  min-height: 320px;
+  font-size: 16px;
+  line-height: 1.7;
+}
+.post-editor .ql-toolbar.ql-snow {
+  border-radius: 8px 8px 0 0;
+}
+.post-editor .ql-container.ql-snow {
+  border-radius: 0 0 8px 8px;
+}
+
+// react-select (classNamePrefix="select") follows the color scheme
+.select__control {
+  min-height: 46px !important;
+  border-radius: 8px !important;
+  border-color: var(--color-border) !important;
+  background: var(--color-surface) !important;
+}
+.select__control--is-focused {
+  border-color: #2980b9 !important;
+  box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.18) !important;
+}
+.select__menu {
+  background: var(--color-surface) !important;
+  border: 1px solid var(--color-border);
+}
+.select__option {
+  color: var(--color-text) !important;
+}
+.select__option--is-focused {
+  background: var(--color-subtle) !important;
+}
+.select__input-container,
+.select__single-value {
+  color: var(--color-text) !important;
+}
+.select__placeholder {
+  color: var(--color-muted) !important;
+}
+.select__multi-value {
+  background: var(--color-subtle) !important;
+}
+.select__multi-value__label {
+  color: var(--color-text) !important;
 }

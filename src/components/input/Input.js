@@ -8,31 +8,34 @@ const InputStyles = styled.div`
   input {
     width: 100%;
     border-radius: 8px;
-    background: ${(props) => props.theme.grayLight};
-    padding: ${(props) => (props.hasIcon ? "20px 60px 20px 20px" : "20px")};
-    border: 2px solid transparent;
-    transition: all 0.2s ease-in-out;
+    background: var(--color-surface);
+    color: var(--color-text);
+    padding: ${(props) => (props.hasIcon ? "12px 48px 12px 14px" : "12px 14px")};
+    border: 1px solid var(--color-border);
+    font-size: 15px;
+    transition:
+      border-color 0.15s,
+      box-shadow 0.15s;
   }
   input:focus {
-    background: var(--color-surface);
-    border-color: ${(props) => props.theme.grayLight};
+    outline: none;
+    border-color: ${(props) => props.theme.primary};
+    box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.18);
   }
-  input::-webkit-input-placeholder {
-    color: #84878b;
+  input::placeholder {
+    color: var(--color-muted);
   }
   .input-icon {
     position: absolute;
-    right: 20px;
+    right: 14px;
     top: 50%;
     transform: translateY(-50%);
     cursor: pointer;
   }
   p {
-    font-size: 14px;
-    color: red;
-    font-style: italic;
-    position: absolute;
-    right: 0;
+    margin-top: 6px;
+    font-size: 13px;
+    color: #e74c3c;
   }
 `;
 

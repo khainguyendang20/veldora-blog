@@ -109,11 +109,11 @@ describe("DashboardSidebar", () => {
 
   it("keeps links mounted across re-renders", () => {
     const { rerender } = renderWithRouter(<DashboardSidebar />);
-    const before = screen.getByRole("link", { name: "Post" });
+    const before = screen.getByRole("link", { name: "Posts" });
 
     rerender(<DashboardSidebar />);
 
-    expect(screen.getByRole("link", { name: "Post" })).toBe(before);
+    expect(screen.getByRole("link", { name: "Posts" })).toBe(before);
   });
 
   it("styles the logout item like the other links", () => {

@@ -1,4 +1,4 @@
-import Heading from "components/layout/Heading";
+import { PageHeader } from "components/admin";
 import { db } from "config/firebase-config";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import FormContainer from "layout/FormContainer";
@@ -27,17 +27,22 @@ const EditCategoryPage = () => {
   };
 
   return (
-    <FormContainer>
-      <Heading>Edit category</Heading>
-      {category && (
-        <CategoryForm
-          key={id}
-          defaultValues={category}
-          onSubmit={handleUpdateCategory}
-          submitLabel="Update"
-        ></CategoryForm>
-      )}
-    </FormContainer>
+    <>
+      <PageHeader
+        title="Edit category"
+        description="Changes apply to new and edited posts."
+      ></PageHeader>
+      <FormContainer>
+        {category && (
+          <CategoryForm
+            key={id}
+            defaultValues={category}
+            onSubmit={handleUpdateCategory}
+            submitLabel="Update"
+          ></CategoryForm>
+        )}
+      </FormContainer>
+    </>
   );
 };
 

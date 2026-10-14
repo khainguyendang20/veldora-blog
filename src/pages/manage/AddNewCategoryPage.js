@@ -1,4 +1,4 @@
-import Heading from "components/layout/Heading";
+import { PageHeader } from "components/admin";
 import { db } from "config/firebase-config";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import FormContainer from "layout/FormContainer";
@@ -16,14 +16,19 @@ const AddNewCategoryPage = () => {
   };
 
   return (
-    <FormContainer>
-      <Heading>Add new category</Heading>
-      <CategoryForm
-        onSubmit={handleCreateCategory}
-        submitLabel="Create"
-        resetAfterSubmit
-      ></CategoryForm>
-    </FormContainer>
+    <>
+      <PageHeader
+        title="New category"
+        description="Categories group posts on the blog and in search."
+      ></PageHeader>
+      <FormContainer>
+        <CategoryForm
+          onSubmit={handleCreateCategory}
+          submitLabel="Create"
+          resetAfterSubmit
+        ></CategoryForm>
+      </FormContainer>
+    </>
   );
 };
 
