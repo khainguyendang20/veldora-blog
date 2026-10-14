@@ -36,6 +36,11 @@ export const categoryStatus = {
   APPROVED: 1,
 };
 
+// The home page shows this many featured posts; the posts table won't let
+// staff feature more, so which ones appear is never left to chance
+export const featuredLimit = 4;
+export const featuredCacheKey = "home:featured";
+
 // Category ids featured as sections on the home page
 export const homeCategory = {
   TECHNOLOGY: "IOLi8j3f97GwzD06PGzd",

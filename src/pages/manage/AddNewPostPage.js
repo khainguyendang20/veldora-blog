@@ -15,6 +15,8 @@ const AddNewPostPage = () => {
     // must be the auth uid: Firestore rules check it for ownership.
     await addDoc(collection(db, "posts"), {
       ...payload,
+      // Staff feature posts from the posts table once they are live
+      featured: false,
       user: {
         id: user.uid,
         fullname: user.fullname || "",

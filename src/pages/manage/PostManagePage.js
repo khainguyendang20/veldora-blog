@@ -1,4 +1,9 @@
-import { ActionDelete, ActionEdit, ActionView } from "components/actions";
+import {
+  ActionDelete,
+  ActionEdit,
+  ActionFeature,
+  ActionView,
+} from "components/actions";
 import { PageHeader, SearchInput } from "components/admin";
 import { Button } from "components/button";
 import { Image } from "components/image";
@@ -9,12 +14,15 @@ import { toast } from "react-toastify";
 import { deletePost } from "module/post/deletePost";
 import { formatDate } from "utils/formatDate";
 import useFirestoreQuery from "hooks/useFirestoreQuery";
+import { forgetCachedQuery } from "hooks/useCachedQuery";
 import debounce from "lodash/debounce";
 import React, { useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import styled from "styled-components";
 import {
+  featuredCacheKey,
+  featuredLimit,
   isStaffRole,
   postStatus,
   thumbnailPlaceholder,
@@ -92,7 +100,13 @@ const statusByName = {
   rejected: postStatus.REJECTED,
   draft: postStatus.DRAFT,
   scheduled: postStatus.SCHEDULED,
+  featured: "featured",
 };
+
+// Scheduled posts can be featured ahead of time: they reach the home page
+// when they go live
+const canBeFeatured = (post) =>
+  post.status === postStatus.APPROVED || post.status === postStatus.SCHEDULED;
 
 const statusTabs = [
   { label: "All", value: null },
@@ -175,12 +189,17 @@ const PostManagePage = () => {
     return query(colRef, where("user.id", "==", uid));
   }, [uid, role]);
 
+  const matchesTab = (post, tab) =>
+    tab === null ||
+    (tab === "featured" ? post.featured === true : post.status === tab);
   const countByStatus = (status) =>
-    status === null
-      ? posts.length
-      : posts.filter((post) => post.status === status).length;
+    posts.filter((post) => matchesTab(post, status)).length;
+  const featuredCount = countByStatus("featured");
+  const tabs = canModerate
+    ? [...statusTabs, { label: "Featured", value: "featured" }]
+    : statusTabs;
   const filteredPosts = posts.filter((post) => {
-    if (statusFilter !== null && post.status !== statusFilter) return false;
+    if (!matchesTab(post, statusFilter)) return false;
     if (!filter) return true;
     const searchTerm = filter.toLowerCase();
     return (
@@ -221,6 +240,35 @@ const PostManagePage = () => {
       toast.error("Could not update the post, please try again.");
     }
   };
+  // Why a star can't be turned on, or null when it can
+  const featureBlocker = (post) => {
+    if (post.featured) return null;
+    if (!canBeFeatured(post))
+      return "Only approved or scheduled posts can be featured.";
+    if (featuredCount >= featuredLimit)
+      return `The home page shows ${featuredLimit} featured posts. Unfeature one first.`;
+    return null;
+  };
+
+  const handleToggleFeatured = async (post) => {
+    const blocker = featureBlocker(post);
+    if (blocker) {
+      toast.info(blocker);
+      return;
+    }
+    try {
+      await updateDoc(doc(db, "posts", post.id), { featured: !post.featured });
+      forgetCachedQuery(featuredCacheKey);
+      toast.success(
+        post.featured
+          ? `Removed "${post.title}" from the home page`
+          : `Featured "${post.title}" on the home page`
+      );
+    } catch (error) {
+      toast.error("Could not update the post, please try again.");
+    }
+  };
+
   const getStatusBadge = (status, publishAt) => {
     switch (status) {
       case postStatus.DRAFT:
@@ -252,14 +300,18 @@ const PostManagePage = () => {
         </Button>
       </PageHeader>
       <StatusTabs role="group" aria-label="Filter by status">
-        {statusTabs.map((tab) => (
+        {tabs.map((tab) => (
           <button
             key={tab.label}
             type="button"
             aria-pressed={statusFilter === tab.value}
             onClick={() => setStatusFilter(tab.value)}
           >
-            {tab.label} ({countByStatus(tab.value)})
+            {tab.label} (
+            {tab.value === "featured"
+              ? `${featuredCount}/${featuredLimit}`
+              : countByStatus(tab.value)}
+            )
           </button>
         ))}
       </StatusTabs>
@@ -331,6 +383,19 @@ const PostManagePage = () => {
               </td>
               <td>
                 <div className="table-actions">
+                  {canModerate && (
+                    <ActionFeature
+                      featured={post.featured === true}
+                      disabled={Boolean(featureBlocker(post))}
+                      hint={
+                        featureBlocker(post) ||
+                        (post.featured
+                          ? "Featured on the home page. Click to remove."
+                          : "Feature on the home page")
+                      }
+                      onClick={() => handleToggleFeatured(post)}
+                    ></ActionFeature>
+                  )}
                   <ActionView
                     onClick={() => navigate(`/post/${post.slug}`)}
                   ></ActionView>

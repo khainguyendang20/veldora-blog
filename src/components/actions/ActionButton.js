@@ -18,6 +18,19 @@ const ActionButtonStyles = styled.button`
     color: ${(props) => props.theme.primary};
     border-color: ${(props) => props.theme.primary};
   }
+  /* A toggle that is on, e.g. a featured post's star */
+  &[aria-pressed="true"] {
+    color: #f39c12;
+    border-color: rgba(243, 156, 18, 0.5);
+    background: rgba(243, 156, 18, 0.1);
+    svg {
+      fill: currentColor;
+    }
+  }
+  /* Still clickable so it can explain why it can't be used */
+  &[aria-disabled="true"] {
+    opacity: 0.45;
+  }
   ${(props) =>
     props.$danger &&
     css`
@@ -34,13 +47,24 @@ const ActionButtonStyles = styled.button`
 `;
 
 // Small outlined icon button for table rows. `label` names it for screen
-// readers and as a tooltip.
-const ActionButton = ({ label, danger = false, onClick = () => {}, children }) => {
+// readers and, unless `hint` says more, as a tooltip. `pressed` makes it
+// a toggle.
+const ActionButton = ({
+  label,
+  hint,
+  danger = false,
+  pressed,
+  disabled,
+  onClick = () => {},
+  children,
+}) => {
   return (
     <ActionButtonStyles
       type="button"
       aria-label={label}
-      title={label}
+      title={hint || label}
+      aria-pressed={pressed}
+      aria-disabled={disabled || undefined}
       $danger={danger}
       onClick={onClick}
     >

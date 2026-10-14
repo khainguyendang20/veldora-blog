@@ -143,6 +143,9 @@ describe("UpdatePostPage", () => {
     expect(payload).not.toHaveProperty("likeCount");
     expect(payload).not.toHaveProperty("commentCount");
     expect(payload).not.toHaveProperty("lastCommentId");
+    // Featuring happens in the posts table; a stale flag must not undo it
+    expect(payload).not.toHaveProperty("featured");
+    expect(screen.queryByText("Featured on the home page")).not.toBeInTheDocument();
   });
 });
 
