@@ -1,4 +1,3 @@
-import Header from "components/layout/Header";
 import DashboardSidebar from "module/dashboard/DashboardSidebar";
 import { dashboardSidebar } from "utils/constants";
 import React, { Suspense } from "react";
@@ -10,7 +9,6 @@ const LayoutDashboardStyles = styled.div`
   min-height: 100vh;
   background: var(--color-bg);
   .dashboard-main {
-    margin-top: ${(props) => props.theme.headerHeight};
     margin-left: ${dashboardSidebar.width};
     padding: 32px 40px 64px;
   }
@@ -44,7 +42,6 @@ const LayoutDashboard = () => {
 
   return (
     <LayoutDashboardStyles>
-      <Header></Header>
       <DashboardSidebar></DashboardSidebar>
       <main className="dashboard-main">
         <div className="dashboard-content">

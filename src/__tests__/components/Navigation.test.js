@@ -2,6 +2,7 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { useMediaQuery } from "@uidotdev/usehooks";
+import { onSnapshot, query } from "firebase/firestore";
 import { useAuthStore } from "store";
 import { userRole } from "utils/constants";
 import Header from "components/layout/Header";
@@ -122,5 +123,48 @@ describe("DashboardSidebar", () => {
     expect(screen.getByRole("button", { name: "Logout" })).toHaveClass(
       "sidebar__link"
     );
+  });
+});
+
+describe("DashboardSidebar header duties", () => {
+  beforeEach(() => {
+    useAuthStore.setState({
+      user: { uid: "u1", role: userRole.MOD, fullname: "Lan Pham" },
+      isAuthLoading: false,
+    });
+    query.mockReturnValue({});
+    // Three unread notifications
+    onSnapshot.mockImplementation((q, cb) => {
+      cb({ forEach: (fn) => ["n1", "n2", "n3"].forEach((id) => fn({ id, data: () => ({}) })) });
+      return vi.fn();
+    });
+  });
+
+  it("links the logo back to the blog", () => {
+    renderWithRouter(<DashboardSidebar />);
+
+    expect(screen.getByRole("link", { name: "Veldora Blog" })).toHaveAttribute("href", "/");
+  });
+
+  it("shows the unread count on Notifications", () => {
+    renderWithRouter(<DashboardSidebar />);
+
+    expect(
+      screen.getByRole("link", { name: "Notifications (3 unread)" })
+    ).toHaveAttribute("href", "/manage/notifications");
+  });
+
+  it("shows who is signed in, linking to their profile settings", () => {
+    renderWithRouter(<DashboardSidebar />);
+
+    const profile = screen.getByRole("link", { name: /Lan Pham/ });
+    expect(profile).toHaveAttribute("href", "/manage/profile");
+    expect(profile).toHaveTextContent("Moderator");
+  });
+
+  it("switches the color mode", () => {
+    renderWithRouter(<DashboardSidebar />);
+
+    expect(screen.getByRole("button", { name: /Switch to (dark|light) mode/ })).toBeInTheDocument();
   });
 });
