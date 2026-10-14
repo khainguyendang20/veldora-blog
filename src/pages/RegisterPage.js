@@ -18,15 +18,15 @@ import { authErrorMessage } from "utils/authErrorMessage";
 import useDocumentMeta from "hooks/useDocumentMeta";
 
 const schema = yup.object({
-  fullname: yup.string().required("Please enter your fullname"),
+  fullname: yup.string().trim().required("Enter your name"),
   email: yup
     .string()
-    .email("Please enter valid email")
-    .required("Please enter your email"),
+    .email("Enter a valid email address")
+    .required("Enter your email address"),
   password: yup
     .string()
-    .min(8, "Your password must be least 8 characters or greater")
-    .required("Please enter your password"),
+    .min(8, "Use at least 8 characters")
+    .required("Choose a password"),
 });
 
 const RegisterPage = () => {
@@ -46,37 +46,38 @@ const RegisterPage = () => {
       );
       await updateProfile(user, { displayName: values.fullname });
       await createUserProfile(user, { fullname: values.fullname });
-      toast.success("Registered successfully!");
+      toast.success("Welcome to Veldora Blog!");
       navigate("/");
     } catch (error) {
       toast.error(authErrorMessage(error));
     }
   };
   return (
-    <LayoutAuthentication>
-      <form
-        autoComplete="off"
-        onSubmit={handleSubmit(handleSignUp)}
-        className="form"
-      >
+    <LayoutAuthentication
+      title="Create your account"
+      subtitle="Join to follow writers, save posts and publish your own."
+    >
+      <GoogleSignInButton></GoogleSignInButton>
+      <p className="auth__divider">or sign up with email</p>
+      <form onSubmit={handleSubmit(handleSignUp)} noValidate>
         <Field>
-          <Label htmlFor="fullname">Fullname</Label>
+          <Label htmlFor="fullname">Full name</Label>
           <Input
             type="text"
             name="fullname"
-            className="input"
-            placeholder="Enter your fullname..."
+            placeholder="Your name"
+            autoComplete="name"
             control={control}
             error={errors?.fullname?.message}
           ></Input>
         </Field>
         <Field>
-          <Label htmlFor="email">Email Address</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
             type="email"
             name="email"
-            className="input"
-            placeholder="Enter your email address..."
+            placeholder="you@example.com"
+            autoComplete="email"
             control={control}
             error={errors?.email?.message}
           ></Input>
@@ -84,25 +85,27 @@ const RegisterPage = () => {
         <Field>
           <Label htmlFor="password">Password</Label>
           <InputPassword
-            type="password"
-            name="password"
-            className="input"
-            placeholder="Enter your password..."
+            placeholder="At least 8 characters"
+            autoComplete="new-password"
             control={control}
             error={errors?.password?.message}
           ></InputPassword>
         </Field>
-        <div className="have-account">
-          Do you already have an account?
-          <Link to="/login" style={{}}>
-            Login now
-          </Link>
-        </div>
-        <Button type="submit" disabled={isSubmitting} isLoading={isSubmitting}>
-          Sign Up
+        <Button
+          type="submit"
+          className="auth__submit"
+          disabled={isSubmitting}
+          isLoading={isSubmitting}
+        >
+          Create account
         </Button>
-        <GoogleSignInButton></GoogleSignInButton>
       </form>
+      <p className="auth__switch">
+        Already have an account?{" "}
+        <Link to="/login" className="auth__link">
+          Sign in
+        </Link>
+      </p>
     </LayoutAuthentication>
   );
 };

@@ -25,11 +25,19 @@ const InputStyles = styled.div`
   input::placeholder {
     color: var(--color-muted);
   }
+  input[aria-invalid="true"] {
+    border-color: #e74c3c;
+  }
   .input-icon {
     position: absolute;
     right: 14px;
     top: 50%;
     transform: translateY(-50%);
+    display: flex;
+    padding: 4px;
+    border: 0;
+    border-radius: 6px;
+    background: none;
     cursor: pointer;
   }
   p {
@@ -39,14 +47,22 @@ const InputStyles = styled.div`
   }
 `;
 
-const Input = ({ name, type = "text", control, children, ...props }) => {
+const Input = ({ name, type = "text", control, error, children, ...props }) => {
   const { field } = useController({ control, name, defaultValue: "" });
-  const { error } = props;
+  const hasError = Boolean(error && error.length > 0);
   return (
     <InputStyles hasIcon={children ? true : false}>
-      <input type={type} name={name} id={name} {...props} {...field} />
+      <input
+        type={type}
+        name={name}
+        id={name}
+        aria-invalid={hasError || undefined}
+        aria-describedby={hasError ? `${name}-error` : undefined}
+        {...props}
+        {...field}
+      />
       {children}
-      {error && error.length > 0 && <p>{error}</p>}
+      {hasError && <p id={`${name}-error`}>{error}</p>}
     </InputStyles>
   );
 };
