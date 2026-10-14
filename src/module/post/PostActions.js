@@ -4,7 +4,6 @@ import {
   deleteDoc,
   doc,
   increment,
-  onSnapshot,
   serverTimestamp,
   setDoc,
   writeBatch,
@@ -13,6 +12,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuthStore } from "store";
+import useDocExists from "hooks/useDocExists";
 import styled from "styled-components";
 import {
   addLikeNotification,
@@ -41,23 +41,6 @@ const PostActionsStyles = styled.div`
     color: ${(props) => props.theme.primary};
   }
 `;
-
-// Whether a document exists, kept live; false while signed out
-const useDocExists = (path) => {
-  const [exists, setExists] = useState(false);
-  const key = path?.join("/");
-  useEffect(() => {
-    if (!path) {
-      setExists(false);
-      return;
-    }
-    return onSnapshot(doc(db, ...path), (snapshot) =>
-      setExists(snapshot.exists())
-    );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-  return [exists, setExists];
-};
 
 // Like and save buttons for a published post. A like is
 // posts/{id}/likes/{uid}, written in one batch with the post's likeCount

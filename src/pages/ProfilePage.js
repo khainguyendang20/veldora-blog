@@ -6,6 +6,7 @@ import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { avatarDefault } from "utils/constants";
 import { Image } from "components/image";
+import FollowButton from "module/follow/FollowButton";
 import useDocumentMeta from "hooks/useDocumentMeta";
 
 const ProfilePageStyles = styled.div`
@@ -75,6 +76,9 @@ const ProfilePage = () => {
       <div className="profile-info">
         <div className="profile-info__name">{info?.fullname}</div>
         <div className="profile-info__username">@{info?.username}</div>
+        <div style={{ marginTop: "12px" }}>
+          <FollowButton authorId={info.id}></FollowButton>
+        </div>
         {/* <div className="profile-info__item">
           <span>
             <svg

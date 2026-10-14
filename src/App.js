@@ -17,6 +17,7 @@ const PostDetailPage = lazy(() => import("pages/PostDetailPage"));
 const BlogPage = lazy(() => import("pages/BlogPage"));
 const CategoryPage = lazy(() => import("pages/CategoryPage"));
 const SearchPage = lazy(() => import("pages/SearchPage"));
+const FollowingPage = lazy(() => import("pages/FollowingPage"));
 const ProfilePage = lazy(() => import("pages/ProfilePage"));
 const DashboardPage = lazy(() => import("pages/manage/DashboardPage"));
 const AddNewPostPage = lazy(() => import("pages/manage/AddNewPostPage"));
@@ -58,6 +59,10 @@ function AppRoutes() {
         ></Route>
         <Route path="/blog" element={<BlogPage></BlogPage>}></Route>
         <Route path="/search" element={<SearchPage></SearchPage>}></Route>
+        <Route
+          path="/following"
+          element={<FollowingPage></FollowingPage>}
+        ></Route>
         <Route
           path="/category/:slug"
           element={<CategoryPage></CategoryPage>}

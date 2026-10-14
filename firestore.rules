@@ -61,6 +61,16 @@ service cloud.firestore {
           && request.resource.data.createdAt == request.time;
       }
 
+      // Authors this user follows, keyed by author uid; private to them
+      match /following/{authorId} {
+        allow read, delete: if signedIn() && request.auth.uid == userId;
+        allow create: if isActive()
+          && request.auth.uid == userId
+          && authorId != userId
+          && request.resource.data.keys().hasOnly(['createdAt'])
+          && request.resource.data.createdAt == request.time;
+      }
+
       // Likes and comments on this user's posts, written by the reader in
       // the same batch as the like or comment
       match /notifications/{notificationId} {

@@ -169,6 +169,18 @@ const menuItems = [
   },
 ];
 
+// The Following feed only makes sense once signed in
+const useMenuItems = () => {
+  const signedIn = useAuthStore((state) => Boolean(state.user));
+  return signedIn
+    ? [
+        ...menuItems.slice(0, 2),
+        { url: "/following", title: "Following" },
+        ...menuItems.slice(2),
+      ]
+    : menuItems;
+};
+
 const ICON_SIZE = 18;
 
 const ThemeToggleStyles = styled.button`
@@ -203,6 +215,7 @@ const Header = () => {
   const userPopoverRef = useRef();
   useClickOutside(userPopoverRef, () => setShowPopover(false));
   const navigate = useNavigate();
+  const items = useMenuItems();
   const handleSearch = (e) => {
     e.preventDefault();
     const q = e.currentTarget.elements.q.value.trim();
@@ -218,7 +231,7 @@ const Header = () => {
           </NavLink>
           {isDesktop ? (
             <ul className="menu">
-              {menuItems.map((item) => (
+              {items.map((item) => (
                 <li key={item.url}>
                   <NavLink to={item.url}>{item.title}</NavLink>
                 </li>
@@ -309,6 +322,7 @@ const UserPopover = ({ show, setShow, data }) => {
 
 const MobileMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const items = useMenuItems();
 
   return (
     <div>
@@ -323,7 +337,7 @@ const MobileMenu = () => {
             >
               <IconClose />
             </span>
-            {[...menuItems, { url: "/search", title: "Search" }].map((item) => (
+            {[...items, { url: "/search", title: "Search" }].map((item) => (
               <li key={item.url}>
                 <NavLink to={item.url}>{item.title}</NavLink>
               </li>

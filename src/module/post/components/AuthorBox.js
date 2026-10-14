@@ -3,6 +3,7 @@ import { doc, getDoc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { Image } from "components/image";
 import { avatarDefault } from "utils/constants";
+import FollowButton from "module/follow/FollowButton";
 
 const AuthorBox = ({ userId = "" }) => {
   const [user, setUser] = useState({});
@@ -25,6 +26,7 @@ const AuthorBox = ({ userId = "" }) => {
       </div>
       <div className="author-content">
         <h3 className="author-name">{user?.fullname}</h3>
+        <FollowButton authorId={userId}></FollowButton>
         <p className="author-desc">{user?.description}</p>
       </div>
     </div>
